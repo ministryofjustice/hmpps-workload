@@ -40,7 +40,7 @@ dependencies {
   // go to open telemetry, when upgrading to spring boot 3 these can be removed
   implementation("io.opentelemetry:opentelemetry-api:1.26.0")
   implementation("com.microsoft.azure:applicationinsights-core:3.4.13")
-  agentDeps("com.microsoft.azure:applicationinsights-agent:3.4.13")
+  agentDeps("com.microsoft.azure:applicationinsights-agent:3.4.14")
 
   implementation("uk.gov.service.notify:notifications-java-client:4.1.0-RELEASE")
   implementation("com.vladmihalcea:hibernate-types-60:2.21.1")
