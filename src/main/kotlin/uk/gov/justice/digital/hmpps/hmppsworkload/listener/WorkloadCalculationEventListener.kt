@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import io.awspring.cloud.sqs.annotation.SqsListener
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.future.future
+import kotlinx.coroutines.async
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.WorkforceAllocationsToDeliusApiClient
@@ -21,17 +21,17 @@ class WorkloadCalculationEventListener(
 ) {
 
   @SqsListener("workloadcalculationqueue", factory = "hmppsQueueContainerFactoryProxy")
-  fun processMessage(rawMessage: String) {
+  suspend fun processMessage(rawMessage: String) {
     val workloadCalculationEvent = getWorkloadCalculationEvent(rawMessage)
     val availableHours = workloadCalculationEvent.additionalInformation.availableHours
     val staffIdentifier = StaffIdentifier(
       workloadCalculationEvent.personReference.identifiers.find { it.type == "staffCode" }!!.value,
       workloadCalculationEvent.personReference.identifiers.find { it.type == "teamCode" }!!.value,
     )
-    CoroutineScope(Dispatchers.Default).future {
+    CoroutineScope(Dispatchers.Default).async {
       val staffGrade = workforceAllocationsToDeliusApiClient.getOfficerView(staffIdentifier.staffCode).getGrade()
       workloadCalculationService.saveWorkloadCalculation(staffIdentifier, staffGrade, availableHours)
-    }.get()
+    }.await()
   }
 
   private fun getWorkloadCalculationEvent(rawMessage: String): WorkloadCalculationEvent {

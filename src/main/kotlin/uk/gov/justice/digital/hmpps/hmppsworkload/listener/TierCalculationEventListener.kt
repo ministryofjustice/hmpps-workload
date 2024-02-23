@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import io.awspring.cloud.sqs.annotation.SqsListener
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.future.future
+import kotlinx.coroutines.async
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.event.PersonReference
 import uk.gov.justice.digital.hmpps.hmppsworkload.service.SaveCaseDetailsService
@@ -17,11 +17,11 @@ class TierCalculationEventListener(
 ) {
 
   @SqsListener("tiercalcqueue", factory = "hmppsQueueContainerFactoryProxy")
-  fun processMessage(rawMessage: String) {
+  suspend fun processMessage(rawMessage: String) {
     val calculationEventData = readMessage(rawMessage)
-    CoroutineScope(Dispatchers.Default).future {
+    CoroutineScope(Dispatchers.Default).async {
       saveCaseDetailsService.saveByCrn(crnFrom(calculationEventData))
-    }.get()
+    }.await()
   }
 
   private fun readMessage(wrapper: String?): CalculationEventData {

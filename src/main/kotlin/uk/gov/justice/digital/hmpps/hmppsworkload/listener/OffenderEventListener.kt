@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import io.awspring.cloud.sqs.annotation.SqsListener
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.future.future
+import kotlinx.coroutines.async
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.hmppsworkload.service.SaveCaseDetailsService
 
@@ -16,11 +16,11 @@ class OffenderEventListener(
 ) {
 
   @SqsListener("hmppsoffenderqueue", factory = "hmppsQueueContainerFactoryProxy")
-  fun processMessage(rawMessage: String) {
+  suspend fun processMessage(rawMessage: String) {
     val (crn) = getCase(rawMessage)
-    CoroutineScope(Dispatchers.Default).future {
+    CoroutineScope(Dispatchers.Default).async {
       saveCaseDetailsService.saveByCrn(crn)
-    }.get()
+    }.await()
   }
 
   private fun getCase(rawMessage: String): HmppsOffenderEvent {
