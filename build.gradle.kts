@@ -1,9 +1,9 @@
 plugins {
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "5.11.0"
-  kotlin("plugin.spring") version "1.9.22"
-  kotlin("plugin.jpa") version "1.9.22"
-  id("io.gitlab.arturbosch.detekt").version("1.23.4")
-  kotlin("plugin.allopen").version("1.9.22")
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "5.15.5"
+  kotlin("plugin.spring") version "1.9.23"
+  kotlin("plugin.jpa") version "1.9.23"
+  id("io.gitlab.arturbosch.detekt").version("1.23.6")
+  kotlin("plugin.allopen").version("1.9.23")
 }
 
 configurations {
@@ -27,36 +27,36 @@ dependencies {
   implementation("org.springframework.boot:spring-boot-starter-data-jpa")
   implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:2.2.1")
 
-  implementation("org.springdoc:springdoc-openapi-starter-webflux-ui:2.3.0")
+  implementation("org.springdoc:springdoc-openapi-starter-webflux-ui:2.4.0")
 
   implementation("org.springframework.boot:spring-boot-starter-security")
   implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
   implementation("org.springframework.boot:spring-boot-starter-oauth2-client")
 
-  implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
-  implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor:1.7.3")
-  implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:1.7.3")
+  implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.0")
+  implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor:1.8.0")
+  implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:1.8.0")
 
   // go to open telemetry, when upgrading to spring boot 3 these can be removed
-  implementation("io.opentelemetry:opentelemetry-api:1.34.1")
-  implementation("com.microsoft.azure:applicationinsights-core:3.4.19")
-  agentDeps("com.microsoft.azure:applicationinsights-agent:3.4.19")
+  implementation("io.opentelemetry:opentelemetry-api:1.36.0")
+  implementation("com.microsoft.azure:applicationinsights-core:3.5.1")
+  agentDeps("com.microsoft.azure:applicationinsights-agent:3.5.1")
 
   implementation("uk.gov.service.notify:notifications-java-client:5.0.0-RELEASE")
   implementation("com.vladmihalcea:hibernate-types-60:2.21.1")
 
   runtimeOnly("com.zaxxer:HikariCP")
   runtimeOnly("org.flywaydb:flyway-core")
-  runtimeOnly("org.postgresql:postgresql:42.7.1")
+  runtimeOnly("org.postgresql:postgresql:42.7.3")
 
-  testImplementation("io.jsonwebtoken:jjwt-impl:0.12.3")
-  testImplementation("io.jsonwebtoken:jjwt-jackson:0.12.3")
+  testImplementation("io.jsonwebtoken:jjwt-impl:0.12.5")
+  testImplementation("io.jsonwebtoken:jjwt-jackson:0.12.5")
   testImplementation("org.mock-server:mockserver-netty:5.15.0")
-  testImplementation("org.awaitility:awaitility-kotlin:4.2.0")
-  testImplementation("io.mockk:mockk:1.13.9")
+  testImplementation("org.awaitility:awaitility-kotlin:4.2.1")
+  testImplementation("io.mockk:mockk:1.13.10")
   testImplementation("com.ninja-squad:springmockk:4.0.2")
 
-  testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
+  testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.0")
 }
 repositories {
   mavenCentral()
