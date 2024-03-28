@@ -1,0 +1,52 @@
+/* workload_points */
+
+ALTER TABLE app.workload_points ADD COLUMN comm_tier_1_s pg_catalog.int8 NULL;
+ALTER TABLE app.workload_points ADD COLUMN comm_tier_2_s pg_catalog.int8 NULL;
+ALTER TABLE app.workload_points ADD COLUMN comm_tier_3_s pg_catalog.int8 NULL;
+ALTER TABLE app.workload_points ADD COLUMN comm_tier_4_s pg_catalog.int8 NULL;
+ALTER TABLE app.workload_points ADD COLUMN comm_tier_5_s pg_catalog.int8 NULL;
+ALTER TABLE app.workload_points ADD COLUMN comm_tier_6_s pg_catalog.int8 NULL;
+ALTER TABLE app.workload_points ADD COLUMN comm_tier_7_s pg_catalog.int8 NULL;
+ALTER TABLE app.workload_points ADD COLUMN comm_tier_8_s pg_catalog.int8 NULL;
+ALTER TABLE app.workload_points ADD COLUMN comm_tier_9_s pg_catalog.int8 NULL;
+ALTER TABLE app.workload_points ADD COLUMN comm_tier_10_s pg_catalog.int8 NULL;
+ALTER TABLE app.workload_points ADD COLUMN comm_tier_11_s pg_catalog.int8 NULL;
+ALTER TABLE app.workload_points ADD COLUMN comm_tier_12_s pg_catalog.int8 NULL;
+ALTER TABLE app.workload_points ADD COLUMN comm_tier_13_s pg_catalog.int8 NULL;
+ALTER TABLE app.workload_points ADD COLUMN comm_tier_14_s pg_catalog.int8 NULL;
+ALTER TABLE app.workload_points ADD COLUMN comm_tier_15_s pg_catalog.int8 NULL;
+ALTER TABLE app.workload_points ADD COLUMN comm_tier_16_s pg_catalog.int8 NULL;
+
+ALTER TABLE app.workload_points ADD COLUMN cust_tier_1_s pg_catalog.int8 NULL;
+ALTER TABLE app.workload_points ADD COLUMN cust_tier_2_s pg_catalog.int8 NULL;
+ALTER TABLE app.workload_points ADD COLUMN cust_tier_3_s pg_catalog.int8 NULL;
+ALTER TABLE app.workload_points ADD COLUMN cust_tier_4_s pg_catalog.int8 NULL;
+ALTER TABLE app.workload_points ADD COLUMN cust_tier_5_s pg_catalog.int8 NULL;
+ALTER TABLE app.workload_points ADD COLUMN cust_tier_6_s pg_catalog.int8 NULL;
+ALTER TABLE app.workload_points ADD COLUMN cust_tier_7_s pg_catalog.int8 NULL;
+ALTER TABLE app.workload_points ADD COLUMN cust_tier_8_s pg_catalog.int8 NULL;
+ALTER TABLE app.workload_points ADD COLUMN cust_tier_9_s pg_catalog.int8 NULL;
+ALTER TABLE app.workload_points ADD COLUMN cust_tier_10_s pg_catalog.int8 NULL;
+ALTER TABLE app.workload_points ADD COLUMN cust_tier_11_s pg_catalog.int8 NULL;
+ALTER TABLE app.workload_points ADD COLUMN cust_tier_12_s pg_catalog.int8 NULL;
+ALTER TABLE app.workload_points ADD COLUMN cust_tier_13_s pg_catalog.int8 NULL;
+ALTER TABLE app.workload_points ADD COLUMN cust_tier_14_s pg_catalog.int8 NULL;
+ALTER TABLE app.workload_points ADD COLUMN cust_tier_15_s pg_catalog.int8 NULL;
+ALTER TABLE app.workload_points ADD COLUMN cust_tier_16_s pg_catalog.int8 NULL;
+
+ALTER TABLE app.workload_points ADD COLUMN lic_tier_1_s pg_catalog.int8 NULL;
+ALTER TABLE app.workload_points ADD COLUMN lic_tier_2_s pg_catalog.int8 NULL;
+ALTER TABLE app.workload_points ADD COLUMN lic_tier_3_s pg_catalog.int8 NULL;
+ALTER TABLE app.workload_points ADD COLUMN lic_tier_4_s pg_catalog.int8 NULL;
+ALTER TABLE app.workload_points ADD COLUMN lic_tier_5_s pg_catalog.int8 NULL;
+ALTER TABLE app.workload_points ADD COLUMN lic_tier_6_s pg_catalog.int8 NULL;
+ALTER TABLE app.workload_points ADD COLUMN lic_tier_7_s pg_catalog.int8 NULL;
+ALTER TABLE app.workload_points ADD COLUMN lic_tier_8_s pg_catalog.int8 NULL;
+ALTER TABLE app.workload_points ADD COLUMN lic_tier_9_s pg_catalog.int8 NULL;
+ALTER TABLE app.workload_points ADD COLUMN lic_tier_10_s pg_catalog.int8 NULL;
+ALTER TABLE app.workload_points ADD COLUMN lic_tier_11_s pg_catalog.int8 NULL;
+ALTER TABLE app.workload_points ADD COLUMN lic_tier_12_s pg_catalog.int8 NULL;
+ALTER TABLE app.workload_points ADD COLUMN lic_tier_13_s pg_catalog.int8 NULL;
+ALTER TABLE app.workload_points ADD COLUMN lic_tier_14_s pg_catalog.int8 NULL;
+ALTER TABLE app.workload_points ADD COLUMN lic_tier_15_s pg_catalog.int8 NULL;
+ALTER TABLE app.workload_points ADD COLUMN lic_tier_16_s pg_catalog.int8 NULL;
