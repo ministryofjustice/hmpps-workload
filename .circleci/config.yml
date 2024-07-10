@@ -119,6 +119,10 @@ workflows:
           type: approval
           requires:
             - deploy_preprod
+          filters:
+            branches:
+              only:
+                - main
       - hmpps/deploy_env:
           name: deploy_prod
           env: "prod"
@@ -131,6 +135,10 @@ workflows:
             - hmpps-workload-prod
           requires:
             - request-prod-approval
+          filters:
+            branches:
+              only:
+                - main
   security:
     triggers:
       - schedule:
