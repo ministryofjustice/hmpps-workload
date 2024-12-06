@@ -32,17 +32,20 @@ class GetAllocatedEvents : IntegrationTestBase() {
       ),
     )
 
+    val teams = listOf("T1")
+
     val caseDetails = caseDetailsRepository.save(CaseDetailsEntity(crn = storedEventManager.crn, tier = Tier.B2, type = CaseType.COMMUNITY, "", ""))
 
     workforceAllocationsToDelius.allocationDetailsResponse(listOf(AllocationDetailIntegration(storedEventManager.crn, storedEventManager.staffCode)))
 
-    webTestClient.get()
+    webTestClient.post()
       .uri(
-        "/allocation/events/me?since=${thirtyDaysInPast()}",
+        "/allocation/events/teams?since=${thirtyDaysInPast()}",
       )
       .headers {
         it.authToken(roles = listOf("ROLE_WORKLOAD_READ", loggedInUser))
       }
+      .bodyValue(teams)
       .exchange()
       .expectStatus()
       .isOk
@@ -82,13 +85,14 @@ class GetAllocatedEvents : IntegrationTestBase() {
 
     workforceAllocationsToDelius.allocationDetailsResponse(listOf(AllocationDetailIntegration(oldEventManager.crn, oldEventManager.staffCode)))
 
-    webTestClient.get()
+    webTestClient.post()
       .uri(
-        "/allocation/events/me?since=${thirtyDaysInPast()}",
+        "/allocation/events/teams?since=${thirtyDaysInPast()}",
       )
       .headers {
         it.authToken(roles = listOf("ROLE_WORKLOAD_READ", loggedInUser))
       }
+      .bodyValue(listOf("T1"))
       .exchange()
       .expectStatus()
       .isOk
@@ -112,13 +116,14 @@ class GetAllocatedEvents : IntegrationTestBase() {
       ),
     )
 
-    webTestClient.get()
+    webTestClient.post()
       .uri(
-        "/allocation/events/me?since=${thirtyDaysInPast()}",
+        "/allocation/events/teams?since=${thirtyDaysInPast()}",
       )
       .headers {
         it.authToken(roles = listOf("ROLE_WORKLOAD_READ", loggedInUser))
       }
+      .bodyValue(listOf("T1"))
       .exchange()
       .expectStatus()
       .isOk
@@ -146,13 +151,14 @@ class GetAllocatedEvents : IntegrationTestBase() {
 
     caseDetailsRepository.save(CaseDetailsEntity(crn = noDeliusDetailsEventManager.crn, tier = Tier.B2, type = CaseType.COMMUNITY, "", ""))
 
-    webTestClient.get()
+    webTestClient.post()
       .uri(
-        "/allocation/events/me?since=${thirtyDaysInPast()}",
+        "/allocation/events/teams?since=${thirtyDaysInPast()}",
       )
       .headers {
         it.authToken(roles = listOf("ROLE_WORKLOAD_READ", loggedInUser))
       }
+      .bodyValue(listOf("T1"))
       .exchange()
       .expectStatus()
       .isOk

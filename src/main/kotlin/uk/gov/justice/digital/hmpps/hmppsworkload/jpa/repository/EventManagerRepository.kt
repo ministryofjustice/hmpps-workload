@@ -19,4 +19,6 @@ interface EventManagerRepository : CrudRepository<EventManagerEntity, Long> {
   fun findFirstByCrnAndEventNumberOrderByCreatedDateDesc(crn: String, eventNumber: Int): EventManagerEntity?
 
   fun findByCreatedDateGreaterThanEqualAndCreatedByAndIsActiveTrue(since: ZonedDateTime, username: String): List<EventManagerEntity>
+
+  fun findByCreatedDateGreaterThanEqualAndTeamCodeInAndIsActiveTrue(since: ZonedDateTime, teams: List<String>): List<EventManagerEntity>
 }
