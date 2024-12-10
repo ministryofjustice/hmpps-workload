@@ -7,9 +7,10 @@ import jakarta.persistence.EntityNotFoundException
 import org.springframework.format.annotation.DateTimeFormat
 import org.springframework.http.MediaType
 import org.springframework.security.access.prepost.PreAuthorize
-import org.springframework.security.core.Authentication
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
@@ -68,35 +69,35 @@ class EventManagerController(private val getEventManager: JpaBasedGetEventManage
   ): CompleteDetails =
     getEventManager.findCompleteDetailsByCrnAndEventNumber(crn, eventNumber) ?: throw EntityNotFoundException("Complete details of event manager not found for crn $crn eventNumber $eventNumber")
 
-  @Operation(summary = "Get allocated events created by logged in user")
+  @Operation(summary = "Get allocated event count by logged in user's teams")
   @ApiResponses(
     value = [
       ApiResponse(responseCode = "200", description = "OK"),
     ],
   )
   @PreAuthorize("hasRole('ROLE_WORKLOAD_MEASUREMENT') or hasRole('ROLE_WORKLOAD_READ')")
-  @GetMapping("/allocation/events/me")
-  suspend fun getAllocationsByLoggedInUser(
+  @PostMapping("/allocation/events/teams/count")
+  suspend fun getAllocationCountByLoggedInUsersTeam(
     @RequestParam(required = true)
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
     since: ZonedDateTime,
-    authentication: Authentication,
-  ): CreatedAllocationDetails =
-    getEventManager.findAllocationsBy(since, authentication.name)
-
-  @Operation(summary = "Get allocated event count by logged in user")
-  @ApiResponses(
-    value = [
-      ApiResponse(responseCode = "200", description = "OK"),
-    ],
-  )
-  @PreAuthorize("hasRole('ROLE_WORKLOAD_MEASUREMENT') or hasRole('ROLE_WORKLOAD_READ')")
-  @GetMapping("/allocation/events/me/count")
-  suspend fun getAllocationCountByLoggedInUser(
-    @RequestParam(required = true)
-    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-    since: ZonedDateTime,
-    authentication: Authentication,
+    @RequestBody teams: List<String>,
   ): CaseCount =
-    getEventManager.countAllocationsBy(since, authentication.name)
+    getEventManager.countAllocationsBy(since, teams)
+
+  @Operation(summary = "Get allocated events created by logged in user's selected teams")
+  @ApiResponses(
+    value = [
+      ApiResponse(responseCode = "200", description = "OK"),
+    ],
+  )
+  @PreAuthorize("hasRole('ROLE_WORKLOAD_MEASUREMENT') or hasRole('ROLE_WORKLOAD_READ')")
+  @PostMapping("/allocation/events/teams")
+  suspend fun getAllocationsByUsersTeams(
+    @RequestParam(required = true)
+    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+    since: ZonedDateTime,
+    @RequestBody teams: List<String>,
+  ): CreatedAllocationDetails =
+    getEventManager.findAllocationsByTeam(since, teams)
 }
