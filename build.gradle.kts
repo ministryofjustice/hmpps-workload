@@ -1,9 +1,9 @@
 plugins {
   id("uk.gov.justice.hmpps.gradle-spring-boot") version "6.1.0"
-  kotlin("plugin.spring") version "2.0.21"
-  kotlin("plugin.jpa") version "2.0.21"
+  kotlin("plugin.spring") version "2.1.0"
+  kotlin("plugin.jpa") version "2.1.0"
   id("io.gitlab.arturbosch.detekt").version("1.23.7")
-  kotlin("plugin.allopen").version("2.0.21")
+  kotlin("plugin.allopen").version("2.1.0")
 }
 
 configurations {
@@ -25,9 +25,9 @@ allOpen {
 dependencies {
   implementation("org.springframework.boot:spring-boot-starter-webflux")
   implementation("org.springframework.boot:spring-boot-starter-data-jpa")
-  implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:5.1.1")
+  implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:5.2.1")
 
-  implementation("org.springdoc:springdoc-openapi-starter-webflux-ui:2.6.0")
+  implementation("org.springdoc:springdoc-openapi-starter-webflux-ui:2.7.0")
 
   implementation("org.springframework.boot:spring-boot-starter-security")
   implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
@@ -36,12 +36,12 @@ dependencies {
   testImplementation("org.springframework.boot:spring-boot-starter-webflux")
   testImplementation("org.springframework.boot:spring-boot-starter-web")
 
-  implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0")
-  implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor:1.9.0")
-  implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:1.9.0")
+  implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.0")
+  implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor:1.10.0")
+  implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:1.10.0")
 
   // go to open telemetry, when upgrading to spring boot 3 these can be removed
-  implementation("io.opentelemetry:opentelemetry-api:1.44.1")
+  implementation("io.opentelemetry:opentelemetry-api:1.45.0")
   implementation("com.microsoft.azure:applicationinsights-core:3.6.2")
   agentDeps("com.microsoft.azure:applicationinsights-agent:3.6.2")
 
@@ -60,7 +60,7 @@ dependencies {
   testImplementation("io.mockk:mockk:1.13.13")
   testImplementation("com.ninja-squad:springmockk:4.0.2")
 
-  testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.9.0")
+  testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.10.0")
 }
 repositories {
   mavenCentral()
