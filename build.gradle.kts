@@ -25,9 +25,9 @@ allOpen {
 dependencies {
   implementation("org.springframework.boot:spring-boot-starter-webflux")
   implementation("org.springframework.boot:spring-boot-starter-data-jpa")
-  implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:5.2.2")
+  implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:5.3.1")
 
-  implementation("org.springdoc:springdoc-openapi-starter-webflux-ui:2.8.4")
+  implementation("org.springdoc:springdoc-openapi-starter-webflux-ui:2.8.5")
 
   implementation("org.springframework.boot:spring-boot-starter-security")
   implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
@@ -41,12 +41,12 @@ dependencies {
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:1.10.1")
 
   // go to open telemetry, when upgrading to spring boot 3 these can be removed
-  implementation("io.opentelemetry:opentelemetry-api:1.46.0")
-  implementation("com.microsoft.azure:applicationinsights-core:3.6.2")
-  agentDeps("com.microsoft.azure:applicationinsights-agent:3.6.2")
+  implementation("io.opentelemetry:opentelemetry-api:1.47.0")
+  implementation("com.microsoft.azure:applicationinsights-core:3.7.0")
+  agentDeps("com.microsoft.azure:applicationinsights-agent:3.7.0")
 
   implementation("uk.gov.service.notify:notifications-java-client:5.2.1-RELEASE")
-  implementation("io.hypersistence:hypersistence-utils-hibernate-63:3.9.0")
+  implementation("io.hypersistence:hypersistence-utils-hibernate-63:3.9.2")
 
   runtimeOnly("com.zaxxer:HikariCP")
   implementation("org.flywaydb:flyway-core")
