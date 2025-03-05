@@ -9,6 +9,9 @@ import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.entity.EventManagerAuditEn
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.entity.EventManagerEntity
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.EventManagerAuditRepository
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.EventManagerRepository
+import java.time.ZonedDateTime
+
+private const val TOLERANCE_MINUTES = 5L
 
 @Service
 class JpaBasedSaveEventManagerService(
@@ -22,8 +25,19 @@ class JpaBasedSaveEventManagerService(
    * inactive and save the new event manager.
    */
   override fun saveEventManager(teamCode: String, deliusStaff: StaffMember, allocateCase: AllocateCase, loggedInUser: String, spoStaffCode: String, spoName: String): SaveResult<EventManagerEntity> = eventManagerRepository.findFirstByCrnAndEventNumberOrderByCreatedDateDesc(allocateCase.crn, allocateCase.eventNumber)?.let { eventManager ->
+    var lastEventCreatedDate = eventManager.createdDate
+
     if (eventManager.staffCode == deliusStaff.code && eventManager.teamCode == teamCode) {
-      return SaveResult(eventManager, false)
+      // reset createdDate if enough time has elapsed and therefore valid reallocation
+      eventManager.createdDate?.let {
+        if (it.isBefore(ZonedDateTime.now().minusMinutes(TOLERANCE_MINUTES))) {
+          eventManager.createdDate = ZonedDateTime.now()
+        }
+      }
+
+      if (eventManager.createdDate == lastEventCreatedDate) {
+        return SaveResult(eventManager, false)
+      }
     }
     eventManager.isActive = false
     eventManagerRepository.save(eventManager)

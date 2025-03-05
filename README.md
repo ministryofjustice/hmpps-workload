@@ -22,7 +22,8 @@ Then execute the command
 
 These tests are defaults from the template, and the app only serves to run the flyway scripts. This allows you to test that the scripts work locally against postgresql in docker
 ```shell
-docker-compose up -d
+
+
 ./gradlew clean check
 ```
 
