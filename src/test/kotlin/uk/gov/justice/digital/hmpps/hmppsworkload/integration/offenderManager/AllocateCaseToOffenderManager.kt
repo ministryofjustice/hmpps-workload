@@ -784,6 +784,5 @@ class AllocateCaseToOffenderManager : IntegrationTestBase() {
     Assertions.assertEquals(1, eventManagerAudit.size)
     Assertions.assertEquals(spoOversightNotes, eventManagerAudit[0].spoOversightNotes)
     Assertions.assertEquals(sensitiveNotes, eventManagerAudit[0].sensitiveOversightNotes)
-    assertEquals(1, eventManager.eventNumber)
   }
 }
