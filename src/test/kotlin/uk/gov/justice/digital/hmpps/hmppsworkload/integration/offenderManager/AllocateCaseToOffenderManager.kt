@@ -656,6 +656,114 @@ class AllocateCaseToOffenderManager : IntegrationTestBase() {
   }
 
   @Test
+  fun `can allocate an already managed CRN to same staff member and changes createdDate when not too recent`() {
+    val nowTimeCheck = ZonedDateTime.now()
+    val createdDateToTest = ZonedDateTime.now().minusMinutes(20)
+
+    val storedPersonManager = PersonManagerEntity(crn = crn, staffCode = staffCode, teamCode = teamCode, createdBy = "USER1", isActive = true)
+    personManagerRepository.save(storedPersonManager)
+    val storedEventManager = EventManagerEntity(
+      crn = crn,
+      staffCode = staffCode,
+      teamCode = teamCode,
+      createdBy = "USER1",
+      isActive = true,
+      eventNumber = eventNumber,
+      spoStaffCode = "SP2",
+      spoName = "Fred flintstone",
+    )
+
+    // update event created date
+    val saveEventManager = eventManagerRepository.save(storedEventManager)
+    saveEventManager.createdDate = createdDateToTest
+
+    eventManagerRepository.save(saveEventManager)
+
+    val storedRequirementManager = RequirementManagerEntity(
+      crn = crn,
+      requirementId = requirementId,
+      staffCode = staffCode,
+      teamCode = teamCode,
+      createdBy = "USER1",
+      isActive = true,
+      eventNumber = eventNumber,
+    )
+    requirementManagerRepository.save(storedRequirementManager)
+
+    val response = webTestClient.post()
+      .uri("/team/$teamCode/offenderManager/$staffCode/case")
+      .bodyValue(allocateCase(crn, eventNumber))
+      .headers {
+        it.authToken(roles = listOf("ROLE_MANAGE_A_WORKFORCE_ALLOCATE"))
+        it.contentType = MediaType.APPLICATION_JSON
+      }
+      .exchange()
+      .expectStatus()
+      .isOk
+      .expectBody(CaseAllocated::class.java)
+      .returnResult()
+      .responseBody
+
+    val eventManager = eventManagerRepository.findByUuid(response.eventManagerId)
+
+    assertTrue(eventManager!!.createdDate!!.isAfter(createdDateToTest))
+    assertTrue(eventManager!!.createdDate!!.isAfter(nowTimeCheck))
+  }
+
+  @Test
+  fun `Does not allocate an already managed CRN to same staff member if allocated  too recently`() {
+    val createdDateToTest = ZonedDateTime.now().minusMinutes(2)
+    val storedPersonManager = PersonManagerEntity(crn = crn, staffCode = staffCode, teamCode = teamCode, createdBy = "USER1", isActive = true)
+    personManagerRepository.save(storedPersonManager)
+    val storedEventManager = EventManagerEntity(
+      crn = crn,
+      staffCode = staffCode,
+      teamCode = teamCode,
+      createdBy = "USER1",
+      isActive = true,
+      eventNumber = eventNumber,
+      spoStaffCode = "SP2",
+      spoName = "Fred flintstone",
+    )
+    eventManagerRepository.save(storedEventManager)
+    // update event created date
+    val saveEventManager = eventManagerRepository.save(storedEventManager)
+    saveEventManager.createdDate = createdDateToTest
+    eventManagerRepository.save(saveEventManager)
+
+    val storedRequirementManager = RequirementManagerEntity(
+      crn = crn,
+      requirementId = requirementId,
+      staffCode = staffCode,
+      teamCode = teamCode,
+      createdBy = "USER1",
+      isActive = true,
+      eventNumber = eventNumber,
+    )
+    requirementManagerRepository.save(storedRequirementManager)
+
+    val response = webTestClient.post()
+      .uri("/team/$teamCode/offenderManager/$staffCode/case")
+      .bodyValue(allocateCase(crn, eventNumber))
+      .headers {
+        it.authToken(roles = listOf("ROLE_MANAGE_A_WORKFORCE_ALLOCATE"))
+        it.contentType = MediaType.APPLICATION_JSON
+      }
+      .exchange()
+      .expectStatus()
+      .isOk
+      .expectBody(CaseAllocated::class.java)
+      .returnResult()
+      .responseBody
+
+    val eventManager = eventManagerRepository.findByUuid(response.eventManagerId)
+    assertEquals(createdDateToTest.hour, eventManager!!.createdDate!!.hour)
+    assertEquals(createdDateToTest.minute, eventManager!!.createdDate!!.minute)
+    assertEquals(createdDateToTest.second, eventManager!!.createdDate!!.second)
+    assertEquals(createdDateToTest.dayOfMonth, eventManager!!.createdDate!!.dayOfMonth)
+  }
+
+  @Test
   fun `must audit event manager allocation when oversight supplied`() {
     val spoOversightNotes = "my spo notes"
     val sensitiveNotes = false
