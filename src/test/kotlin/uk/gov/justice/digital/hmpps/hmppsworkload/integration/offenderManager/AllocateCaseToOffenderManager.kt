@@ -654,30 +654,37 @@ class AllocateCaseToOffenderManager : IntegrationTestBase() {
     Assertions.assertEquals(allocationJustificationNotes, eventManagerAudit[0].allocationJustificationNotes)
     Assertions.assertEquals(sensitiveNotes, eventManagerAudit[0].sensitiveNotes)
   }
+
   @Test
-  fun `can allocate an already managed CRN to same staff member and changes createdDate`() {
-    val createdDate = ZonedDateTime.now().minusDays(2)
-    val storedPersonManager = PersonManagerEntity(crn = crn, staffCode = staffCode, teamCode = teamCode, createdBy = "USER1", createdDate = createdDate, isActive = true)
+  fun `can allocate an already managed CRN to same staff member and changes createdDate when not too recent`() {
+    val nowTimeCheck = ZonedDateTime.now()
+    val createdDateToTest = ZonedDateTime.now().minusMinutes(20)
+
+    val storedPersonManager = PersonManagerEntity(crn = crn, staffCode = staffCode, teamCode = teamCode, createdBy = "USER1", isActive = true)
     personManagerRepository.save(storedPersonManager)
     val storedEventManager = EventManagerEntity(
       crn = crn,
       staffCode = staffCode,
       teamCode = teamCode,
       createdBy = "USER1",
-      createdDate = createdDate,
       isActive = true,
       eventNumber = eventNumber,
       spoStaffCode = "SP2",
       spoName = "Fred flintstone",
     )
-    eventManagerRepository.save(storedEventManager)
+
+    // update event created date
+    val saveEventManager = eventManagerRepository.save(storedEventManager)
+    saveEventManager.createdDate = createdDateToTest
+
+    eventManagerRepository.save(saveEventManager)
+
     val storedRequirementManager = RequirementManagerEntity(
       crn = crn,
       requirementId = requirementId,
       staffCode = staffCode,
       teamCode = teamCode,
       createdBy = "USER1",
-      createdDate = createdDate,
       isActive = true,
       eventNumber = eventNumber,
     )
@@ -698,35 +705,38 @@ class AllocateCaseToOffenderManager : IntegrationTestBase() {
       .responseBody
 
     val eventManager = eventManagerRepository.findByUuid(response.eventManagerId)
-    assertEquals(eventManager!!.createdDate, createdDate)
 
-    assertTrue(eventManager!!.createdDate!!.isAfter(createdDate))
+    assertTrue(eventManager!!.createdDate!!.isAfter(createdDateToTest))
+    assertTrue(eventManager!!.createdDate!!.isAfter(nowTimeCheck))
   }
 
   @Test
-  fun `can allocate an already managed CRN to same staff member but does not update created date if too soon`() {
-    val createdDate = ZonedDateTime.now().minusMinutes(2)
-    val storedPersonManager = PersonManagerEntity(crn = crn, staffCode = staffCode, teamCode = teamCode, createdBy = "USER1", createdDate = createdDate, isActive = true)
+  fun `Does not allocate an already managed CRN to same staff member if allocated  too recently`() {
+    val createdDateToTest = ZonedDateTime.now().minusMinutes(2)
+    val storedPersonManager = PersonManagerEntity(crn = crn, staffCode = staffCode, teamCode = teamCode, createdBy = "USER1", isActive = true)
     personManagerRepository.save(storedPersonManager)
     val storedEventManager = EventManagerEntity(
       crn = crn,
       staffCode = staffCode,
       teamCode = teamCode,
       createdBy = "USER1",
-      createdDate = createdDate,
       isActive = true,
       eventNumber = eventNumber,
       spoStaffCode = "SP2",
       spoName = "Fred flintstone",
     )
     eventManagerRepository.save(storedEventManager)
+    // update event created date
+    val saveEventManager = eventManagerRepository.save(storedEventManager)
+    saveEventManager.createdDate = createdDateToTest
+    eventManagerRepository.save(saveEventManager)
+
     val storedRequirementManager = RequirementManagerEntity(
       crn = crn,
       requirementId = requirementId,
       staffCode = staffCode,
       teamCode = teamCode,
       createdBy = "USER1",
-      createdDate = createdDate,
       isActive = true,
       eventNumber = eventNumber,
     )
@@ -747,7 +757,7 @@ class AllocateCaseToOffenderManager : IntegrationTestBase() {
       .responseBody
 
     val eventManager = eventManagerRepository.findByUuid(response.eventManagerId)
-    assertEquals(eventManager!!.createdDate, createdDate)
+    assertTrue(createdDateToTest.isEqual(eventManager!!.createdDate))
   }
 
   @Test
