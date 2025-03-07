@@ -15,10 +15,10 @@ data class LocalAdminUnit(
 data class ProbationDeliveryUnit(
   val code: String,
   val description: String,
-  val probationArea: ProbationArea,
+  val provider: Provider,
 )
 
-data class ProbationArea(
+data class Provider(
   val code: String,
   val description: String,
 )
