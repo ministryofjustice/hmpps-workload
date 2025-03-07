@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.hmppsworkload.client
 
 import com.fasterxml.jackson.core.type.TypeReference
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import org.slf4j.LoggerFactory
 import org.springframework.core.ParameterizedTypeReference
@@ -137,9 +138,20 @@ class WorkforceAllocationsToDeliusApiClient(private val webClient: WebClient) {
     .retrieve()
     .awaitBody()
 
-  suspend fun getDeliusAllowedTeamInfo(staffId: String): List<Team> = webClient
-    .get()
-    .uri("/staff/$staffId/teams", staffId)
-    .retrieve()
-    .awaitBody()
+  suspend fun getDeliusAllowedTeamInfo(staffId: String): List<Team> {
+    val responseString: String = webClient
+      .get()
+      .uri("/staff/$staffId/teams", staffId)
+      .awaitExchangeOrNull { response ->
+        when (response.statusCode()) {
+          HttpStatus.OK -> response.awaitBody()
+          HttpStatus.NOT_FOUND -> null
+          else -> throw response.createExceptionAndAwait()
+        }
+      } ?: return emptyList()
+
+    val objectMapper = ObjectMapper()
+    val teamsResponse = objectMapper.readValue(responseString, object : TypeReference<Map<String, List<Team>>>() {})
+    return teamsResponse["teams"] ?: emptyList()
+  }
 }
