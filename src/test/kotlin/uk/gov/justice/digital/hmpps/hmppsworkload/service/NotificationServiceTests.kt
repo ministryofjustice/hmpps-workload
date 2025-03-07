@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.AssessRisksNeedsApiClient
+import uk.gov.justice.digital.hmpps.hmppsworkload.client.WorkforceAllocationsToDeliusApiClient
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.Manager
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.Name
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.OffenceDetails
@@ -37,12 +38,14 @@ class NotificationServiceTests {
   private val assessRisksNeedsApiClient = mockk<AssessRisksNeedsApiClient>()
   private val templateId = "templateId"
   private val laoTemplateID = "laoTemplateId"
+  private val workforceAllocationsToDeliusApiClient = mockk<WorkforceAllocationsToDeliusApiClient>()
   private val notificationService = NotificationService(
     notificationClient,
     templateId,
     laoTemplateID,
     assessRisksNeedsApiClient,
     sqsSuccessPublisher,
+    workforceAllocationsToDeliusApiClient,
   )
   private val allocateCase = AllocateCase("CRN1111", sendEmailCopyToAllocatingOfficer = false, eventNumber = 1, allocationJustificationNotes = "Some Notes", sensitiveNotes = false, spoOversightNotes = "spo notes", sensitiveOversightNotes = null, laoCase = false)
   private val parameters = mapOf(
@@ -72,6 +75,7 @@ class NotificationServiceTests {
     coEvery { assessRisksNeedsApiClient.getRiskSummary(any()) } returns null
     coEvery { assessRisksNeedsApiClient.getRiskPredictors(any()) } returns emptyList()
     coEvery { sqsSuccessPublisher.sendNotification(any()) } returns Unit
+    coEvery { workforceAllocationsToDeliusApiClient.getDeliusAllowedTeamInfo(any()) } returns emptyList()
   }
 
   @Test
