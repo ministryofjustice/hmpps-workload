@@ -15,7 +15,7 @@ data class EventManagerDetails @JsonCreator constructor(
   @Schema(description = "Team Code")
   val teamCode: String,
   @Schema(description = "Created date")
-  val createdDate: ZonedDateTime,
+  var createdDate: ZonedDateTime,
   @Schema(description = "event Number")
   val eventNumber: Int?,
   @Schema(description = "SPO Oversight Notes")
