@@ -94,7 +94,7 @@ class NotificationService(
     "allocatingOfficerGrade" to loggedInUser.getGrade(),
   )
 
-  private suspend fun logProbationEstateDetails(loggedInUser: String, crn: String, allocatedUser: String ) {
+  private suspend fun logProbationEstateDetails(loggedInUser: String, crn: String, allocatedUser: String) {
     val loggedInTeams = workforceAllocationsToDeliusApiClient.getDeliusAllowedTeamInfo(loggedInUser).map { it.code }
     val allocatedTeams = workforceAllocationsToDeliusApiClient.getDeliusAllowedTeamInfo(allocatedUser).map { it.code }
     MDC.put(CRN, crn)

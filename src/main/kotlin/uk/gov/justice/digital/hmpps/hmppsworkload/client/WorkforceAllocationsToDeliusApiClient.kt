@@ -139,7 +139,7 @@ class WorkforceAllocationsToDeliusApiClient(private val webClient: WebClient) {
 
   suspend fun getDeliusAllowedTeamInfo(staffId: String): List<Team> = webClient
     .get()
-    .uri("/staff/${staffId}/teams", staffId)
+    .uri("/staff/$staffId/teams", staffId)
     .retrieve()
     .awaitBody()
 }
