@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.AssessRisksNeedsApiClient
+import uk.gov.justice.digital.hmpps.hmppsworkload.client.WorkforceAllocationsToDeliusApiClient
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.AllocationDemandDetails
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.InitialAppointment
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.OffenceDetails
@@ -39,6 +40,7 @@ class NotificationService(
   @Value("\${application.notify.allocation.laoTemplate}") private val allocationTemplateLAOId: String,
   @Qualifier("assessRisksNeedsClientUserEnhanced") private val assessRisksNeedsApiClient: AssessRisksNeedsApiClient,
   private val sqsSuccessPublisher: SqsSuccessPublisher,
+  private val workforceAllocationsToDeliusApiClient: WorkforceAllocationsToDeliusApiClient,
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
 
@@ -65,6 +67,7 @@ class NotificationService(
         .plus(getPersonOnProbationParameters(allocationDemandDetails.name.getCombinedName(), allocateCase))
         .plus(getLoggedInUserParameters(allocationDemandDetails.allocatingStaff))
     }
+    logProbationEstateDetails(allocationDemandDetails.allocatingStaff.code, allocationDemandDetails.crn, allocationDemandDetails.staff.code)
     val emailTo = HashSet(allocateCase.emailTo ?: emptySet())
     emailTo.add(allocationDemandDetails.staff.email!!)
     if (allocateCase.sendEmailCopyToAllocatingOfficer) emailTo.add(allocationDemandDetails.allocatingStaff.email)
@@ -90,6 +93,16 @@ class NotificationService(
     "allocatingOfficerName" to loggedInUser.name.getCombinedName(),
     "allocatingOfficerGrade" to loggedInUser.getGrade(),
   )
+
+  private suspend fun logProbationEstateDetails(loggedInUser: String, crn: String, allocatedUser: String ) {
+    val loggedInTeams = workforceAllocationsToDeliusApiClient.getDeliusAllowedTeamInfo(loggedInUser).map { it.code }
+    val allocatedTeams = workforceAllocationsToDeliusApiClient.getDeliusAllowedTeamInfo(allocatedUser).map { it.code }
+    MDC.put(CRN, crn)
+    MDC.put("ProbationEstateDetails", "Allocating PE Data")
+    log.info("Allocating PE Data for crn: $crn, loggedInUser: $loggedInUser, allocatedUser: $allocatedUser, loggedInTeams: $loggedInTeams, allocatedTeams: $allocatedTeams")
+    MDC.remove(CRN)
+    MDC.remove("ProbationEstateDetails")
+  }
 
   private fun getPersonOnProbationParameters(name: String, allocateCase: AllocateCase): Map<String, Any> = mapOf(
     "case_name" to name,

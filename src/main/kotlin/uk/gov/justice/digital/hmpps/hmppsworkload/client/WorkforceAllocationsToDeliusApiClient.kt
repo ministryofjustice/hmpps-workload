@@ -25,6 +25,7 @@ import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.PersonSummary
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.ProbationStatus
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.StaffActiveCases
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.StaffMember
+import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.Team
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.CaseType
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.entity.EventManagerEntity
 
@@ -133,6 +134,12 @@ class WorkforceAllocationsToDeliusApiClient(private val webClient: WebClient) {
     .uri("/allocation/details")
     .contentType(MediaType.APPLICATION_JSON)
     .bodyValue(AllocationDetailsRequest.from(eventManagers))
+    .retrieve()
+    .awaitBody()
+
+  suspend fun getDeliusAllowedTeamInfo(staffId: String): List<Team> = webClient
+    .get()
+    .uri("/staff/${staffId}/teams", staffId)
     .retrieve()
     .awaitBody()
 }
