@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.RequirementManagerDetails
 import uk.gov.justice.digital.hmpps.hmppsworkload.service.staff.GetRequirementManager
+import java.time.ZonedDateTime
 import java.util.UUID
 
 @RestController
@@ -27,7 +28,13 @@ class RequirementManagerController(private val getRequirementManager: GetRequire
   )
   @PreAuthorize("hasRole('ROLE_WORKLOAD_MEASUREMENT') or hasRole('ROLE_WORKLOAD_READ')")
   @GetMapping("\${requirement.manager.getByIdPath}")
-  suspend fun getRequirementManagerById(@PathVariable(required = true) id: UUID): RequirementManagerDetails = getRequirementManager.findById(id)?.let { requirementManagerEntity -> RequirementManagerDetails.from(requirementManagerEntity) } ?: run {
-    throw EntityNotFoundException("Event Manager not found for id $id")
+  suspend fun getRequirementManagerById(@PathVariable(required = true) id: UUID): RequirementManagerDetails {
+    var requirementManager = getRequirementManager.findById(id)?.let { requirementManagerEntity -> RequirementManagerDetails.from(requirementManagerEntity) } ?: run {
+      throw EntityNotFoundException("Event Manager not found for id $id")
+    }
+    if (requirementManager.createdDate.isBefore(ZonedDateTime.now().minusMinutes(5))) {
+      requirementManager.createdDate = ZonedDateTime.now()
+    }
+    return requirementManager
   }
 }
