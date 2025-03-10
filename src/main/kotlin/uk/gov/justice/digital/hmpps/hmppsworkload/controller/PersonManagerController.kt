@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.PersonManagerDetails
 import uk.gov.justice.digital.hmpps.hmppsworkload.service.staff.GetPersonManager
+import java.time.ZonedDateTime
 import java.util.UUID
 
 @RestController
@@ -27,5 +28,11 @@ class PersonManagerController(private val getPersonManager: GetPersonManager) {
   )
   @PreAuthorize("hasRole('ROLE_WORKLOAD_MEASUREMENT') or hasRole('ROLE_WORKLOAD_READ')")
   @GetMapping("\${person.manager.getByIdPath}")
-  suspend fun getPersonManagerById(@PathVariable(required = true) id: UUID): PersonManagerDetails = getPersonManager.findById(id) ?: throw EntityNotFoundException("Person Manager not found for id $id")
+  suspend fun getPersonManagerById(@PathVariable(required = true) id: UUID): PersonManagerDetails {
+    var personManager = getPersonManager.findById(id) ?: throw EntityNotFoundException("Person Manager not found for id $id")
+    if (personManager.createdDate.isBefore(ZonedDateTime.now().minusMinutes(5))) {
+      personManager.createdDate = ZonedDateTime.now()
+    }
+    return personManager
+  }
 }

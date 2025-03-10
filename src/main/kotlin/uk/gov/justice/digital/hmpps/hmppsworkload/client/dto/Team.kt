@@ -24,4 +24,4 @@ data class ProbationDeliveryUnit @JsonCreator constructor(
 data class Provider @JsonCreator constructor(
   @JsonProperty("code") val code: String,
   @JsonProperty("description") val description: String
-)
+  

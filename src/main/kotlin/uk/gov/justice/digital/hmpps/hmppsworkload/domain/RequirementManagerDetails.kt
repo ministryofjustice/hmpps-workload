@@ -15,7 +15,7 @@ data class RequirementManagerDetails @JsonCreator constructor(
   @Schema(description = "Team Code")
   val teamCode: String,
   @Schema(description = "Created date")
-  val createdDate: ZonedDateTime,
+  var createdDate: ZonedDateTime,
   @Schema(description = "requirement ID")
   val requirementId: BigInteger,
   @Schema(description = "event number")

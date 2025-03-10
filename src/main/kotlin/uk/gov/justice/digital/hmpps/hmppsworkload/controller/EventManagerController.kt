@@ -36,7 +36,13 @@ class EventManagerController(private val getEventManager: JpaBasedGetEventManage
   )
   @PreAuthorize("hasRole('ROLE_WORKLOAD_MEASUREMENT') or hasRole('ROLE_WORKLOAD_READ')")
   @GetMapping("\${event.manager.getByIdPath}")
-  suspend fun getEventManagerById(@PathVariable(required = true) id: UUID): EventManagerDetails = getEventManager.findById(id) ?: throw EntityNotFoundException("Event Manager not found for id $id")
+  suspend fun getEventManagerById(@PathVariable(required = true) id: UUID): EventManagerDetails {
+    var eventManager = getEventManager.findById(id) ?: throw EntityNotFoundException("Event Manager not found for id $id")
+    if (eventManager.createdDate.isBefore(ZonedDateTime.now().minusMinutes(5))) {
+      eventManager.createdDate = ZonedDateTime.now()
+    }
+    return eventManager
+  }
 
   @Operation(summary = "Get case details of Event Manager by crn and event number")
   @ApiResponses(
