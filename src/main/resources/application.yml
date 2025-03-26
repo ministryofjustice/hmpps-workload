@@ -109,3 +109,7 @@ management:
 
 oauth:
   endpoint.url: http://localhost:8090/auth
+
+springdoc:
+  swagger-ui:
+    version: 5.20.0
