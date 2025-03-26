@@ -1,9 +1,10 @@
 plugins {
   id("uk.gov.justice.hmpps.gradle-spring-boot") version "8.0.0"
-  kotlin("plugin.spring") version "2.1.10"
-  kotlin("plugin.jpa") version "2.1.10"
-  id("io.gitlab.arturbosch.detekt").version("1.23.7")
-  kotlin("plugin.allopen").version("2.1.10")
+  kotlin("plugin.spring") version "2.1.20"
+  kotlin("plugin.jpa") version "2.1.20"
+  kotlin("jvm") version "2.0.21"
+  id("io.gitlab.arturbosch.detekt").version("1.23.8")
+  kotlin("plugin.allopen").version("2.1.20")
 }
 
 configurations {
@@ -23,11 +24,12 @@ allOpen {
 }
 
 dependencies {
+  implementation(kotlin("stdlib"))
   implementation("org.springframework.boot:spring-boot-starter-webflux")
   implementation("org.springframework.boot:spring-boot-starter-data-jpa")
-  implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:5.2.2")
+  implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:5.4.2")
 
-  implementation("org.springdoc:springdoc-openapi-starter-webflux-ui:2.8.5")
+  implementation("org.springdoc:springdoc-openapi-starter-webflux-ui:2.8.6")
 
   implementation("org.springframework.boot:spring-boot-starter-security")
   implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
@@ -41,12 +43,12 @@ dependencies {
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:1.10.1")
 
   // go to open telemetry, when upgrading to spring boot 3 these can be removed
-  implementation("io.opentelemetry:opentelemetry-api:1.46.0")
-  implementation("com.microsoft.azure:applicationinsights-core:3.6.2")
-  agentDeps("com.microsoft.azure:applicationinsights-agent:3.6.2")
+  implementation("io.opentelemetry:opentelemetry-api:1.48.0")
+  implementation("com.microsoft.azure:applicationinsights-core:3.7.1")
+  agentDeps("com.microsoft.azure:applicationinsights-agent:3.7.1")
 
   implementation("uk.gov.service.notify:notifications-java-client:5.2.1-RELEASE")
-  implementation("io.hypersistence:hypersistence-utils-hibernate-63:3.9.0")
+  implementation("io.hypersistence:hypersistence-utils-hibernate-63:3.9.5")
 
   runtimeOnly("com.zaxxer:HikariCP")
   implementation("org.flywaydb:flyway-core")
@@ -56,8 +58,8 @@ dependencies {
   testImplementation("io.jsonwebtoken:jjwt-impl:0.12.6")
   testImplementation("io.jsonwebtoken:jjwt-jackson:0.12.6")
   testImplementation("org.mock-server:mockserver-netty:5.15.0")
-  testImplementation("org.awaitility:awaitility-kotlin:4.2.2")
-  testImplementation("io.mockk:mockk:1.13.16")
+  testImplementation("org.awaitility:awaitility-kotlin:4.3.0")
+  testImplementation("io.mockk:mockk:1.13.17")
   testImplementation("com.ninja-squad:springmockk:4.0.2")
 
   testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.10.1")
@@ -95,6 +97,7 @@ tasks.named<JavaExec>("bootRun") {
 }
 
 detekt {
+  toolVersion = "1.23.8"
   config.setFrom("src/test/resources/detekt-config.yml")
   buildUponDefaultConfig = true
 }
@@ -102,7 +105,7 @@ detekt {
 configurations.matching { it.name == "detekt" }.all {
   resolutionStrategy.eachDependency {
     if (requested.group == "org.jetbrains.kotlin") {
-      useVersion("2.0.10")
+      useVersion("2.0.21")
     }
   }
 }
