@@ -2,7 +2,7 @@ plugins {
   id("uk.gov.justice.hmpps.gradle-spring-boot") version "8.0.0"
   kotlin("plugin.spring") version "2.1.20"
   kotlin("plugin.jpa") version "2.1.20"
-  kotlin("jvm") version "2.0.21"
+  kotlin("jvm") version "2.1.20"
   id("io.gitlab.arturbosch.detekt").version("1.23.8")
   kotlin("plugin.allopen").version("2.1.20")
 }
@@ -43,12 +43,12 @@ dependencies {
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:1.10.1")
 
   // go to open telemetry, when upgrading to spring boot 3 these can be removed
-  implementation("io.opentelemetry:opentelemetry-api:1.48.0")
+  implementation("io.opentelemetry:opentelemetry-api:1.49.0")
   implementation("com.microsoft.azure:applicationinsights-core:3.7.1")
   agentDeps("com.microsoft.azure:applicationinsights-agent:3.7.1")
 
   implementation("uk.gov.service.notify:notifications-java-client:5.2.1-RELEASE")
-  implementation("io.hypersistence:hypersistence-utils-hibernate-63:3.9.5")
+  implementation("io.hypersistence:hypersistence-utils-hibernate-63:3.9.9")
 
   runtimeOnly("com.zaxxer:HikariCP")
   implementation("org.flywaydb:flyway-core")
