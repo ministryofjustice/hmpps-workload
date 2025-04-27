@@ -1,5 +1,5 @@
 plugins {
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "8.0.0"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "8.1.0"
   kotlin("plugin.spring") version "2.1.20"
   kotlin("plugin.jpa") version "2.1.20"
   kotlin("jvm") version "2.1.20"
@@ -48,7 +48,7 @@ dependencies {
   agentDeps("com.microsoft.azure:applicationinsights-agent:3.7.2")
 
   implementation("uk.gov.service.notify:notifications-java-client:5.2.1-RELEASE")
-  implementation("io.hypersistence:hypersistence-utils-hibernate-63:3.9.9")
+  implementation("io.hypersistence:hypersistence-utils-hibernate-63:3.9.10")
 
   runtimeOnly("com.zaxxer:HikariCP")
   implementation("org.flywaydb:flyway-core")
