@@ -25,7 +25,7 @@ class AssessRisksNeedsApiClientTest {
     }
     val webClient = WebClient.builder().exchangeFunction(exchangeFunction).build()
     val result = AssessRisksNeedsApiClient(webClient).getRiskSummary("X123456")
-    assert(result?.overallRiskLevel == "HIGH")
+    assertTrue(result?.overallRiskLevel == "HIGH")
   }
 
   @Test
@@ -80,9 +80,9 @@ class AssessRisksNeedsApiClientTest {
     }
     val webClient = WebClient.builder().exchangeFunction(exchangeFunction).build()
     val result = AssessRisksNeedsApiClient(webClient).getRiskPredictors("X123456")
-    assert(result.size == 2)
-    assert(result.first().rsrPercentageScore == BigDecimal.valueOf(0.85))
-    assert(result.first().completedDate == LocalDateTime.parse("2025-04-30T15:20:00"))
+    assertTrue(result.size == 2)
+    assertTrue(result.first().rsrPercentageScore == BigDecimal.valueOf(0.85))
+    assertTrue(result.first().completedDate == LocalDateTime.parse("2025-04-30T15:20:00"))
   }
 
   @Test
