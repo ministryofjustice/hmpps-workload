@@ -10,6 +10,7 @@ import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import uk.gov.justice.digital.hmpps.hmppsworkload.service.NotificationEmail
 import uk.gov.justice.digital.hmpps.hmppsworkload.service.NotificationService
 import uk.gov.service.notify.NotificationClient
@@ -94,12 +95,8 @@ class NotificationListenerTest {
     var notificationMessage = NotificationEmail(setOf("example@example.com"), templateId, referenceId, emailParameters)
     coEvery { objectMapper.readValue(rawMessage, NotificationEmail::class.java) } returns notificationMessage
     coEvery { notificationClient.sendEmail(templateId, "example@example.com", emailParameters, referenceId) } throws NotificationClientException("Failed to send email")
-    try {
-      notificationListener.processMessage(rawMessage, "002")
-    } catch (e: NotificationService.NotificationInvalidSenderException) {
-      assertTrue(true)
-      return@runBlocking
-    }
-    assertTrue(false)
+    val exception = assertThrows<NotificationService.NotificationInvalidSenderException> { notificationListener.processMessage(rawMessage, "002") }
+
+    assertTrue(exception.message.equals("Unable to deliver to recipient example@example.com"))
   }
 }
