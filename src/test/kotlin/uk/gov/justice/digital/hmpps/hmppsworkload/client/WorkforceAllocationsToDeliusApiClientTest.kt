@@ -1,8 +1,12 @@
 package uk.gov.justice.digital.hmpps.hmppsworkload.client
 
 import kotlinx.coroutines.runBlocking
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Assertions.assertNull
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.fail
 import org.springframework.http.HttpStatus
 import org.springframework.web.reactive.function.client.ClientRequest
 import org.springframework.web.reactive.function.client.ClientResponse
@@ -20,13 +24,13 @@ import java.util.UUID
 class WorkforceAllocationsToDeliusApiClientTest {
 
   @Test
-  fun `test choose practitioners`() = runBlocking {
+  fun `test choose practitioners`() = runBlocking<Unit> {
     val exchangeFunction = ExchangeFunction {
       Mono.just(
         ClientResponse.create(HttpStatus.OK)
           .header("Content-Type", "application/json")
           .body(ClientResponses.deliusResponseChoosePractitioners())
-          .build()
+          .build(),
       )
     }
     val webClient = WebClient.builder()
@@ -42,10 +46,10 @@ class WorkforceAllocationsToDeliusApiClientTest {
   }
 
   @Test
-  fun `test choose practitioners not found`() = runBlocking {
+  fun `test choose practitioners not found`() = runBlocking<Unit> {
     val exchangeFunction = ExchangeFunction {
       Mono.just(
-        ClientResponse.create(HttpStatus.NOT_FOUND).build()
+        ClientResponse.create(HttpStatus.NOT_FOUND).build(),
       )
     }
     val webClient = WebClient.builder()
@@ -62,7 +66,7 @@ class WorkforceAllocationsToDeliusApiClientTest {
   fun `test choose practitioners error`() = runBlocking<Unit> {
     val exchangeFunction = ExchangeFunction {
       Mono.just(
-        ClientResponse.create(HttpStatus.INTERNAL_SERVER_ERROR).build()
+        ClientResponse.create(HttpStatus.INTERNAL_SERVER_ERROR).build(),
       )
     }
     val webClient = WebClient.builder()
@@ -86,7 +90,7 @@ class WorkforceAllocationsToDeliusApiClientTest {
         ClientResponse.create(HttpStatus.OK)
           .header("Content-Type", "application/json")
           .body(ClientResponses.deliusResponseChoosePractitionersNoCRN())
-          .build()
+          .build(),
       )
     }
     val webClient = WebClient.builder()
@@ -105,7 +109,7 @@ class WorkforceAllocationsToDeliusApiClientTest {
   fun `test choose practitioners no crn not found`() = runBlocking {
     val exchangeFunction = ExchangeFunction {
       Mono.just(
-        ClientResponse.create(HttpStatus.NOT_FOUND).build()
+        ClientResponse.create(HttpStatus.NOT_FOUND).build(),
       )
     }
     val webClient = WebClient.builder()
@@ -122,7 +126,7 @@ class WorkforceAllocationsToDeliusApiClientTest {
   fun `test choose practitioners no crn error`() = runBlocking<Unit> {
     val exchangeFunction = ExchangeFunction {
       Mono.just(
-        ClientResponse.create(HttpStatus.INTERNAL_SERVER_ERROR).build()
+        ClientResponse.create(HttpStatus.INTERNAL_SERVER_ERROR).build(),
       )
     }
     val webClient = WebClient.builder()
@@ -146,7 +150,7 @@ class WorkforceAllocationsToDeliusApiClientTest {
         ClientResponse.create(HttpStatus.OK)
           .header("Content-Type", "application/json")
           .body(ClientResponses.deliusResponseGetPersonByCRN())
-          .build()
+          .build(),
       )
     }
     val webClient = WebClient.builder()
@@ -165,7 +169,7 @@ class WorkforceAllocationsToDeliusApiClientTest {
   fun `test get person (by crn) not found`() = runBlocking {
     val exchangeFunction = ExchangeFunction {
       Mono.just(
-        ClientResponse.create(HttpStatus.NOT_FOUND).build()
+        ClientResponse.create(HttpStatus.NOT_FOUND).build(),
       )
     }
     val webClient = WebClient.builder()
@@ -184,7 +188,7 @@ class WorkforceAllocationsToDeliusApiClientTest {
   fun `test get person (by crn) error`() = runBlocking<Unit> {
     val exchangeFunction = ExchangeFunction {
       Mono.just(
-        ClientResponse.create(HttpStatus.INTERNAL_SERVER_ERROR).build()
+        ClientResponse.create(HttpStatus.INTERNAL_SERVER_ERROR).build(),
       )
     }
     val webClient = WebClient.builder()
@@ -208,7 +212,7 @@ class WorkforceAllocationsToDeliusApiClientTest {
         ClientResponse.create(HttpStatus.OK)
           .header("Content-Type", "application/json")
           .body(ClientResponses.deliusResponseGetOfficerView())
-          .build()
+          .build(),
       )
     }
     val webClient = WebClient.builder()
@@ -231,7 +235,7 @@ class WorkforceAllocationsToDeliusApiClientTest {
         ClientResponse.create(HttpStatus.OK)
           .header("Content-Type", "application/json")
           .body(ClientResponses.deliusResponseGetImpact())
-          .build()
+          .build(),
       )
     }
     val webClient = WebClient.builder()
@@ -253,7 +257,7 @@ class WorkforceAllocationsToDeliusApiClientTest {
         ClientResponse.create(HttpStatus.OK)
           .header("Content-Type", "application/json")
           .body(ClientResponses.deliusResponseAllocationCompleteDetails())
-          .build()
+          .build(),
       )
     }
     val webClient = WebClient.builder()
@@ -276,7 +280,7 @@ class WorkforceAllocationsToDeliusApiClientTest {
         ClientResponse.create(HttpStatus.OK)
           .header("Content-Type", "application/json")
           .body(ClientResponses.deliusResponseStaffActiveCases())
-          .build()
+          .build(),
       )
     }
     val webClient = WebClient.builder()
@@ -299,7 +303,7 @@ class WorkforceAllocationsToDeliusApiClientTest {
         ClientResponse.create(HttpStatus.OK)
           .header("Content-Type", "application/json")
           .body(ClientResponses.deliusResponseAllocationDetails())
-          .build()
+          .build(),
       )
     }
     val webClient = WebClient.builder()
@@ -335,7 +339,7 @@ class WorkforceAllocationsToDeliusApiClientTest {
         ClientResponse.create(HttpStatus.OK)
           .header("Content-Type", "application/json")
           .body(ClientResponses.deliusResponsePostAllocationDetails())
-          .build()
+          .build(),
       )
     }
     val eventManagerEntity = EventManagerEntity(
@@ -349,7 +353,7 @@ class WorkforceAllocationsToDeliusApiClientTest {
       true,
       1,
       "SM00235",
-      "John Smith"
+      "John Smith",
     )
     val webClient = WebClient.builder()
       .exchangeFunction(exchangeFunction)
@@ -372,7 +376,7 @@ class WorkforceAllocationsToDeliusApiClientTest {
         ClientResponse.create(HttpStatus.OK)
           .header("Content-Type", "application/json")
           .body(ClientResponses.deliusResponseGetAllowedTeamInfo())
-          .build()
+          .build(),
       )
     }
     val webClient = WebClient.builder()
