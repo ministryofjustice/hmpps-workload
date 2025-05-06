@@ -20,7 +20,6 @@ class WorkloadPrisonerEventListenerTest {
   @MockK(relaxed = true)
   lateinit var saveCaseDetailsService: SaveCaseDetailsService
 
-
   @InjectMockKs
   lateinit var prisonerEventListener: WorkloadPrisonerEventListener
 
@@ -60,7 +59,7 @@ class WorkloadPrisonerEventListenerTest {
     """.trimIndent()
     every { objectMapper.readValue(rawMessage, SQSMessage::class.java) } returns SQSMessage(message, "002")
     every { objectMapper.readValue(message, WorkloadPrisonerEvent::class.java) } returns WorkloadPrisonerEvent(
-      PersonReference(listOf(PersonReferenceType("NOMS", "N123456")))
+      PersonReference(listOf(PersonReferenceType("NOMS", "N123456"))),
     )
 
     prisonerEventListener.processMessage(rawMessage)
@@ -69,5 +68,4 @@ class WorkloadPrisonerEventListenerTest {
 
     confirmVerified(saveCaseDetailsService)
   }
-
 }
