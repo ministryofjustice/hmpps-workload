@@ -38,7 +38,6 @@ class WorkloadCalculationEventListenerTest {
 
   @Test
   fun `test process workload calculation message`() = runBlocking {
-    // given
     val rawMessage = """
       {
         "messageID": "002",
