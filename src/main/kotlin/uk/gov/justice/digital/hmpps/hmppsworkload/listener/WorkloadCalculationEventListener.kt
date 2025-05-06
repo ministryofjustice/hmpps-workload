@@ -2,9 +2,7 @@ package uk.gov.justice.digital.hmpps.hmppsworkload.listener
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.awspring.cloud.sqs.annotation.SqsListener
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.future.future
+import kotlinx.coroutines.runBlocking
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Component
@@ -22,17 +20,19 @@ class WorkloadCalculationEventListener(
 ) {
 
   @SqsListener("workloadcalculationqueue", factory = "hmppsQueueContainerFactoryProxy")
-  fun processMessage(rawMessage: String) {
+  fun processMessage(rawMessage: String) = runBlocking {
     val workloadCalculationEvent = getWorkloadCalculationEvent(rawMessage)
-    val availableHours = workloadCalculationEvent.additionalInformation.availableHours
+    handleSave(workloadCalculationEvent)
+  }
+
+  suspend fun handleSave(event: WorkloadCalculationEvent) {
+    val availableHours = event.additionalInformation.availableHours
     val staffIdentifier = StaffIdentifier(
-      workloadCalculationEvent.personReference.identifiers.find { it.type == "staffCode" }!!.value,
-      workloadCalculationEvent.personReference.identifiers.find { it.type == "teamCode" }!!.value,
+      event.personReference.identifiers.find { it.type == "staffCode" }!!.value,
+      event.personReference.identifiers.find { it.type == "teamCode" }!!.value,
     )
-    CoroutineScope(Dispatchers.Default).future {
-      val staffGrade = workforceAllocationsToDeliusApiClient.getOfficerView(staffIdentifier.staffCode).getGrade()
-      workloadCalculationService.saveWorkloadCalculation(staffIdentifier, staffGrade, availableHours)
-    }.get()
+    val staffGrade = workforceAllocationsToDeliusApiClient.getOfficerView(staffIdentifier.staffCode).getGrade()
+    workloadCalculationService.saveWorkloadCalculation(staffIdentifier, staffGrade, availableHours)
   }
 
   private fun getWorkloadCalculationEvent(rawMessage: String): WorkloadCalculationEvent {

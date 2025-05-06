@@ -85,7 +85,7 @@ class GetOffenderManagerService(
     return OffenderManagerOverview.from(overview, officerView)
   }
 
-  fun findOffenderManagerOverview(staffIdentifier: StaffIdentifier, grade: String): OverviewOffenderManager = offenderManagerRepository.findByOverview(staffIdentifier.teamCode, staffIdentifier.staffCode)?.let {
+  private fun findOffenderManagerOverview(staffIdentifier: StaffIdentifier, grade: String): OverviewOffenderManager = offenderManagerRepository.findByOverview(staffIdentifier.teamCode, staffIdentifier.staffCode)?.let {
     it.capacity = calculateCapacity(it.totalPoints, it.availablePoints)
     it.hasWorkload = true
     it
