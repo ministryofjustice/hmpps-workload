@@ -29,7 +29,7 @@ dependencies {
   implementation("org.springframework.boot:spring-boot-starter-data-jpa")
   implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:5.4.4")
 
-  implementation("org.springdoc:springdoc-openapi-starter-webflux-ui:2.8.6")
+  implementation("org.springdoc:springdoc-openapi-starter-webflux-ui:2.8.8")
 
   implementation("org.springframework.boot:spring-boot-starter-security")
   implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
@@ -43,7 +43,7 @@ dependencies {
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:1.10.2")
 
   // go to open telemetry, when upgrading to spring boot 3 these can be removed
-  implementation("io.opentelemetry:opentelemetry-api:1.49.0")
+  implementation("io.opentelemetry:opentelemetry-api:1.50.0")
   implementation("com.microsoft.azure:applicationinsights-core:3.7.2")
   agentDeps("com.microsoft.azure:applicationinsights-agent:3.7.2")
 
