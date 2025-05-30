@@ -44,8 +44,8 @@ dependencies {
 
   // go to open telemetry, when upgrading to spring boot 3 these can be removed
   implementation("io.opentelemetry:opentelemetry-api:1.50.0")
-  implementation("com.microsoft.azure:applicationinsights-core:3.7.2")
-  agentDeps("com.microsoft.azure:applicationinsights-agent:3.7.2")
+  implementation("com.microsoft.azure:applicationinsights-core:3.7.3")
+  agentDeps("com.microsoft.azure:applicationinsights-agent:3.7.3")
 
   implementation("uk.gov.service.notify:notifications-java-client:5.2.1-RELEASE")
   implementation("io.hypersistence:hypersistence-utils-hibernate-63:3.9.10")
@@ -53,7 +53,7 @@ dependencies {
   runtimeOnly("com.zaxxer:HikariCP")
   implementation("org.flywaydb:flyway-core")
   implementation("org.flywaydb:flyway-database-postgresql")
-  runtimeOnly("org.postgresql:postgresql:42.7.5")
+  runtimeOnly("org.postgresql:postgresql:42.7.6")
 
   testImplementation("io.jsonwebtoken:jjwt-impl:0.12.6")
   testImplementation("io.jsonwebtoken:jjwt-jackson:0.12.6")
