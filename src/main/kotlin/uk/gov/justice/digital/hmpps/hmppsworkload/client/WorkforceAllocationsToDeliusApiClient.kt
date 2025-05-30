@@ -19,6 +19,7 @@ import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.AllocationDetailsRe
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.ChoosePractitionerResponse
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.CommunityPersonManager
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.CompleteDetails
+import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.DeliusTeams
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.ImpactResponse
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.Name
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.OfficerView
@@ -26,7 +27,6 @@ import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.PersonSummary
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.ProbationStatus
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.StaffActiveCases
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.StaffMember
-import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.Team
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.CaseType
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.entity.EventManagerEntity
 
@@ -138,7 +138,7 @@ class WorkforceAllocationsToDeliusApiClient(private val webClient: WebClient) {
     .retrieve()
     .awaitBody()
 
-  suspend fun getDeliusAllowedTeamInfo(staffId: String): List<Team> {
+  suspend fun getDeliusAllowedTeamInfo(staffId: String): DeliusTeams {
     val responseString: String = webClient
       .get()
       .uri("/staff/$staffId/teams", staffId)
@@ -148,10 +148,10 @@ class WorkforceAllocationsToDeliusApiClient(private val webClient: WebClient) {
           HttpStatus.NOT_FOUND -> null
           else -> throw response.createExceptionAndAwait()
         }
-      } ?: return emptyList()
+      } ?: return DeliusTeams(emptyList(), emptyList())
 
     val objectMapper = ObjectMapper()
-    val teamsResponse = objectMapper.readValue(responseString, object : TypeReference<Map<String, List<Team>>>() {})
-    return teamsResponse["teams"] ?: emptyList()
+    val teamsResponse = objectMapper.readValue(responseString, DeliusTeams::class.java)
+    return teamsResponse ?: DeliusTeams(emptyList(), emptyList())
   }
 }

@@ -10,6 +10,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.AssessRisksNeedsApiClient
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.WorkforceAllocationsToDeliusApiClient
+import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.DeliusTeams
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.Manager
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.Name
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.OffenceDetails
@@ -75,7 +76,7 @@ class NotificationServiceTests {
     coEvery { assessRisksNeedsApiClient.getRiskSummary(any()) } returns null
     coEvery { assessRisksNeedsApiClient.getRiskPredictors(any()) } returns emptyList()
     coEvery { sqsSuccessPublisher.sendNotification(any()) } returns Unit
-    coEvery { workforceAllocationsToDeliusApiClient.getDeliusAllowedTeamInfo(any()) } returns emptyList()
+    coEvery { workforceAllocationsToDeliusApiClient.getDeliusAllowedTeamInfo(any()) } returns DeliusTeams(emptyList(), emptyList())
   }
 
   @Test
