@@ -95,8 +95,8 @@ class NotificationService(
   )
 
   private suspend fun logProbationEstateDetails(loggedInUser: String, crn: String, allocatedUser: String) {
-    val loggedInTeams = workforceAllocationsToDeliusApiClient.getDeliusAllowedTeamInfo(loggedInUser).map { it.code }
-    val allocatedTeams = workforceAllocationsToDeliusApiClient.getDeliusAllowedTeamInfo(allocatedUser).map { it.code }
+    val loggedInTeams = workforceAllocationsToDeliusApiClient.getDeliusAllowedTeamInfo(loggedInUser).teams.map { it.code }
+    val allocatedTeams = workforceAllocationsToDeliusApiClient.getDeliusAllowedTeamInfo(allocatedUser).teams.map { it.code }
     MDC.put(CRN, crn)
     MDC.put("ProbationEstateDetails", "Allocating PE Data")
     log.info("Allocating PE Data for crn: $crn, loggedInUser: $loggedInUser, allocatedUser: $allocatedUser, loggedInTeams: $loggedInTeams, allocatedTeams: $allocatedTeams")

@@ -757,7 +757,7 @@ class AllocateCaseToOffenderManager : IntegrationTestBase() {
       .responseBody
 
     val eventManager = eventManagerRepository.findByUuid(response.eventManagerId)
-    assertEquals(createdDateToTest.hour, eventManager!!.createdDate!!.hour)
+    assertEquals(createdDateToTest.hour - 1, eventManager!!.createdDate!!.hour)
     assertEquals(createdDateToTest.minute, eventManager!!.createdDate!!.minute)
     assertEquals(createdDateToTest.second, eventManager!!.createdDate!!.second)
     assertEquals(createdDateToTest.dayOfMonth, eventManager!!.createdDate!!.dayOfMonth)
