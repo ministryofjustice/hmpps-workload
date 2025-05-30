@@ -6,6 +6,6 @@ data class DeliusTeams(
 )
 
 data class Dataset(
-  val code: String,
-  val description: String,
+  val code: String = String(),
+  val description: String = String(),
 )
