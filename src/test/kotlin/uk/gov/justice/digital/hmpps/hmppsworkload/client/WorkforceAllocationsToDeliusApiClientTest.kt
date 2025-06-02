@@ -386,14 +386,14 @@ class WorkforceAllocationsToDeliusApiClientTest {
     val result = WorkforceAllocationsToDeliusApiClient(webClient)
       .getDeliusAllowedTeamInfo("SM00234")
 
-    assertEquals(1, result.size)
-    assertEquals("TM1", result[0].code)
-    assertEquals("Team1", result[0].description)
-    assertEquals("LAU1", result[0].localAdminUnit.code)
-    assertEquals("Lau1", result[0].localAdminUnit.description)
-    assertEquals("PDU1", result[0].localAdminUnit.probationDeliveryUnit.code)
-    assertEquals("Pdu1", result[0].localAdminUnit.probationDeliveryUnit.description)
-    assertEquals("REG1", result[0].localAdminUnit.probationDeliveryUnit.provider.code)
-    assertEquals("Region1", result[0].localAdminUnit.probationDeliveryUnit.provider.description)
+    assertEquals(1, result.teams.size)
+    assertEquals("TM1", result.teams.get(0).code)
+    assertEquals("Team1", result.teams.get(0).description)
+    assertEquals("LAU1", result.teams.get(0).localAdminUnit.code)
+    assertEquals("Lau1", result.teams.get(0).localAdminUnit.description)
+    assertEquals("PDU1", result.teams.get(0).localAdminUnit.probationDeliveryUnit.code)
+    assertEquals("Pdu1", result.teams.get(0).localAdminUnit.probationDeliveryUnit.description)
+    assertEquals("REG1", result.teams.get(0).localAdminUnit.probationDeliveryUnit.provider.code)
+    assertEquals("Region1", result.teams.get(0).localAdminUnit.probationDeliveryUnit.provider.description)
   }
 }
