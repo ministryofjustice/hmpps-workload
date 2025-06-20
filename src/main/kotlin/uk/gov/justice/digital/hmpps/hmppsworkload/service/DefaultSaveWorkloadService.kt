@@ -31,11 +31,12 @@ class DefaultSaveWorkloadService(
   private val caseDetailsRepository: CaseDetailsRepository,
 ) {
 
+  @Suppress("TooGenericExceptionCaught")
   suspend fun saveWorkload(
     allocatedStaffId: StaffIdentifier,
     allocateCase: AllocateCase,
     loggedInUser: String,
-  ): CaseAllocated {
+  ): CaseAllocated? {
     val caseDetails: CaseDetailsEntity = caseDetailsRepository.findByIdOrNull(allocateCase.crn)!!
     val allocationData = workforceAllocationsToDeliusApiClient.allocationDetails(allocateCase.crn, allocateCase.eventNumber, allocatedStaffId.staffCode, loggedInUser)
     val personManagerSaveResult = savePersonManager(allocatedStaffId, allocationData, loggedInUser, allocateCase, caseDetails)
@@ -45,12 +46,16 @@ class DefaultSaveWorkloadService(
     val requirementManagerSaveResults = saveRequirementManagerService.saveRequirementManagers(allocatedStaffId.teamCode, allocationData.staff, allocateCase, loggedInUser, unallocatedRequirements)
       .also { afterRequirementManagersSaved(it, caseDetails) }
 
-    notificationService.notifyAllocation(allocationData, allocateCase, caseDetails)
-    log.info("Allocation notified for case: ${caseDetails.crn}, conviction number: ${allocateCase.eventNumber}, to: ${allocationData.staff.code}, from: ${allocationData.allocatingStaff.code}")
-    sqsSuccessPublisher.auditAllocation(allocateCase.crn, allocateCase.eventNumber, loggedInUser, unallocatedRequirements.map { it.id })
-
-    log.info("Case allocated: ${caseDetails.crn}, by ${allocationData.allocatingStaff.code}")
-    return CaseAllocated(personManagerSaveResult.entity.uuid, eventManagerSaveResult.entity.uuid, requirementManagerSaveResults.map { it.entity.uuid })
+    try {
+      notificationService.notifyAllocation(allocationData, allocateCase, caseDetails)
+      log.info("Allocation notified for case: ${caseDetails.crn}, conviction number: ${allocateCase.eventNumber}, to: ${allocationData.staff.code}, from: ${allocationData.allocatingStaff.code}")
+      sqsSuccessPublisher.auditAllocation(allocateCase.crn, allocateCase.eventNumber, loggedInUser, unallocatedRequirements.map { it.id })
+      log.info("Case allocated: ${caseDetails.crn}, by ${allocationData.allocatingStaff.code}")
+      return CaseAllocated(personManagerSaveResult.entity.uuid, eventManagerSaveResult.entity.uuid, requirementManagerSaveResults.map { it.entity.uuid })
+    } catch (e: Exception) {
+      log.error("Failed to send notification and allocate", e)
+    }
+    return null
   }
 
   private fun saveEventManager(allocatedStaffId: StaffIdentifier, allocationData: AllocationDemandDetails, allocateCase: AllocateCase, loggedInUser: String, caseDetails: CaseDetailsEntity): SaveResult<EventManagerEntity> {
