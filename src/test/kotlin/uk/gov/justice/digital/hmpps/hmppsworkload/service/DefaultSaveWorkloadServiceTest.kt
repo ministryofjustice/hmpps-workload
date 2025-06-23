@@ -126,7 +126,7 @@ class DefaultSaveWorkloadServiceTest {
 
       val workload = defaultSaveWorkloadService.saveWorkload(staffIdentifier, allocateCase, loggedInUser)
 
-      assertEquals(workload.eventManagerId, eventManagerEntity.entity.uuid)
+      assertEquals(workload!!.eventManagerId, eventManagerEntity.entity.uuid)
       assertEquals(workload.requirementManagerIds, listOf(requirementManagerEntity.uuid))
       assertEquals(workload.personManagerId, personManagerEntity.uuid)
 

@@ -44,7 +44,7 @@ class NotificationService(
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
 
-  @Suppress("LongParameterList", "LongMethod")
+  @Suppress("LongParameterList", "LongMethod", "TooGenericExceptionCaught")
   suspend fun notifyAllocation(allocationDemandDetails: AllocationDemandDetails, allocateCase: AllocateCase, caseDetails: CaseDetailsEntity): NotificationMessageResponse {
     val emailReferenceId = UUID.randomUUID().toString()
     val notifyData = getNotifyData(allocateCase.crn)
@@ -71,19 +71,26 @@ class NotificationService(
     val emailTo = HashSet(allocateCase.emailTo ?: emptySet())
     emailTo.add(allocationDemandDetails.staff.email!!)
     if (allocateCase.sendEmailCopyToAllocatingOfficer) emailTo.add(allocationDemandDetails.allocatingStaff.email)
-    MDC.put(REFERENCE_ID, emailReferenceId)
-    MDC.put(CRN, caseDetails.crn)
-    log.info("Email request sent to Notify for crn: ${caseDetails.crn} with reference ID: $emailReferenceId")
-    MDC.remove(REFERENCE_ID)
-    MDC.remove(CRN)
-    sqsSuccessPublisher.sendNotification(
-      NotificationEmail(
-        emailTo = emailTo,
-        emailTemplate = templateId,
-        emailReferenceId = emailReferenceId,
-        emailParameters = parameters,
-      ),
-    )
+
+    try {
+      sqsSuccessPublisher.sendNotification(
+        NotificationEmail(
+          emailTo = emailTo,
+          emailTemplate = templateId,
+          emailReferenceId = emailReferenceId,
+          emailParameters = parameters,
+        ),
+      )
+      MDC.put(REFERENCE_ID, emailReferenceId)
+      MDC.put(CRN, caseDetails.crn)
+      log.info("Email request sent to Notify for crn: ${caseDetails.crn} with reference ID: $emailReferenceId")
+    } catch (exception: Exception) {
+      log.error("Failed to send notification", exception)
+    } finally {
+      MDC.remove(REFERENCE_ID)
+      MDC.remove(CRN)
+    }
+
     return NotificationMessageResponse(templateId, emailReferenceId, emailTo)
   }
 
