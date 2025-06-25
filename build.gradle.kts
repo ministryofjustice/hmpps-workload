@@ -27,7 +27,7 @@ dependencies {
   implementation(kotlin("stdlib"))
   implementation("org.springframework.boot:spring-boot-starter-webflux")
   implementation("org.springframework.boot:spring-boot-starter-data-jpa")
-  implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:5.4.6")
+  implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:5.4.5")
 
   implementation("org.springdoc:springdoc-openapi-starter-webflux-ui:2.8.9")
 
