@@ -1,5 +1,6 @@
 FROM eclipse-temurin:21-jdk-jammy AS builder
 
+ENV AWS_REGION=eu-west-2
 
 WORKDIR /app
 
