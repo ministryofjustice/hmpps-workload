@@ -3,6 +3,8 @@ package uk.gov.justice.digital.hmpps.hmppsworkload.client
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import kotlinx.coroutines.TimeoutCancellationException
+import kotlinx.coroutines.withTimeout
 import org.slf4j.LoggerFactory
 import org.springframework.core.ParameterizedTypeReference
 import org.springframework.http.HttpStatus
@@ -30,6 +32,7 @@ import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.StaffMember
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.CaseType
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.entity.EventManagerEntity
 
+@Suppress("SwallowedException", "TooManyFunctions", "LargeClass")
 class WorkforceAllocationsToDeliusApiClient(private val webClient: WebClient) {
 
   companion object {
@@ -38,41 +41,71 @@ class WorkforceAllocationsToDeliusApiClient(private val webClient: WebClient) {
 
   suspend fun choosePractitioners(crn: String, teamCodes: List<String>): ChoosePractitionerResponse? {
     val teams = teamCodes.joinToString(separator = ",")
-    return webClient
-      .get()
-      .uri("/allocation-demand/choose-practitioner?crn={crn}&teamCode={teams}", crn, teams)
-      .awaitExchangeOrNull { response ->
-        when (response.statusCode()) {
-          HttpStatus.OK -> response.awaitBody()
-          HttpStatus.NOT_FOUND -> null
-          else -> throw response.createExceptionAndAwait()
-        }
+    try {
+      return withTimeout(TIMEOUT_VALUE) {
+        webClient
+          .get()
+          .uri("/allocation-demand/choose-practitioner?crn={crn}&teamCode={teams}", crn, teams)
+          .awaitExchangeOrNull { response ->
+            when (response.statusCode()) {
+              HttpStatus.OK -> response.awaitBody()
+              HttpStatus.NOT_FOUND -> null
+              else -> throw response.createExceptionAndAwait()
+            }
+          }
       }
+    } catch (e: TimeoutCancellationException) {
+      throw WorkloadWebClientTimeoutException(e.message!!)
+    }
   }
 
   suspend fun choosePractitioners(teamCodes: List<String>): ChoosePractitionerResponse? {
     val teams = teamCodes.joinToString(separator = ",")
-    val responseString: String = webClient
-      .get()
-      .uri("/teams?teamCode={teams}", teams)
-      .awaitExchangeOrNull { response ->
-        when (response.statusCode()) {
-          HttpStatus.OK -> response.awaitBody()
-          HttpStatus.NOT_FOUND -> null
-          else -> throw response.createExceptionAndAwait()
-        }
-      } ?: return null
+    val responseString: String = getTeams(teams)
+    if (responseString.isNullOrBlank()) return null
     val objectMapper = jacksonObjectMapper()
-    val teamDetails: Map<String, Map<String, List<StaffMember>>> = objectMapper.readValue(responseString, object : TypeReference<Map<String, Map<String, List<StaffMember>>>>() {})
+    val teamDetails: Map<String, Map<String, List<StaffMember>>> =
+      objectMapper.readValue(
+        responseString,
+        object : TypeReference<Map<String, Map<String, List<StaffMember>>>>() {},
+      )
     val teamDetail = teamDetails["teams"]?.values?.flatten() ?: emptyList()
-    return createPractitionersResponse(teamDetails.keys.first(), teamDetail.map { StaffMember(it.code, it.name, it.email, it.retrieveGrade()) })
+    return createPractitionersResponse(
+      teamDetails.keys.first(),
+      teamDetail.map { StaffMember(it.code, it.name, it.email, it.retrieveGrade()) },
+    )
+  }
+
+  suspend fun getTeams(teams: String): String {
+    try {
+      return withTimeout(TIMEOUT_VALUE) {
+        webClient
+          .get()
+          .uri("/teams?teamCode={teams}", teams)
+          .awaitExchangeOrNull { response ->
+            when (response.statusCode()) {
+              HttpStatus.OK -> response.awaitBody()
+              HttpStatus.NOT_FOUND -> null
+              else -> throw response.createExceptionAndAwait()
+            }
+          } ?: ""
+      }
+    } catch (e: TimeoutCancellationException) {
+      throw WorkloadWebClientTimeoutException(e.message!!)
+    }
   }
 
   private fun createPractitionersResponse(teams: String, staffMembers: List<StaffMember>): ChoosePractitionerResponse? {
     val nullName = Name("", "", "")
     val nullProbationStatus = ProbationStatus("", "")
     val nullCommunityPersonManager = CommunityPersonManager("", nullName, "", "")
-    return ChoosePractitionerResponse("", nullName, nullProbationStatus, nullCommunityPersonManager, mapOf(teams to staffMembers))
+    return ChoosePractitionerResponse(
+      "",
+      nullName,
+      nullProbationStatus,
+      nullCommunityPersonManager,
+      mapOf(teams to staffMembers),
+    )
   }
 
   suspend fun getPersonByCrn(crn: String): PersonSummary? = getPerson(crn, "CRN") { response ->
@@ -91,67 +124,150 @@ class WorkforceAllocationsToDeliusApiClient(private val webClient: WebClient) {
     }
   }
 
-  private suspend fun getPerson(identifier: String, identifierType: String, responseHandler: suspend (ClientResponse) -> PersonSummary?): PersonSummary? = webClient
-    .get()
-    .uri("/person/{identifier}?type={identifierType}", identifier, identifierType)
-    .awaitExchangeOrNull(responseHandler)
+  private suspend fun getPerson(
+    identifier: String,
+    identifierType: String,
+    responseHandler: suspend (ClientResponse) -> PersonSummary?,
+  ): PersonSummary? {
+    try {
+      return withTimeout(TIMEOUT_VALUE) {
+        webClient
+          .get()
+          .uri("/person/{identifier}?type={identifierType}", identifier, identifierType)
+          .awaitExchangeOrNull(responseHandler)
+      }
+    } catch (e: TimeoutCancellationException) {
+      throw WorkloadWebClientTimeoutException(e.message!!)
+    }
+  }
 
-  suspend fun getOfficerView(staffCode: String): OfficerView = webClient
-    .get()
-    .uri("/staff/{staffCode}/officer-view", staffCode)
-    .retrieve()
-    .awaitBody()
+  suspend fun getOfficerView(staffCode: String): OfficerView {
+    try {
+      return withTimeout(TIMEOUT_VALUE) {
+        webClient
+          .get()
+          .uri("/staff/{staffCode}/officer-view", staffCode)
+          .retrieve()
+          .awaitBody()
+      }
+    } catch (e: TimeoutCancellationException) {
+      throw WorkloadWebClientTimeoutException(e.message!!)
+    }
+  }
 
-  suspend fun impact(crn: String, staffCode: String): ImpactResponse = webClient
-    .get()
-    .uri("/allocation-demand/impact?crn={crn}&staff={staffCode}", crn, staffCode)
-    .retrieve()
-    .awaitBody()
+  suspend fun impact(crn: String, staffCode: String): ImpactResponse {
+    try {
+      return withTimeout(TIMEOUT_VALUE) {
+        webClient
+          .get()
+          .uri("/allocation-demand/impact?crn={crn}&staff={staffCode}", crn, staffCode)
+          .retrieve()
+          .awaitBody()
+      }
+    } catch (e: TimeoutCancellationException) {
+      throw WorkloadWebClientTimeoutException(e.message!!)
+    }
+  }
 
-  suspend fun allocationCompleteDetails(crn: String, eventNumber: String, staffCode: String): CompleteDetails = webClient
-    .get()
-    .uri("/allocation-completed/details?crn={crn}&eventNumber={eventNumber}&staffCode={staffCode}", crn, eventNumber, staffCode)
-    .retrieve()
-    .awaitBody()
+  suspend fun allocationCompleteDetails(crn: String, eventNumber: String, staffCode: String): CompleteDetails {
+    try {
+      return withTimeout(TIMEOUT_VALUE) {
+        webClient
+          .get()
+          .uri(
+            "/allocation-completed/details?crn={crn}&eventNumber={eventNumber}&staffCode={staffCode}",
+            crn,
+            eventNumber,
+            staffCode,
+          )
+          .retrieve()
+          .awaitBody()
+      }
+    } catch (e: TimeoutCancellationException) {
+      throw WorkloadWebClientTimeoutException(e.message!!)
+    }
+  }
 
   suspend fun staffActiveCases(staffCode: String, crns: Collection<String>): StaffActiveCases {
     val requestType = object : ParameterizedTypeReference<Collection<String>>() {}
-    return webClient
-      .post()
-      .uri("/staff/{staffCode}/active-cases", staffCode)
-      .body(Mono.just(crns), requestType)
-      .retrieve()
-      .awaitBody()
+    try {
+      return withTimeout(TIMEOUT_VALUE) {
+        webClient
+          .post()
+          .uri("/staff/{staffCode}/active-cases", staffCode)
+          .body(Mono.just(crns), requestType)
+          .retrieve()
+          .awaitBody()
+      }
+    } catch (e: TimeoutCancellationException) {
+      throw WorkloadWebClientTimeoutException(e.message!!)
+    }
   }
 
-  suspend fun allocationDetails(crn: String, eventNumber: Int, staffCode: String, loggedInUser: String): AllocationDemandDetails = webClient
-    .get()
-    .uri("/allocation-demand/{crn}/{eventNumber}/allocation?staff={staffCode}&allocatingStaffUsername={loggedInUser}", crn, eventNumber, staffCode, loggedInUser)
-    .retrieve()
-    .awaitBody()
+  suspend fun allocationDetails(
+    crn: String,
+    eventNumber: Int,
+    staffCode: String,
+    loggedInUser: String,
+  ): AllocationDemandDetails {
+    try {
+      return withTimeout(TIMEOUT_VALUE) {
+        webClient
+          .get()
+          .uri(
+            "/allocation-demand/{crn}/{eventNumber}/allocation?staff={staffCode}&allocatingStaffUsername={loggedInUser}",
+            crn,
+            eventNumber,
+            staffCode,
+            loggedInUser,
+          )
+          .retrieve()
+          .awaitBody()
+      }
+    } catch (e: TimeoutCancellationException) {
+      throw WorkloadWebClientTimeoutException(e.message!!)
+    }
+  }
 
-  suspend fun allocationDetails(eventManagers: List<EventManagerEntity>): AllocationDetails = webClient
-    .post()
-    .uri("/allocation/details")
-    .contentType(MediaType.APPLICATION_JSON)
-    .bodyValue(AllocationDetailsRequest.from(eventManagers))
-    .retrieve()
-    .awaitBody()
+  suspend fun allocationDetails(eventManagers: List<EventManagerEntity>): AllocationDetails {
+    try {
+      return withTimeout(TIMEOUT_VALUE) {
+        webClient
+          .post()
+          .uri("/allocation/details")
+          .contentType(MediaType.APPLICATION_JSON)
+          .bodyValue(AllocationDetailsRequest.from(eventManagers))
+          .retrieve()
+          .awaitBody()
+      }
+    } catch (e: TimeoutCancellationException) {
+      throw WorkloadWebClientTimeoutException(e.message!!)
+    }
+  }
 
   suspend fun getDeliusAllowedTeamInfo(staffId: String): DeliusTeams {
-    val responseString: String = webClient
-      .get()
-      .uri("/staff/$staffId/teams", staffId)
-      .awaitExchangeOrNull { response ->
-        when (response.statusCode()) {
-          HttpStatus.OK -> response.awaitBody()
-          HttpStatus.NOT_FOUND -> null
-          else -> throw response.createExceptionAndAwait()
-        }
-      } ?: return DeliusTeams(emptyList(), emptyList())
-
+    val responseString = getDeliusTeamsResponse(staffId)
     val objectMapper = ObjectMapper()
     val teamsResponse = objectMapper.readValue(responseString, DeliusTeams::class.java)
     return teamsResponse ?: DeliusTeams(emptyList(), emptyList())
+  }
+
+  private suspend fun getDeliusTeamsResponse(staffId: String): String {
+    try {
+      return withTimeout(TIMEOUT_VALUE) {
+        webClient
+          .get()
+          .uri("/staff/$staffId/teams", staffId)
+          .awaitExchangeOrNull { response ->
+            when (response.statusCode()) {
+              HttpStatus.OK -> response.awaitBody()
+              HttpStatus.NOT_FOUND -> null
+              else -> throw response.createExceptionAndAwait()
+            }
+          } ?: ""
+      }
+    } catch (e: TimeoutCancellationException) {
+      throw WorkloadWebClientTimeoutException(e.message!!)
+    }
   }
 }
