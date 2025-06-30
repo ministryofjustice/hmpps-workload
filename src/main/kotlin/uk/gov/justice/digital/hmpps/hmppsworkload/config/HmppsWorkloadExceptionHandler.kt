@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity
 import org.springframework.security.access.AccessDeniedException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
+import uk.gov.justice.digital.hmpps.hmppsworkload.client.WorkloadWebClientTimeoutException
 
 @RestControllerAdvice
 class HmppsWorkloadExceptionHandler {
@@ -37,6 +38,20 @@ class HmppsWorkloadExceptionHandler {
         ErrorResponse(
           status = NOT_FOUND,
           userMessage = "Entity not found: ${e.message}",
+          developerMessage = e.message,
+        ),
+      )
+  }
+
+  @ExceptionHandler(WorkloadWebClientTimeoutException::class)
+  suspend fun handleWorkloadWebClientTimeoutException(e: Exception): ResponseEntity<ErrorResponse> {
+    log.error("WebClient Timeout", e)
+    return ResponseEntity
+      .status(HttpStatus.GATEWAY_TIMEOUT)
+      .body(
+        ErrorResponse(
+          status = HttpStatus.GATEWAY_TIMEOUT,
+          userMessage = "Timeout: ${e.message}",
           developerMessage = e.message,
         ),
       )

@@ -1,7 +1,9 @@
 package uk.gov.justice.digital.hmpps.hmppsworkload.client
 
+import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.reactor.awaitSingle
 import kotlinx.coroutines.reactor.awaitSingleOrNull
+import kotlinx.coroutines.withTimeout
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.core.ParameterizedTypeReference
 import org.springframework.stereotype.Component
@@ -10,29 +12,46 @@ import reactor.core.publisher.Mono
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.RiskPredictor
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.RiskSummary
 
+const val TIMEOUT_VALUE = 3000L
+
+@Suppress("SwallowedException")
 @Component
 class AssessRisksNeedsApiClient(@Qualifier("assessRisksNeedsClientUserEnhancedAppScope") private val webClient: WebClient) {
 
-  suspend fun getRiskSummary(crn: String): RiskSummary? = webClient
-    .get()
-    .uri("/risks/crn/{crn}/summary", crn)
-    .retrieve()
-    .bodyToMono(RiskSummary::class.java)
-    .retry(1)
-    .onErrorResume {
-      Mono.empty()
-    }.awaitSingleOrNull()
+  suspend fun getRiskSummary(crn: String): RiskSummary? {
+    try {
+      return withTimeout(TIMEOUT_VALUE) {
+        webClient
+          .get()
+          .uri("/risks/crn/{crn}/summary", crn)
+          .retrieve()
+          .bodyToMono(RiskSummary::class.java)
+          .retry(1)
+          .onErrorResume {
+            Mono.empty()
+          }.awaitSingleOrNull()
+      }
+    } catch (e: TimeoutCancellationException) {
+      throw WorkloadWebClientTimeoutException(e.message!!)
+    }
+  }
 
   suspend fun getRiskPredictors(crn: String): List<RiskPredictor> {
     val responseType = object : ParameterizedTypeReference<List<RiskPredictor>>() {}
-    return webClient
-      .get()
-      .uri("/risks/crn/{crn}/predictors/rsr/history", crn)
-      .retrieve()
-      .bodyToMono(responseType)
-      .retry(1)
-      .onErrorResume {
-        Mono.just(emptyList())
-      }.awaitSingle()
+    try {
+      return withTimeout(TIMEOUT_VALUE) {
+        webClient
+          .get()
+          .uri("/risks/crn/{crn}/predictors/rsr/history", crn)
+          .retrieve()
+          .bodyToMono(responseType)
+          .retry(1)
+          .onErrorResume {
+            Mono.just(emptyList())
+          }.awaitSingle()
+      }
+    } catch (e: TimeoutCancellationException) {
+      throw WorkloadWebClientTimeoutException(e.message!!)
+    }
   }
 }
