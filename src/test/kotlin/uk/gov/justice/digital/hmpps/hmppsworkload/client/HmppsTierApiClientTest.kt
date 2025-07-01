@@ -9,7 +9,6 @@ import org.springframework.http.HttpStatus
 import org.springframework.web.reactive.function.client.ClientResponse
 import org.springframework.web.reactive.function.client.ExchangeFunction
 import org.springframework.web.reactive.function.client.WebClient
-import org.springframework.web.reactive.function.client.WebClientResponseException
 import reactor.core.publisher.Mono
 
 class HmppsTierApiClientTest {
@@ -51,6 +50,6 @@ class HmppsTierApiClientTest {
       )
     }
     val webClient = WebClient.builder().exchangeFunction(exchangeFunction).build()
-    assertThrows(WebClientResponseException::class.java) { runBlocking { HmppsTierApiClient(webClient).getTierByCrn("X123456") } }
+    assertThrows(WorkloadFailedDependencyException::class.java) { runBlocking { HmppsTierApiClient(webClient).getTierByCrn("X123456") } }
   }
 }

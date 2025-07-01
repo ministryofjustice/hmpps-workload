@@ -6,13 +6,12 @@ import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.fail
+import org.junit.jupiter.api.assertThrows
 import org.springframework.http.HttpStatus
 import org.springframework.web.reactive.function.client.ClientRequest
 import org.springframework.web.reactive.function.client.ClientResponse
 import org.springframework.web.reactive.function.client.ExchangeFunction
 import org.springframework.web.reactive.function.client.WebClient
-import org.springframework.web.reactive.function.client.WebClientResponseException
 import reactor.core.publisher.Mono
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.CaseType
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.entity.EventManagerEntity
@@ -63,6 +62,7 @@ class WorkforceAllocationsToDeliusApiClientTest {
   }
 
   @Test
+  @Suppress("SwallowedException")
   fun `test choose practitioners error`() = runBlocking<Unit> {
     val exchangeFunction = ExchangeFunction {
       Mono.just(
@@ -73,14 +73,12 @@ class WorkforceAllocationsToDeliusApiClientTest {
       .exchangeFunction(exchangeFunction)
       .build()
 
-    try {
-      WorkforceAllocationsToDeliusApiClient(webClient)
-        .choosePractitioners("X999999", listOf("teamA", "teamB", "teamC"))
-    } catch (e: WebClientResponseException) {
-      assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, e.statusCode)
-      return@runBlocking
+    assertThrows<WorkloadFailedDependencyException> {
+      runBlocking {
+        WorkforceAllocationsToDeliusApiClient(webClient)
+          .choosePractitioners("X999999", listOf("teamA", "teamB", "teamC"))
+      }
     }
-    fail("Expected exception not thrown")
   }
 
   @Test
@@ -123,6 +121,7 @@ class WorkforceAllocationsToDeliusApiClientTest {
   }
 
   @Test
+  @Suppress("SwallowedException")
   fun `test choose practitioners no crn error`() = runBlocking<Unit> {
     val exchangeFunction = ExchangeFunction {
       Mono.just(
@@ -133,14 +132,12 @@ class WorkforceAllocationsToDeliusApiClientTest {
       .exchangeFunction(exchangeFunction)
       .build()
 
-    try {
-      WorkforceAllocationsToDeliusApiClient(webClient)
-        .choosePractitioners(listOf("teamA", "teamB"))
-    } catch (e: WebClientResponseException) {
-      assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, e.statusCode)
-      return@runBlocking
+    assertThrows<WorkloadFailedDependencyException> {
+      runBlocking {
+        WorkforceAllocationsToDeliusApiClient(webClient)
+          .choosePractitioners(listOf("teamA", "teamB"))
+      }
     }
-    fail("Expected exception not thrown")
   }
 
   @Test
@@ -185,6 +182,7 @@ class WorkforceAllocationsToDeliusApiClientTest {
   }
 
   @Test
+  @Suppress("SwallowedException")
   fun `test get person (by crn) error`() = runBlocking<Unit> {
     val exchangeFunction = ExchangeFunction {
       Mono.just(
@@ -195,14 +193,12 @@ class WorkforceAllocationsToDeliusApiClientTest {
       .exchangeFunction(exchangeFunction)
       .build()
 
-    try {
-      WorkforceAllocationsToDeliusApiClient(webClient)
-        .getPersonByCrn("X999999")
-    } catch (e: WebClientResponseException) {
-      assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, e.statusCode)
-      return@runBlocking
+    assertThrows<WorkloadFailedDependencyException> {
+      runBlocking {
+        WorkforceAllocationsToDeliusApiClient(webClient)
+          .getPersonByCrn("X999999")
+      }
     }
-    fail("Expected exception not thrown")
   }
 
   @Test

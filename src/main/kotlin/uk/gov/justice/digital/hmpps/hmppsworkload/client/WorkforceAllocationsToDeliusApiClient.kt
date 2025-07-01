@@ -32,6 +32,8 @@ import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.StaffMember
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.CaseType
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.entity.EventManagerEntity
 
+const val DOWNSTREAM_500 = "Downstream 5xx:"
+
 @Suppress("SwallowedException", "TooManyFunctions", "LargeClass")
 class WorkforceAllocationsToDeliusApiClient(private val webClient: WebClient) {
 
@@ -47,15 +49,19 @@ class WorkforceAllocationsToDeliusApiClient(private val webClient: WebClient) {
           .get()
           .uri("/allocation-demand/choose-practitioner?crn={crn}&teamCode={teams}", crn, teams)
           .awaitExchangeOrNull { response ->
-            when (response.statusCode()) {
-              HttpStatus.OK -> response.awaitBody()
-              HttpStatus.NOT_FOUND -> null
+            when {
+              response.statusCode() == HttpStatus.OK -> response.awaitBody()
+              response.statusCode() == HttpStatus.NOT_FOUND -> null
+              response.statusCode().is5xxServerError -> throw WorkloadFailedDependencyException("$DOWNSTREAM_500 ${response.statusCode()}")
               else -> throw response.createExceptionAndAwait()
             }
           }
       }
     } catch (e: TimeoutCancellationException) {
       throw WorkloadWebClientTimeoutException(e.message!!)
+    } catch (e: WorkloadFailedDependencyException) {
+      log.warn("DeliusClient choose practitioners failed due to Failed Dependency", e)
+      throw WorkloadFailedDependencyException(e.message!!)
     }
   }
 
@@ -83,15 +89,19 @@ class WorkforceAllocationsToDeliusApiClient(private val webClient: WebClient) {
           .get()
           .uri("/teams?teamCode={teams}", teams)
           .awaitExchangeOrNull { response ->
-            when (response.statusCode()) {
-              HttpStatus.OK -> response.awaitBody()
-              HttpStatus.NOT_FOUND -> null
+            when {
+              response.statusCode() == HttpStatus.OK -> response.awaitBody()
+              response.statusCode() == HttpStatus.NOT_FOUND -> null
+              response.statusCode().is5xxServerError -> throw WorkloadFailedDependencyException("$DOWNSTREAM_500 ${response.statusCode()}")
               else -> throw response.createExceptionAndAwait()
             }
           } ?: ""
       }
     } catch (e: TimeoutCancellationException) {
       throw WorkloadWebClientTimeoutException(e.message!!)
+    } catch (e: WorkloadFailedDependencyException) {
+      log.warn("DeliusClient get teams failed due to Failed Dependency", e)
+      throw WorkloadFailedDependencyException(e.message!!)
     }
   }
 
@@ -109,17 +119,22 @@ class WorkforceAllocationsToDeliusApiClient(private val webClient: WebClient) {
   }
 
   suspend fun getPersonByCrn(crn: String): PersonSummary? = getPerson(crn, "CRN") { response ->
-    when (response.statusCode()) {
-      HttpStatus.OK -> response.awaitBody()
-      HttpStatus.NOT_FOUND -> PersonSummary(crn, Name("Unknown", "", "Unknown"), CaseType.UNKNOWN)
+    when {
+      response.statusCode() == HttpStatus.OK -> response.awaitBody()
+      response.statusCode() == HttpStatus.NOT_FOUND ->
+        PersonSummary(crn, Name("Unknown", "", "Unknown"), CaseType.UNKNOWN)
+      response.statusCode().is5xxServerError ->
+        throw WorkloadFailedDependencyException("DeliusClient getPersonByCrn failed with ${response.statusCode()}")
       else -> throw response.createExceptionAndAwait()
     }
   }
 
   suspend fun getPersonByNoms(noms: String): PersonSummary? = getPerson(noms, "NOMS") { response ->
-    when (response.statusCode()) {
-      HttpStatus.OK -> response.awaitBody()
-      HttpStatus.NOT_FOUND -> null
+    when {
+      response.statusCode() == HttpStatus.OK -> response.awaitBody()
+      response.statusCode() == HttpStatus.NOT_FOUND -> null
+      response.statusCode().is5xxServerError ->
+        throw WorkloadFailedDependencyException("DeliusClient getPersonByNoms failed with ${response.statusCode()}")
       else -> throw response.createExceptionAndAwait()
     }
   }
@@ -148,6 +163,9 @@ class WorkforceAllocationsToDeliusApiClient(private val webClient: WebClient) {
           .get()
           .uri("/staff/{staffCode}/officer-view", staffCode)
           .retrieve()
+          .onStatus({ it.is5xxServerError }) { response ->
+            response.createException().flatMap { Mono.error(WorkloadFailedDependencyException(it.message!!)) }
+          }
           .awaitBody()
       }
     } catch (e: TimeoutCancellationException) {
@@ -162,6 +180,9 @@ class WorkforceAllocationsToDeliusApiClient(private val webClient: WebClient) {
           .get()
           .uri("/allocation-demand/impact?crn={crn}&staff={staffCode}", crn, staffCode)
           .retrieve()
+          .onStatus({ it.is5xxServerError }) { response ->
+            response.createException().flatMap { Mono.error(WorkloadFailedDependencyException(it.message!!)) }
+          }
           .awaitBody()
       }
     } catch (e: TimeoutCancellationException) {
@@ -181,6 +202,9 @@ class WorkforceAllocationsToDeliusApiClient(private val webClient: WebClient) {
             staffCode,
           )
           .retrieve()
+          .onStatus({ it.is5xxServerError }) { response ->
+            response.createException().flatMap { Mono.error(WorkloadFailedDependencyException(it.message!!)) }
+          }
           .awaitBody()
       }
     } catch (e: TimeoutCancellationException) {
@@ -197,6 +221,9 @@ class WorkforceAllocationsToDeliusApiClient(private val webClient: WebClient) {
           .uri("/staff/{staffCode}/active-cases", staffCode)
           .body(Mono.just(crns), requestType)
           .retrieve()
+          .onStatus({ it.is5xxServerError }) { response ->
+            response.createException().flatMap { Mono.error(WorkloadFailedDependencyException(it.message!!)) }
+          }
           .awaitBody()
       }
     } catch (e: TimeoutCancellationException) {
@@ -222,6 +249,9 @@ class WorkforceAllocationsToDeliusApiClient(private val webClient: WebClient) {
             loggedInUser,
           )
           .retrieve()
+          .onStatus({ it.is5xxServerError }) { response ->
+            response.createException().flatMap { Mono.error(WorkloadFailedDependencyException(it.message!!)) }
+          }
           .awaitBody()
       }
     } catch (e: TimeoutCancellationException) {
@@ -238,6 +268,9 @@ class WorkforceAllocationsToDeliusApiClient(private val webClient: WebClient) {
           .contentType(MediaType.APPLICATION_JSON)
           .bodyValue(AllocationDetailsRequest.from(eventManagers))
           .retrieve()
+          .onStatus({ it.is5xxServerError }) { response ->
+            response.createException().flatMap { Mono.error(WorkloadFailedDependencyException(it.message!!)) }
+          }
           .awaitBody()
       }
     } catch (e: TimeoutCancellationException) {
@@ -259,15 +292,19 @@ class WorkforceAllocationsToDeliusApiClient(private val webClient: WebClient) {
           .get()
           .uri("/staff/$staffId/teams", staffId)
           .awaitExchangeOrNull { response ->
-            when (response.statusCode()) {
-              HttpStatus.OK -> response.awaitBody()
-              HttpStatus.NOT_FOUND -> null
+            when {
+              response.statusCode() == HttpStatus.OK -> response.awaitBody()
+              response.statusCode() == HttpStatus.NOT_FOUND -> null
+              response.statusCode().is5xxServerError -> throw WorkloadFailedDependencyException("$DOWNSTREAM_500 ${response.statusCode()}")
               else -> throw response.createExceptionAndAwait()
             }
           } ?: ""
       }
     } catch (e: TimeoutCancellationException) {
       throw WorkloadWebClientTimeoutException(e.message!!)
+    } catch (e: WorkloadFailedDependencyException) {
+      log.warn("DeliusClient getDeliusTeamsResponse failed due to Failed Dependency", e)
+      throw WorkloadFailedDependencyException(e.message!!)
     }
   }
 }
