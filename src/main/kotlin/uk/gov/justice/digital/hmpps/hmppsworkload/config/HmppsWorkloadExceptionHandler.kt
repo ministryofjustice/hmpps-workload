@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity
 import org.springframework.security.access.AccessDeniedException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
+import uk.gov.justice.digital.hmpps.hmppsworkload.client.WorkloadFailedDependencyException
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.WorkloadWebClientTimeoutException
 
 @RestControllerAdvice
@@ -52,6 +53,20 @@ class HmppsWorkloadExceptionHandler {
         ErrorResponse(
           status = HttpStatus.GATEWAY_TIMEOUT,
           userMessage = "Timeout: ${e.message}",
+          developerMessage = e.message,
+        ),
+      )
+  }
+
+  @ExceptionHandler(WorkloadFailedDependencyException::class)
+  suspend fun handleFailedDependencyException(e: Exception): ResponseEntity<ErrorResponse> {
+    log.error("WebClient Dependency Failure", e)
+    return ResponseEntity
+      .status(HttpStatus.FAILED_DEPENDENCY)
+      .body(
+        ErrorResponse(
+          status = HttpStatus.FAILED_DEPENDENCY,
+          userMessage = "Failed Dependency: ${e.message}",
           developerMessage = e.message,
         ),
       )
