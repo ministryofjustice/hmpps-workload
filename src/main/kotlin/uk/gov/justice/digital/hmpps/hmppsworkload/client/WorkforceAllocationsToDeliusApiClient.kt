@@ -158,7 +158,7 @@ class WorkforceAllocationsToDeliusApiClient(private val webClient: WebClient) {
 
   suspend fun getOfficerView(staffCode: String): OfficerView {
     try {
-      return withTimeout(TIMEOUT_VALUE) {
+      return withTimeout(OFFICER_VIEW_TIMEOUT_VALUE) {
         webClient
           .get()
           .uri("/staff/{staffCode}/officer-view", staffCode)
