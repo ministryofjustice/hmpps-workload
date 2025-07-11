@@ -34,7 +34,7 @@ fun getAllocationDetails(
       "",
       "Member",
     ),
-    "simulate-delivered@notifications.service.gov.uk",
+    "simulate-delivered@justice.gov.uk",
     "PO",
   ),
   StaffMember(
