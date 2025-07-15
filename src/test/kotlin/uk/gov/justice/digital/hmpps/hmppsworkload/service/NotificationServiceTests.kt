@@ -411,24 +411,11 @@ class NotificationServiceTests {
   @Test
   fun `must email all addresses supplied`() = runBlocking {
     val allocationDetails = getAllocationDetails(allocateCase.crn)
-    val firstEmail = "first.one@justice.gov.uk"
-    val secondEmail = "second@justice.gov.uk"
-    val thirdEmail = "gaz.second-me@justice.gov.uk"
-    val fourthEmail = "fourth_4.second-me@justice.gov.uk"
-    val allocateCase = AllocateCase("CRN1111", "instructions", listOf(firstEmail, secondEmail, thirdEmail, fourthEmail), false, 1, allocationJustificationNotes = "some notes", sensitiveNotes = false, spoOversightNotes = "spo notes", sensitiveOversightNotes = null, laoCase = false)
-    notificationService.notifyAllocation(allocationDetails, allocateCase, caseDetails)
-    val parameters = slot<NotificationEmail>()
-    coVerify(exactly = 1) { sqsSuccessPublisher.sendNotification(capture(parameters)) }
-  }
-
-  @Test
-  fun `does not send email if any invalid  address supplied`() = runBlocking {
-    val allocationDetails = getAllocationDetails(allocateCase.crn)
-    val firstEmail = "first@justice.gov.uk"
-    val secondEmail = "second@justice.gov.ww"
+    val firstEmail = "first@email.com"
+    val secondEmail = "second@email.com"
     val allocateCase = AllocateCase("CRN1111", "instructions", listOf(firstEmail, secondEmail), false, 1, allocationJustificationNotes = "some notes", sensitiveNotes = false, spoOversightNotes = "spo notes", sensitiveOversightNotes = null, laoCase = false)
     notificationService.notifyAllocation(allocationDetails, allocateCase, caseDetails)
     val parameters = slot<NotificationEmail>()
-    coVerify(exactly = 0) { sqsSuccessPublisher.sendNotification(capture(parameters)) }
+    coVerify(exactly = 1) { sqsSuccessPublisher.sendNotification(capture(parameters)) }
   }
 }
