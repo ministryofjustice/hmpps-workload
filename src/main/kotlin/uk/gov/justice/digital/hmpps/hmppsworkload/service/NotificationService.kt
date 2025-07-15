@@ -26,6 +26,7 @@ import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.temporal.ChronoUnit
 import java.util.UUID
+import java.util.regex.Pattern
 import kotlin.collections.HashSet
 
 const val SCORE_UNAVAILABLE = "Score Unavailable"
@@ -43,6 +44,7 @@ class NotificationService(
   private val workforceAllocationsToDeliusApiClient: WorkforceAllocationsToDeliusApiClient,
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
+  private val emailRegex = Pattern.compile("^[A-Za-z0-9][A-Za-z0-9\\-_\\.]*@justice.gov.uk$")
 
   @Suppress("LongParameterList", "LongMethod", "TooGenericExceptionCaught")
   suspend fun notifyAllocation(allocationDemandDetails: AllocationDemandDetails, allocateCase: AllocateCase, caseDetails: CaseDetailsEntity): NotificationMessageResponse {
@@ -73,6 +75,13 @@ class NotificationService(
     if (allocateCase.sendEmailCopyToAllocatingOfficer) emailTo.add(allocationDemandDetails.allocatingStaff.email)
 
     try {
+      for (emailAddress in emailTo) {
+        if (!emailRegex.matcher(emailAddress).matches()) {
+          log.error("Failed to send notification, invalid  email address $emailAddress")
+          throw NotificationInvalidRecipientException("Invalid email $emailAddress")
+        }
+      }
+
       sqsSuccessPublisher.sendNotification(
         NotificationEmail(
           emailTo = emailTo,
@@ -84,6 +93,8 @@ class NotificationService(
       MDC.put(REFERENCE_ID, emailReferenceId)
       MDC.put(CRN, caseDetails.crn)
       log.info("Email request sent to Notify for crn: ${caseDetails.crn} with reference ID: $emailReferenceId")
+    } catch (exception: NotificationInvalidRecipientException) {
+      log.error("Failed to send notification due to invalid email address", exception)
     } catch (exception: Exception) {
       log.error("Failed to send notification", exception)
     } finally {
@@ -95,6 +106,7 @@ class NotificationService(
   }
 
   class NotificationInvalidSenderException(emailRecipient: String, cause: Throwable) : Exception("Unable to deliver to recipient $emailRecipient", cause)
+  class NotificationInvalidRecipientException(emailRecipient: String) : Exception("Unable to deliver to recipient $emailRecipient")
 
   private fun getLoggedInUserParameters(loggedInUser: StaffMember): Map<String, Any> = mapOf(
     "allocatingOfficerName" to loggedInUser.name.getCombinedName(),
