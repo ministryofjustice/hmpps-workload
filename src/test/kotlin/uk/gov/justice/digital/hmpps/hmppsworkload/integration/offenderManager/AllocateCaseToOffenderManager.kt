@@ -18,11 +18,9 @@ import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.MediaType
-import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.AllocationDemandDetails
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.AllocateCase
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.CaseAllocated
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.CaseType
@@ -467,85 +465,6 @@ class AllocateCaseToOffenderManager : IntegrationTestBase() {
         null,
       )
     }
-  }
-
-  @Disabled
-  @Test
-  fun `sends email by default to allocating officer`() {
-    val allocateToEmail = "allocateTo-user@test.justice.gov.uk"
-    workforceAllocationsToDelius.reset()
-    workforceAllocationsToDelius.allocationResponse(crn, eventNumber, staffCode, allocatingOfficerUsername, allocateToEmail)
-
-    webTestClient.post()
-      .uri("/team/$teamCode/offenderManager/$staffCode/case")
-      .bodyValue(allocateCase(crn, eventNumber))
-      .headers {
-        it.authToken(roles = listOf("ROLE_MANAGE_A_WORKFORCE_ALLOCATE"))
-        it.contentType = MediaType.APPLICATION_JSON
-      }
-      .exchange()
-      .expectStatus()
-      .isOk
-      .expectBody()
-      .jsonPath("$.personManagerId")
-      .value(MatchesPattern.matchesPattern("([a-f0-9]{8}(-[a-f0-9]{4}){4}[a-f0-9]{8})"))
-      .jsonPath("$.eventManagerId")
-      .value(MatchesPattern.matchesPattern("([a-f0-9]{8}(-[a-f0-9]{4}){4}[a-f0-9]{8})"))
-      .jsonPath("$.requirementManagerIds[0]")
-      .value(MatchesPattern.matchesPattern("([a-f0-9]{8}(-[a-f0-9]{4}){4}[a-f0-9]{8})"))
-
-    expectWorkloadAllocationCompleteMessages(crn)
-
-    await untilCallTo {
-      workloadCalculationRepository.count()
-    } matches { it == 1L }
-
-    val parameters = slot<AllocateCase>()
-    val allocationDemand = slot<AllocationDemandDetails>()
-    // verify that the additional email got an email
-    coVerify(exactly = 1) { notificationService.notifyAllocation(capture(allocationDemand), capture(parameters), any()) }
-    assertTrue(parameters.captured.emailTo!!.size == 1)
-    assertEquals(allocateToEmail, allocationDemand.captured.allocatingStaff.email)
-    assertEquals(allocateToEmail, parameters.captured.emailTo!!.get(0))
-  }
-
-  @Disabled
-  @Test
-  fun `do not send email to allocating officer`() {
-    val allocateToEmail = "allocateTo-user@test.justice.gov.uk"
-    workforceAllocationsToDelius.reset()
-    workforceAllocationsToDelius.allocationResponse(crn, eventNumber, staffCode, allocatingOfficerUsername, allocateToEmail)
-
-    webTestClient.post()
-      .uri("/team/$teamCode/offenderManager/$staffCode/case")
-      .bodyValue(allocateCase(crn, eventNumber, false))
-      .headers {
-        it.authToken(roles = listOf("ROLE_MANAGE_A_WORKFORCE_ALLOCATE"))
-        it.contentType = MediaType.APPLICATION_JSON
-      }
-      .exchange()
-      .expectStatus()
-      .isOk
-      .expectBody()
-      .jsonPath("$.personManagerId")
-      .value(MatchesPattern.matchesPattern("([a-f0-9]{8}(-[a-f0-9]{4}){4}[a-f0-9]{8})"))
-      .jsonPath("$.eventManagerId")
-      .value(MatchesPattern.matchesPattern("([a-f0-9]{8}(-[a-f0-9]{4}){4}[a-f0-9]{8})"))
-      .jsonPath("$.requirementManagerIds[0]")
-      .value(MatchesPattern.matchesPattern("([a-f0-9]{8}(-[a-f0-9]{4}){4}[a-f0-9]{8})"))
-
-    expectWorkloadAllocationCompleteMessages(crn)
-
-    await untilCallTo {
-      workloadCalculationRepository.count()
-    } matches { it == 1L }
-
-    // verify that the additional email received an email
-    verify(exactly = 1) { notificationClient.sendEmail(any(), "additionalEmailReceiver@test.justice.gov.uk", any(), any()) }
-    // verify that the allocate-to user received an email.
-    verify(exactly = 1) { notificationClient.sendEmail(any(), allocateToEmail, any(), any()) }
-    // verify that the allocating officer does not receive an email
-    verify(exactly = 0) { notificationClient.sendEmail(any(), "sheila.hancock@test.justice.gov.uk", any(), any()) }
   }
 
   @Test
