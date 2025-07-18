@@ -32,6 +32,7 @@ import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.*
+import java.util.Collections.emptySet
 
 class NotificationServiceTests {
   private val notificationClient = mockk<NotificationClientApi>()
@@ -417,5 +418,35 @@ class NotificationServiceTests {
     notificationService.notifyAllocation(allocationDetails, allocateCase, caseDetails)
     val parameters = slot<NotificationEmail>()
     coVerify(exactly = 1) { sqsSuccessPublisher.sendNotification(capture(parameters)) }
+  }
+
+  @Test
+  fun `must send email by default to allocating officer`() = runBlocking {
+    val allocationDetails = getAllocationDetails(allocateCase.crn)
+    val firstEmail = "first@justice.gov.uk"
+    val secondEmail = "second@justice.gov.uk"
+    val allocateCase = AllocateCase("CRN1111", "instructions", listOf(firstEmail, secondEmail), true, 1, allocationJustificationNotes = "some notes", sensitiveNotes = false, spoOversightNotes = "spo notes", sensitiveOversightNotes = null, laoCase = false)
+    notificationService.notifyAllocation(allocationDetails, allocateCase, caseDetails)
+    val parameters = slot<NotificationEmail>()
+    coVerify(exactly = 1) { sqsSuccessPublisher.sendNotification(capture(parameters)) }
+    val emailTo = HashSet<String>(parameters.captured.emailTo ?: emptySet())
+
+    Assertions.assertEquals(emailTo.size, 4)
+    Assertions.assertTrue(emailTo.contains(allocationDetails.allocatingStaff.email!!))
+  }
+
+  @Test
+  fun `must not send email to allocating officer if opted out `() = runBlocking {
+    val allocationDetails = getAllocationDetails(allocateCase.crn)
+    val firstEmail = "first@justice.gov.uk"
+    val secondEmail = "second@justice.gov.uk"
+    val allocateCase = AllocateCase("CRN1111", "instructions", listOf(firstEmail, secondEmail), false, 1, allocationJustificationNotes = "some notes", sensitiveNotes = false, spoOversightNotes = "spo notes", sensitiveOversightNotes = null, laoCase = false)
+    notificationService.notifyAllocation(allocationDetails, allocateCase, caseDetails)
+    val parameters = slot<NotificationEmail>()
+    coVerify(exactly = 1) { sqsSuccessPublisher.sendNotification(capture(parameters)) }
+    val emailTo = HashSet<String>(parameters.captured.emailTo ?: emptySet())
+
+    Assertions.assertEquals(emailTo.size, 3)
+    Assertions.assertFalse(emailTo.contains(allocationDetails.allocatingStaff.email!!))
   }
 }
