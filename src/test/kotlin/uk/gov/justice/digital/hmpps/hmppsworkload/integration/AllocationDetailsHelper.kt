@@ -44,7 +44,7 @@ fun getAllocationDetails(
       "",
       "Member",
     ),
-    null,
+    "simulate-delivered@justice.gov.uk",
     "SPO",
   ),
   initialAppointment?.let { InitialAppointment(initialAppointment) },

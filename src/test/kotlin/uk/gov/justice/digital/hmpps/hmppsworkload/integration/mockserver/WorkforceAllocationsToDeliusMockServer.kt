@@ -23,6 +23,7 @@ import uk.gov.justice.digital.hmpps.hmppsworkload.integration.responses.workforc
 import uk.gov.justice.digital.hmpps.hmppsworkload.integration.responses.workforceAllocationsToDelius.deliusAllocationRequirementsResponse
 import uk.gov.justice.digital.hmpps.hmppsworkload.integration.responses.workforceAllocationsToDelius.deliusAllocationResponse
 import uk.gov.justice.digital.hmpps.hmppsworkload.integration.responses.workforceAllocationsToDelius.deliusStaffActiveCasesResponse
+import uk.gov.justice.digital.hmpps.hmppsworkload.integration.responses.workforceAllocationsToDelius.getTeamCodesResponse
 import uk.gov.justice.digital.hmpps.hmppsworkload.integration.responses.workforceAllocationsToDelius.impactResponse
 import uk.gov.justice.digital.hmpps.hmppsworkload.integration.responses.workforceAllocationsToDelius.officerOverviewResponse
 import uk.gov.justice.digital.hmpps.hmppsworkload.integration.responses.workforceAllocationsToDelius.personSummaryResponse
@@ -73,7 +74,16 @@ class WorkforceAllocationsToDeliusMockServer : ClientAndServer(MOCKSERVER_PORT) 
       ),
     )
   }
-
+  fun getDeliusAllowedTeamsResponse(staffCode: String) {
+    val choosePractitionerRequest =
+      HttpRequest.request()
+        .withPath("/staff/$staffCode/teams")
+    workforceAllocationsToDelius.`when`(choosePractitionerRequest).respond(
+      HttpResponse.response().withContentType(MediaType.APPLICATION_JSON).withBody(
+        getTeamCodesResponse(),
+      ),
+    )
+  }
   fun choosePractitionerByTeamCodesResponseUnallocated(teamCodes: List<String>, crn: String) {
     val choosePractitionerRequest =
       HttpRequest.request()
