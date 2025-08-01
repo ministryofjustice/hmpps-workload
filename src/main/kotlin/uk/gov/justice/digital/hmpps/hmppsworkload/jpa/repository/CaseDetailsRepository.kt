@@ -1,6 +1,20 @@
 package uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository
 
+import org.springframework.data.jpa.repository.Modifying
+import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.CrudRepository
+import uk.gov.justice.digital.hmpps.hmppsworkload.domain.CaseType
+import uk.gov.justice.digital.hmpps.hmppsworkload.domain.Tier
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.entity.CaseDetailsEntity
 
-interface CaseDetailsRepository : CrudRepository<CaseDetailsEntity, String>
+interface CaseDetailsRepository : CrudRepository<CaseDetailsEntity, String> {
+
+  @Suppress("LongParameterList")
+  @Modifying
+  @Query(
+    value = """INSERT INTO case_details(first_name, surname, tier, "type", crn) VALUES (:firstName, :surname, :tier, :caseType, :crn)
+     ON CONFLICT (crn) DO UPDATE  set first_name = excluded.first_name, surname = excluded.surname, tier = excluded.tier, type = excluded.type, crn = excluded.crn;""",
+    nativeQuery = true,
+  )
+  fun insertCaseDetails(firstName: String, surname: String, tier: Tier, caseType: CaseType, crn: String)
+}
