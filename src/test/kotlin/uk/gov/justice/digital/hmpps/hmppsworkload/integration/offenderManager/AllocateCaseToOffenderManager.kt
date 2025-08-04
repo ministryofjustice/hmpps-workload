@@ -415,7 +415,7 @@ class AllocateCaseToOffenderManager : IntegrationTestBase() {
 
   @Test
   fun `can send email when selecting a second person to receive email`() = runBlocking {
-    casesDbService.insertCaseDetails("Jane", "Doe", Tier.A0, CaseType.CUSTODY, crn)
+    casesDbService.insertCaseDetails("Jane", "Doe", Tier.A0, CaseType.COMMUNITY, crn)
     webTestClient.post()
       .uri("/team/$teamCode/offenderManager/$staffCode/case")
       .bodyValue(allocateCase(crn, eventNumber))
