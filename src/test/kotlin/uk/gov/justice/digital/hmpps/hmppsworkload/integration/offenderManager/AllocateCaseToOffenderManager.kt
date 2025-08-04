@@ -81,7 +81,7 @@ class AllocateCaseToOffenderManager : IntegrationTestBase() {
     hmppsTier.tierCalculationResponse(crn)
     assessRisksNeedsApi.riskSummaryErrorResponse(crn)
     assessRisksNeedsApi.riskPredictorResponse(crn)
-    caseDetailsRepository.save(CaseDetailsEntity(crn, Tier.A0, CaseType.CUSTODY, "Jane", "Doe"))
+    casesDbService.insertCaseDetails("Jane", "Doe", Tier.A0, CaseType.CUSTODY, crn)
     every { notificationClient.sendEmail(any(), any(), any(), any()) } returns
       SendEmailResponse(emailResponse())
     coEvery { notificationService.notifyAllocation(any(), any(), any()) } returns
@@ -143,7 +143,7 @@ class AllocateCaseToOffenderManager : IntegrationTestBase() {
   @Test
   fun `Notify error still keeps entry in db`() {
     every { notificationClient.sendEmail(any(), any(), any(), any()) } throws NotificationClientException("An exception")
-    caseDetailsRepository.save(CaseDetailsEntity(crn, Tier.A0, CaseType.CUSTODY, "Jane", "Doe"))
+    casesDbService.insertCaseDetails("Jane", "Doe", Tier.A0, CaseType.CUSTODY, crn)
 
     webTestClient.post()
       .uri("/team/$teamCode/offenderManager/$staffCode/case")
@@ -276,7 +276,7 @@ class AllocateCaseToOffenderManager : IntegrationTestBase() {
     // WFP-2937 we have changed the front end behaviour to disable the button after the first click
     workforceAllocationsToDelius.allocationResponse(crn, eventNumber, staffCode, allocatingOfficerUsername)
 
-    caseDetailsRepository.save(CaseDetailsEntity(crn, Tier.A0, CaseType.CUSTODY, "Jane", "Doe"))
+    casesDbService.insertCaseDetails("Jane", "Doe", Tier.A0, CaseType.CUSTODY, crn)
 
     webTestClient.post()
       .uri("/team/$teamCode/offenderManager/$staffCode/case")
@@ -306,7 +306,7 @@ class AllocateCaseToOffenderManager : IntegrationTestBase() {
   @Test
   fun `must emit staff grade to tier allocation telemetry event`() {
     val caseDetailsEntity = CaseDetailsEntity(crn, Tier.A0, CaseType.CUSTODY, "Jane", "Doe")
-    caseDetailsRepository.save(caseDetailsEntity)
+    casesDbService.insertCaseDetails("Jane", "Doe", Tier.A0, CaseType.CUSTODY, crn)
     webTestClient.post()
       .uri("/team/$teamCode/offenderManager/$staffCode/case")
       .bodyValue(allocateCase(crn, eventNumber))
@@ -415,7 +415,7 @@ class AllocateCaseToOffenderManager : IntegrationTestBase() {
 
   @Test
   fun `can send email when selecting a second person to receive email`() = runBlocking {
-    caseDetailsRepository.save(CaseDetailsEntity(crn, Tier.A0, CaseType.COMMUNITY, "Jane", "Doe"))
+    casesDbService.insertCaseDetails("Jane", "Doe", Tier.A0, CaseType.CUSTODY, crn)
     webTestClient.post()
       .uri("/team/$teamCode/offenderManager/$staffCode/case")
       .bodyValue(allocateCase(crn, eventNumber))
