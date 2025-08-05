@@ -12,6 +12,6 @@ class SaveCasesDbService(
 ) {
   @Transactional
   fun insertCaseDetails(firstName: String, surname: String, tier: Tier, caseType: CaseType, crn: String) {
-    caseDetailsRepository.insertCaseDetails(firstName, surname, tier, caseType, crn)
+    caseDetailsRepository.insertCaseDetails(firstName, surname, tier.name, caseType.name, crn)
   }
 }

@@ -15,7 +15,7 @@ class ChoosePractitionersByTeamCodes : IntegrationTestBase() {
     val teamCode = "T1"
     val teamCode2 = "T2"
     val crn = "CRN1"
-    val caseDetails = casesDbService.insertCaseDetails("Don", "Cole", Tier.B3, CaseType.CUSTODY, crn)
+    casesDbService.insertCaseDetails("Don", "Cole", Tier.B3, CaseType.CUSTODY, crn)
 
     workforceAllocationsToDelius.choosePractitionerByTeamCodesResponse(listOf(teamCode, teamCode2), crn)
     val firstWmtStaff = setupCurrentWmtStaff("OM1", teamCode)
