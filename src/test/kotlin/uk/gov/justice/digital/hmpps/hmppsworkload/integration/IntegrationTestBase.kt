@@ -63,6 +63,7 @@ import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.WorkloadCalcula
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.WorkloadPointsRepository
 import uk.gov.justice.digital.hmpps.hmppsworkload.listener.HmppsOffenderEvent
 import uk.gov.justice.digital.hmpps.hmppsworkload.service.AuditMessage
+import uk.gov.justice.digital.hmpps.hmppsworkload.service.SaveCasesDbService
 import uk.gov.justice.hmpps.sqs.HmppsQueueService
 import uk.gov.justice.hmpps.sqs.MissingQueueException
 import java.math.BigDecimal
@@ -96,6 +97,9 @@ abstract class IntegrationTestBase {
 
   @Autowired
   protected lateinit var caseDetailsRepository: CaseDetailsRepository
+
+  @Autowired
+  protected lateinit var casesDbService: SaveCasesDbService
 
   @Autowired
   protected lateinit var requirementManagerRepository: RequirementManagerRepository
