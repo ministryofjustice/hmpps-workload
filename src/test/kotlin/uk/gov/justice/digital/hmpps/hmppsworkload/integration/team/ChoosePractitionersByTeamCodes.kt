@@ -5,6 +5,7 @@ import uk.gov.justice.digital.hmpps.hmppsworkload.domain.CaseType
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.Tier
 import uk.gov.justice.digital.hmpps.hmppsworkload.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.hmppsworkload.integration.mockserver.WorkforceAllocationsToDeliusExtension.Companion.workforceAllocationsToDelius
+import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.entity.CaseDetailsEntity
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.entity.PersonManagerEntity
 import java.time.ZonedDateTime
 
@@ -15,7 +16,7 @@ class ChoosePractitionersByTeamCodes : IntegrationTestBase() {
     val teamCode = "T1"
     val teamCode2 = "T2"
     val crn = "CRN1"
-    casesDbService.insertCaseDetails("Don", "Cole", Tier.B3, CaseType.CUSTODY, crn)
+    val caseDetails = caseDetailsRepository.save(CaseDetailsEntity(crn, Tier.B3, CaseType.CUSTODY, "Don", "Cole"))
 
     workforceAllocationsToDelius.choosePractitionerByTeamCodesResponse(listOf(teamCode, teamCode2), crn)
     val firstWmtStaff = setupCurrentWmtStaff("OM1", teamCode)
@@ -53,7 +54,7 @@ class ChoosePractitionersByTeamCodes : IntegrationTestBase() {
       .jsonPath("$.name.surname")
       .isEqualTo("Cole")
       .jsonPath("$.tier")
-      .isEqualTo(Tier.B3.name)
+      .isEqualTo(caseDetails.tier.name)
       .jsonPath("$.probationStatus.status")
       .isEqualTo("PREVIOUSLY_MANAGED")
       .jsonPath("$.probationStatus.description")
@@ -113,7 +114,7 @@ class ChoosePractitionersByTeamCodes : IntegrationTestBase() {
     val teamCode = "T1"
     val teamCode2 = "T2"
     val crn = "CRN1"
-    casesDbService.insertCaseDetails("Don", "Cole", Tier.B3, CaseType.CUSTODY, crn)
+    val caseDetails = caseDetailsRepository.save(CaseDetailsEntity(crn, Tier.B3, CaseType.CUSTODY, "Don", "Cole"))
 
     workforceAllocationsToDelius.choosePractitionerByTeamCodesResponse(listOf(teamCode, teamCode2), crn)
     val firstWmtStaff = setupCurrentWmtStaff("OM1", teamCode)
@@ -151,7 +152,7 @@ class ChoosePractitionersByTeamCodes : IntegrationTestBase() {
       .jsonPath("$.name.surname")
       .isEqualTo("Cole")
       .jsonPath("$.tier")
-      .isEqualTo(Tier.B3.name)
+      .isEqualTo(caseDetails.tier.name)
       .jsonPath("$.probationStatus.status")
       .isEqualTo("PREVIOUSLY_MANAGED")
       .jsonPath("$.probationStatus.description")
@@ -285,7 +286,7 @@ class ChoosePractitionersByTeamCodes : IntegrationTestBase() {
     val teamCode = "T1"
     val teamCode2 = "T2"
     val crn = "CRN1"
-    casesDbService.insertCaseDetails("Don", "Cole", Tier.B3, CaseType.CUSTODY, crn)
+    caseDetailsRepository.save(CaseDetailsEntity(crn, Tier.B3, CaseType.CUSTODY, "Don", "Cole"))
     workforceAllocationsToDelius.choosePractitionerByTeamCodesResponse(listOf(teamCode, teamCode2), crn)
     val firstWmtStaff = setupCurrentWmtStaff("OM1", teamCode)
     setupCurrentWmtStaff("OM2", teamCode2)
@@ -340,7 +341,7 @@ class ChoosePractitionersByTeamCodes : IntegrationTestBase() {
     val teamCode = "T1"
     val staffCode = "OM1"
     val crn = "CRN1"
-    casesDbService.insertCaseDetails("Don", "Cole", Tier.B3, CaseType.CUSTODY, crn)
+    caseDetailsRepository.save(CaseDetailsEntity(crn, Tier.B3, CaseType.CUSTODY, "Don", "Cole"))
     workforceAllocationsToDelius.choosePractitionerByTeamCodesResponse(listOf(teamCode), crn)
 
     val movedPersonManager = PersonManagerEntity(crn = "CRN3", staffCode = staffCode, teamCode = teamCode, createdBy = "USER1", isActive = false)
@@ -365,7 +366,7 @@ class ChoosePractitionersByTeamCodes : IntegrationTestBase() {
     val teamCode = "T1"
     val teamCode2 = "T2"
     val crn = "CRN1"
-    casesDbService.insertCaseDetails("Don", "Cole", Tier.B3, CaseType.CUSTODY, crn)
+    caseDetailsRepository.save(CaseDetailsEntity(crn, Tier.B3, CaseType.CUSTODY, "Don", "Cole"))
     val staffCode = "OM1"
 
     workforceAllocationsToDelius.choosePractitionerStaffInMultipleTeamsResponse(listOf(teamCode, teamCode2), crn)
@@ -389,7 +390,7 @@ class ChoosePractitionersByTeamCodes : IntegrationTestBase() {
   fun `can get choose practitioner response when practitioner does not have an email field`() {
     val teamCode = "T2"
     val crn = "CRN1"
-    casesDbService.insertCaseDetails("Don", "Cole", Tier.B3, CaseType.CUSTODY, crn)
+    caseDetailsRepository.save(CaseDetailsEntity(crn, Tier.B3, CaseType.CUSTODY, "Don", "Cole"))
 
     workforceAllocationsToDelius.choosePractitionerByTeamCodesResponse(listOf(teamCode), crn)
     val firstWmtStaff = setupCurrentWmtStaff("OM3", teamCode)
@@ -418,7 +419,7 @@ class ChoosePractitionersByTeamCodes : IntegrationTestBase() {
   fun `can get choose practitioner response when there is no community person manager`() {
     val teamCode = "T2"
     val crn = "CRN1"
-    casesDbService.insertCaseDetails("Don", "Cole", Tier.B3, CaseType.CUSTODY, crn)
+    caseDetailsRepository.save(CaseDetailsEntity(crn, Tier.B3, CaseType.CUSTODY, "Don", "Cole"))
 
     workforceAllocationsToDelius.choosePractitionerByTeamCodesResponseNoCommunityPersonManager(listOf(teamCode), crn)
     val firstWmtStaff = setupCurrentWmtStaff("OM3", teamCode)
@@ -449,7 +450,7 @@ class ChoosePractitionersByTeamCodes : IntegrationTestBase() {
   fun `can get choose practitioner response when unallocated case`() {
     val teamCode = "T2"
     val crn = "CRN1"
-    casesDbService.insertCaseDetails("Don", "Cole", Tier.B3, CaseType.CUSTODY, crn)
+    caseDetailsRepository.save(CaseDetailsEntity(crn, Tier.B3, CaseType.CUSTODY, "Don", "Cole"))
 
     workforceAllocationsToDelius.choosePractitionerByTeamCodesResponseUnallocated(listOf(teamCode), crn)
     val firstWmtStaff = setupCurrentWmtStaff("OM3", teamCode)
