@@ -133,7 +133,7 @@ class SentenceChangedEventListenerTests : IntegrationTestBase() {
   @Test
   fun `case details deleted if no active convictions exist`() {
     val crn = "J678910"
-    caseDetailsRepository.save(CaseDetailsEntity(crn, Tier.C1, CaseType.COMMUNITY, "Jane", "Doe"))
+    casesDbService.insertCaseDetails("Jane", "Doe", Tier.C1, CaseType.COMMUNITY, crn)
 
     val personManagerEntity = personManagerRepository.save(PersonManagerEntity(crn = crn, staffCode = "STFFCDE", teamCode = "TM1", createdBy = "USER1", isActive = true))
     val eventManagerEntity = eventManagerRepository.save(
@@ -189,7 +189,7 @@ class SentenceChangedEventListenerTests : IntegrationTestBase() {
 
     val caseDetailsEntity = CaseDetailsEntity(crn, Tier.C3, CaseType.COMMUNITY, "Jane", "Doe")
     personManagerRepository.save(PersonManagerEntity(crn = crn, staffCode = staffCode, teamCode = teamCode, createdBy = "createdby", isActive = true))
-    caseDetailsRepository.save(caseDetailsEntity)
+    casesDbService.insertCaseDetails("Jane", "Doe", Tier.C3, CaseType.COMMUNITY, crn)
 
     placeSentenceChangedEventOnOffenderTopic(crn)
 
@@ -208,9 +208,7 @@ class SentenceChangedEventListenerTests : IntegrationTestBase() {
     workforceAllocationsToDelius.personResponseByCrn(crn)
     hmppsTier.tierCalculationResponse(crn)
 
-    val caseDetailsEntity = CaseDetailsEntity(crn, Tier.C3, CaseType.COMMUNITY, "Jane", "Doe")
-
-    caseDetailsRepository.save(caseDetailsEntity)
+    casesDbService.insertCaseDetails("Jane", "Doe", Tier.C3, CaseType.COMMUNITY, crn)
 
     workforceAllocationsToDelius.officerViewResponse(staffCode)
     personManagerRepository.save(PersonManagerEntity(crn = crn, staffCode = staffCode, teamCode = teamCode, createdBy = "createdby", isActive = true))
