@@ -39,7 +39,7 @@ jobs:
       localstack-tag: 3.0.2
       postgres-tag: "15"
       postgres-username: postgres
-      postgres-passwork: postgres
+      postgres-password: postgres
   build:
     name: Build docker image from hmpps-github-actions
     if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/epic')
