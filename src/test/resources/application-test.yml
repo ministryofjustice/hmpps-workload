@@ -7,6 +7,8 @@ management.endpoint:
 spring:
   datasource:
     url: "jdbc:postgresql://${database.endpoint:localhost:5432}/${database.name:postgres}"
+    username: postgres
+    password: postgres
   flyway:
     locations: classpath:db/migration, classpath:db/data
     mixed: true
