@@ -1,0 +1,96 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: hmpps-workload-ingress
+  namespace: default
+  labels:
+    app.kubernetes.io/name: hmpps-workload
+    role: alert-rules
+spec:
+  groups:
+    - name: hmpps-workload-ingress
+      rules:
+        # 5xx responses (all 5xx except 504)
+        - alert: Ingress5xxErrorResponses
+          expr: |
+            avg(
+              rate(nginx_ingress_controller_requests{
+                exported_namespace="default",
+                ingress=~"hmpps-workload(-v1-2)",
+                path="/",
+                status=~"5(0[0-3]|0[5-9]|[1-9][0-9])"
+              }[5m]) > 0
+            ) by (ingress, exported_namespace)
+          for: 1m
+          labels:
+            severity: warning
+            service: hmpps-workload
+          annotations:
+            summary: Ingress serving 5xx responses.
+        - alert: Ingress504ErrorResponses
+          expr: |
+            avg(
+              rate(nginx_ingress_controller_requests{
+                exported_namespace="default",
+                ingress=~"hmpps-workload(-v1-2)",
+                path="/",
+                status=~"504"
+              }[5m]) > 0
+            ) by (ingress, exported_namespace)
+          for: 1m
+          labels:
+            severity: warning
+            service: hmpps-workload
+          annotations:
+            summary: Ingress serving 504 responses.
+        # 5xx on /health specifically
+        - alert: Ingress5xxOnHealthEndpoint
+          expr: |
+            avg(
+              rate(nginx_ingress_controller_requests{
+                exported_namespace="default",
+                ingress=~"hmpps-workload(-v1-2)",
+                path="/health",
+                status=~"5.*"
+              }[5m]) > 0.5
+            ) by (ingress, exported_namespace)
+          for: 5m
+          labels:
+            severity: warning
+            service: hmpps-workload
+          annotations:
+            summary: High rate of 5xx errors on /health.
+
+        # 429 rate limiting detected
+        - alert: IngressRatelimitBlocking
+          expr: |
+            avg(
+              rate(nginx_ingress_controller_requests{
+                exported_namespace="default",
+                ingress=~"hmpps-workload(-v1-2)",
+                status="429"
+              }[1m]) > 0
+            ) by (ingress, exported_namespace)
+          for: 1m
+          labels:
+            severity: warning
+            service: hmpps-workload
+          annotations:
+            summary: Ingress is being rate limited (429s).
+
+        # ModSecurity blocking (default blocking code 406)
+        - alert: IngressModSecurityBlocking
+          expr: |
+            avg(
+              rate(nginx_ingress_controller_requests{
+                exported_namespace="default",
+                ingress=~"hmpps-workload(-v1-2)",
+                status="406"
+              }[1m]) > 0.33
+            ) by (ingress, exported_namespace)
+          for: 1m
+          labels:
+            severity: warning
+            service: hmpps-workload
+          annotations:
+            summary: ModSecurity is blocking requests.
