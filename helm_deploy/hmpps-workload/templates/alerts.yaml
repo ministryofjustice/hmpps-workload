@@ -2,7 +2,6 @@ apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
 metadata:
   name: hmpps-workload-ingress
-  namespace: default
   labels:
     app.kubernetes.io/name: hmpps-workload
     role: alert-rules
