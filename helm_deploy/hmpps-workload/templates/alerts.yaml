@@ -18,7 +18,7 @@ spec:
                 ingress=~"hmpps-workload(-v1-2)",
                 path="/",
                 status=~"5(0[0-3]|0[5-9]|[1-9][0-9])"
-              }[5m]) > 0
+              }[5m]) * 60 * 5 >= 3
             ) by (ingress, exported_namespace)
           for: 1m
           labels:
