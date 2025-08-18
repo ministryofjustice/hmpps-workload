@@ -34,7 +34,7 @@ import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.entity.EventManagerEntity
 
 const val DOWNSTREAM_500 = "Downstream 5xx:"
 
-@Suppress("SwallowedException", "TooManyFunctions", "LargeClass")
+@Suppress("SwallowedException", "TooManyFunctions", "LargeClass", "StringLiteralDuplication")
 class WorkforceAllocationsToDeliusApiClient(private val webClient: WebClient) {
 
   companion object {

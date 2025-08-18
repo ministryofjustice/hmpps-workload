@@ -11,6 +11,7 @@ import reactor.core.publisher.Mono
 private const val BEARER = "Bearer "
 private const val CLIENT_ID = "client_id"
 
+@Suppress("CyclomaticComplexMethod")
 class CallingClientWebFilter : WebFilter {
   override fun filter(exchange: ServerWebExchange, chain: WebFilterChain): Mono<Void> {
     val path = exchange.request.uri.path

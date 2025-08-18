@@ -79,11 +79,13 @@ class WebClientUserEnhancementConfiguration(
       .map(SecurityContext::getAuthentication)
       .map(Authentication::getName)
       .map { username ->
-        val clientRequest = ClientRequest.from(request)
-        if (request.body() is BodyInserters.FormInserter<*>) {
-          clientRequest.body((request.body() as BodyInserters.FormInserter<String>).with("username", username))
+        val builder = ClientRequest.from(request)
+        val body = request.body()
+        if (body is BodyInserters.FormInserter<*>) {
+          @Suppress("UNCHECKED_CAST")
+          builder.body((body as BodyInserters.FormInserter<String>).with("username", username))
         }
-        clientRequest.build()
+        builder.build()
       }
   }
 

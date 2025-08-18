@@ -5,6 +5,7 @@ import jakarta.persistence.Embeddable
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.Tier
 import java.math.BigInteger
 
+@Suppress("LongMethod")
 @Embeddable
 data class CustodyTierPoints(
   @Column(name = "cust_tier_1")
