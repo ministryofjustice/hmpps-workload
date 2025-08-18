@@ -13,12 +13,14 @@ import java.time.ZonedDateTime
 
 private const val TOLERANCE_MINUTES = 5L
 
+@Suppress("NestedBlockDepth")
 @Service
 class JpaBasedSaveEventManagerService(
   private val eventManagerRepository: EventManagerRepository,
   private val eventManagerAuditRepository: EventManagerAuditRepository,
 ) : SaveEventManagerService {
 
+  @Suppress("NestedBlockDepth")
   @Transactional
   /***
    * if the case has an event manager check if the new event manager is the same otherwise make the older event manager

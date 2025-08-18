@@ -1,4 +1,5 @@
 plugins {
+  id("com.gorylenko.gradle-git-properties") version "2.5.2"
   id("uk.gov.justice.hmpps.gradle-spring-boot") version "8.3.0"
   kotlin("plugin.spring") version "2.2.0"
   kotlin("plugin.jpa") version "2.2.0"
@@ -89,6 +90,12 @@ tasks {
 
   getByName("check") {
     dependsOn(":ktlintCheck", "detekt")
+  }
+}
+
+kotlin {
+  compilerOptions {
+    freeCompilerArgs.add("-Xannotation-default-target=param-property")
   }
 }
 
