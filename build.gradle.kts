@@ -1,11 +1,11 @@
 plugins {
   id("com.gorylenko.gradle-git-properties") version "2.5.2"
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "8.3.0"
-  kotlin("plugin.spring") version "2.2.0"
-  kotlin("plugin.jpa") version "2.2.0"
-  kotlin("jvm") version "2.2.0"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "8.3.6"
+  kotlin("plugin.spring") version "2.2.10"
+  kotlin("plugin.jpa") version "2.2.10"
+  kotlin("jvm") version "2.2.10"
   id("io.gitlab.arturbosch.detekt").version("1.23.8")
-  kotlin("plugin.allopen").version("2.2.0")
+  kotlin("plugin.allopen").version("2.2.10")
 }
 
 configurations {
@@ -28,7 +28,7 @@ dependencies {
   implementation(kotlin("stdlib"))
   implementation("org.springframework.boot:spring-boot-starter-webflux")
   implementation("org.springframework.boot:spring-boot-starter-data-jpa")
-  implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:5.4.6")
+  implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:5.4.10")
 
   implementation("org.springdoc:springdoc-openapi-starter-webflux-ui:2.8.9")
 
@@ -44,23 +44,23 @@ dependencies {
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:1.10.2")
 
   // go to open telemetry, when upgrading to spring boot 3 these can be removed
-  implementation("io.opentelemetry:opentelemetry-api:1.51.0")
-  implementation("com.microsoft.azure:applicationinsights-core:3.7.3")
-  agentDeps("com.microsoft.azure:applicationinsights-agent:3.7.3")
+  implementation("io.opentelemetry:opentelemetry-api:1.53.0")
+  implementation("com.microsoft.azure:applicationinsights-core:3.7.4")
+  agentDeps("com.microsoft.azure:applicationinsights-agent:3.7.4")
 
   implementation("uk.gov.service.notify:notifications-java-client:5.2.1-RELEASE")
-  implementation("io.hypersistence:hypersistence-utils-hibernate-63:3.10.1")
+  implementation("io.hypersistence:hypersistence-utils-hibernate-63:3.10.3")
 
   runtimeOnly("com.zaxxer:HikariCP")
   implementation("org.flywaydb:flyway-core")
   implementation("org.flywaydb:flyway-database-postgresql")
   runtimeOnly("org.postgresql:postgresql:42.7.7")
 
-  testImplementation("io.jsonwebtoken:jjwt-impl:0.12.6")
-  testImplementation("io.jsonwebtoken:jjwt-jackson:0.12.6")
+  testImplementation("io.jsonwebtoken:jjwt-impl:0.12.7")
+  testImplementation("io.jsonwebtoken:jjwt-jackson:0.12.7")
   testImplementation("org.mock-server:mockserver-netty:5.15.0")
   testImplementation("org.awaitility:awaitility-kotlin:4.3.0")
-  testImplementation("io.mockk:mockk:1.14.4")
+  testImplementation("io.mockk:mockk:1.14.5")
   testImplementation("com.ninja-squad:springmockk:4.0.2")
 
   testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.10.2")
