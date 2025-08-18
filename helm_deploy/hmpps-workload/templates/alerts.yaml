@@ -9,87 +9,59 @@ spec:
   groups:
     - name: hmpps-workload-ingress
       rules:
-        # 5xx responses (all 5xx except 504)
-        - alert: Ingress5xxErrorResponses
+        # 5xx except 504 — >=3 in 5m
+        - alert: WorkloadIngress5xxErrorResponses
           expr: |
-            avg(
-              rate(nginx_ingress_controller_requests{
-                exported_namespace="default",
-                ingress=~"hmpps-workload(-v1-2)",
-                path="/",
+            sum by (ingress, namespace) (
+              increase(nginx_ingress_controller_requests{
+                namespace="hmpps-workload-prod",
+                ingress=~"hmpps-workload(-v1-2)?",
                 status=~"5(0[0-3]|0[5-9]|[1-9][0-9])"
-              }[5m]) * 60 * 5 >= 3
-            ) by (ingress, exported_namespace)
+              }[5m])
+            ) >= 3
           for: 1m
-          labels:
-            severity: warning
-            service: hmpps-workload
-          annotations:
-            summary: Ingress serving 5xx responses.
-        - alert: Ingress504ErrorResponses
+          labels: { severity: warning, service: hmpps-workload }
+          annotations: { summary: Ingress serving 5xx (excl. 504) responses. }
+
+        # Any 504s in last 5m
+        - alert: WorkloadIngress504ErrorResponses
           expr: |
-            avg(
-              rate(nginx_ingress_controller_requests{
-                exported_namespace="default",
-                ingress=~"hmpps-workload(-v1-2)",
-                path="/",
-                status=~"504"
-              }[5m]) > 0
-            ) by (ingress, exported_namespace)
+            sum by (ingress, namespace) (
+              increase(nginx_ingress_controller_requests{
+                namespace="hmpps-workload-prod",
+                ingress=~"hmpps-workload(-v1-2)?",
+                status="504"
+              }[5m])
+            ) > 0
           for: 1m
-          labels:
-            severity: warning
-            service: hmpps-workload
-          annotations:
-            summary: Ingress serving 504 responses.
-        # 5xx on /health specifically
-        - alert: Ingress5xxOnHealthEndpoint
+          labels: { severity: warning, service: hmpps-workload }
+          annotations: { summary: Ingress serving 504 responses. }
+
+        # 5xx on /health — sustained >0.5 req/s over 5m
+        - alert: WorkloadIngress5xxOnHealthEndpoint
           expr: |
-            avg(
+            sum by (ingress, namespace) (
               rate(nginx_ingress_controller_requests{
-                exported_namespace="default",
-                ingress=~"hmpps-workload(-v1-2)",
-                path="/health",
-                status=~"5.*"
-              }[5m]) > 0.5
-            ) by (ingress, exported_namespace)
+                namespace="hmpps-workload-prod",
+                ingress=~"hmpps-workload(-v1-2)?",
+                path=~"/health.*",
+                status=~"5.."
+              }[5m])
+            ) > 0.5
           for: 5m
-          labels:
-            severity: warning
-            service: hmpps-workload
-          annotations:
-            summary: High rate of 5xx errors on /health.
+          labels: { severity: warning, service: hmpps-workload }
+          annotations: { summary: High rate of 5xx errors on /health. }
 
-        # 429 rate limiting detected
-        - alert: IngressRatelimitBlocking
+        # 429s — any in last minute
+        - alert: WorkloadIngressRatelimitBlocking
           expr: |
-            avg(
-              rate(nginx_ingress_controller_requests{
-                exported_namespace="default",
-                ingress=~"hmpps-workload(-v1-2)",
+            sum by (ingress, namespace) (
+              increase(nginx_ingress_controller_requests{
+                namespace="hmpps-workload-prod",
+                ingress=~"hmpps-workload(-v1-2)?",
                 status="429"
-              }[1m]) > 0
-            ) by (ingress, exported_namespace)
+              }[1m])
+            ) > 0
           for: 1m
-          labels:
-            severity: warning
-            service: hmpps-workload
-          annotations:
-            summary: Ingress is being rate limited (429s).
-
-        # ModSecurity blocking (default blocking code 406)
-        - alert: IngressModSecurityBlocking
-          expr: |
-            avg(
-              rate(nginx_ingress_controller_requests{
-                exported_namespace="default",
-                ingress=~"hmpps-workload(-v1-2)",
-                status="406"
-              }[1m]) > 0.33
-            ) by (ingress, exported_namespace)
-          for: 1m
-          labels:
-            severity: warning
-            service: hmpps-workload
-          annotations:
-            summary: ModSecurity is blocking requests.
+          labels: { severity: warning, service: hmpps-workload }
+          annotations: { summary: Ingress is rate limiting (429s). }
