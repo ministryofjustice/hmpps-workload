@@ -1,81 +1,67 @@
 apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
 metadata:
-  name: wmt-web-ingress
+  name: hmpps-workload-ingress
   labels:
-    app.kubernetes.io/name: wmt-web
+    app.kubernetes.io/name: hmpps-workload
     role: alert-rules
 spec:
   groups:
-    - name: wmt-web-ingress
+    - name: hmpps-workload-ingress
       rules:
         # 5xx except 504 — >=3 in 5m
-        - alert: WmtWebIngress5xxErrorResponses
+        - alert: WorkloadIngress5xxErrorResponses
           expr: |
             sum by (ingress, namespace) (
               increase(nginx_ingress_controller_requests{
                 namespace="hmpps-workload-prod",
-                ingress=~"wmt-web(-v1-2)?",
+                ingress=~"hmpps-workload(-v1-2)?",
                 status=~"5(0[0-3]|0[5-9]|[1-9][0-9])"
               }[5m])
             ) >= 3
           for: 1m
-          labels: { severity: warning, service: wmt-web }
+          labels: { severity: warning, service: hmpps-workload }
           annotations: { summary: Ingress serving 5xx (excl. 504) responses. }
 
         # Any 504s in last 5m
-        - alert: WmtWebIngress504ErrorResponses
+        - alert: WorkloadIngress504ErrorResponses
           expr: |
             sum by (ingress, namespace) (
               increase(nginx_ingress_controller_requests{
                 namespace="hmpps-workload-prod",
-                ingress=~"wmt-web(-v1-2)?",
+                ingress=~"hmpps-workload(-v1-2)?",
                 status="504"
               }[5m])
             ) > 0
           for: 1m
-          labels: { severity: warning, service: wmt-web }
+          labels: { severity: warning, service: hmpps-workload }
           annotations: { summary: Ingress serving 504 responses. }
 
         # 5xx on /health — sustained >0.5 req/s over 5m
-        - alert: WmtWebIngress5xxOnHealthEndpoint
+        - alert: WorkloadIngress5xxOnHealthEndpoint
           expr: |
             sum by (ingress, namespace) (
               rate(nginx_ingress_controller_requests{
                 namespace="hmpps-workload-prod",
-                ingress=~"wmt-web(-v1-2)?",
+                ingress=~"hmpps-workload(-v1-2)?",
                 path=~"/health.*",
                 status=~"5.."
               }[5m])
             ) > 0.5
           for: 5m
-          labels: { severity: warning, service: wmt-web }
+          labels: { severity: warning, service: hmpps-workload }
           annotations: { summary: High rate of 5xx errors on /health. }
 
         # 429s — any in last minute
-        - alert: WmtWebIngressRatelimitBlocking
+        - alert: WorkloadIngressRatelimitBlocking
           expr: |
             sum by (ingress, namespace) (
               increase(nginx_ingress_controller_requests{
                 namespace="hmpps-workload-prod",
-                ingress=~"wmt-web(-v1-2)?",
+                ingress=~"hmpps-workload(-v1-2)?",
                 status="429"
               }[1m])
             ) > 0
           for: 1m
-          labels: { severity: warning, service: wmt-web }
+          labels: { severity: warning, service: hmpps-workload }
           annotations: { summary: Ingress is rate limiting (429s). }
-
-        # ModSecurity blocking (406) — >0.33 req/s over 1m
-        - alert: WmtWebIngressModSecurityBlocking
-          expr: |
-            sum by (ingress, namespace) (
-              rate(nginx_ingress_controller_requests{
-                namespace="hmpps-workload-prod",
-                ingress=~"wmt-web(-v1-2)?",
-                status="406"
-              }[1m])
-            ) > 0.33
-          for: 1m
-          labels: { severity: warning, service: wmt-web }
-          annotations: { summary: ModSecurity is blocking requests. }
