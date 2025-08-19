@@ -20,7 +20,7 @@ spec:
               }[5m])
             ) >= 3
           for: 1m
-          labels: { severity: warning, service: hmpps-workload }
+          labels: { severity: hmpps-workload-prod-alerts, service: hmpps-workload }
           annotations: { summary: Ingress serving 5xx (excl. 504) responses. }
 
         # Any 504s in last 5m
@@ -34,7 +34,7 @@ spec:
               }[5m])
             ) > 0
           for: 1m
-          labels: { severity: warning, service: hmpps-workload }
+          labels: { severity: hmpps-workload-prod-alerts, service: hmpps-workload }
           annotations: { summary: Ingress serving 504 responses. }
 
         # 5xx on /health — sustained >0.5 req/s over 5m
@@ -49,7 +49,7 @@ spec:
               }[5m])
             ) > 0.5
           for: 5m
-          labels: { severity: warning, service: hmpps-workload }
+          labels: { severity: hmpps-workload-prod-alerts, service: hmpps-workload }
           annotations: { summary: High rate of 5xx errors on /health. }
 
         # 429s — any in last minute
@@ -63,5 +63,5 @@ spec:
               }[1m])
             ) > 0
           for: 1m
-          labels: { severity: warning, service: hmpps-workload }
+          labels: { severity: hmpps-workload-prod-alerts, service: hmpps-workload }
           annotations: { summary: Ingress is rate limiting (429s). }
