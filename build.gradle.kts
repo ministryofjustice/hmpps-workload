@@ -30,7 +30,7 @@ dependencies {
   implementation("org.springframework.boot:spring-boot-starter-data-jpa")
   implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:5.4.10")
 
-  implementation("org.springdoc:springdoc-openapi-starter-webflux-ui:2.8.9")
+  implementation("org.springdoc:springdoc-openapi-starter-webflux-ui:2.8.10")
 
   implementation("org.springframework.boot:spring-boot-starter-security")
   implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
@@ -56,8 +56,8 @@ dependencies {
   implementation("org.flywaydb:flyway-database-postgresql")
   runtimeOnly("org.postgresql:postgresql:42.7.7")
 
-  testImplementation("io.jsonwebtoken:jjwt-impl:0.12.7")
-  testImplementation("io.jsonwebtoken:jjwt-jackson:0.12.7")
+  testImplementation("io.jsonwebtoken:jjwt-impl:0.13.0")
+  testImplementation("io.jsonwebtoken:jjwt-jackson:0.13.0")
   testImplementation("org.mock-server:mockserver-netty:5.15.0")
   testImplementation("org.awaitility:awaitility-kotlin:4.3.0")
   testImplementation("io.mockk:mockk:1.14.5")
