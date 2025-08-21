@@ -5,6 +5,7 @@ plugins {
   kotlin("plugin.jpa") version "2.2.10"
   kotlin("jvm") version "2.2.10"
   id("io.gitlab.arturbosch.detekt").version("1.23.8")
+  id("org.owasp.dependencycheck") version "12.1.3"
   kotlin("plugin.allopen").version("2.2.10")
 }
 
@@ -18,6 +19,8 @@ configurations {
 
 dependencyCheck {
   suppressionFiles.add("suppressions.xml")
+  nvd.datafeedUrl = "file:///opt/vulnz/cache"
+
 }
 
 allOpen {
