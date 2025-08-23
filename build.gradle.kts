@@ -1,6 +1,6 @@
 plugins {
   id("com.gorylenko.gradle-git-properties") version "2.5.2"
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "8.3.6"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "8.3.7"
   kotlin("plugin.spring") version "2.2.10"
   kotlin("plugin.jpa") version "2.2.10"
   kotlin("jvm") version "2.2.10"
@@ -32,7 +32,7 @@ dependencies {
   implementation("org.springframework.boot:spring-boot-starter-data-jpa")
   implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:5.4.10")
 
-  implementation("org.springdoc:springdoc-openapi-starter-webflux-ui:2.8.10")
+  implementation("org.springdoc:springdoc-openapi-starter-webflux-ui:2.8.11")
 
   implementation("org.springframework.boot:spring-boot-starter-security")
   implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
