@@ -4,7 +4,7 @@ metadata:
   name: hmpps-workload-ingress
   labels:
     app.kubernetes.io/name: hmpps-workload
-    role: alert-rules
+    prometheus: cloud-platform
 spec:
   groups:
     - name: hmpps-workload-ingress
