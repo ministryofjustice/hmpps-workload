@@ -10,6 +10,7 @@ spec:
   successfulJobsHistoryLimit: 5
   jobTemplate:
     spec:
+      ttlSecondsAfterFinished: 60
       template:
         spec:
           {{- if .Values.serviceAccountName }}
