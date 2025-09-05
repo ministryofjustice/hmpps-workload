@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.hmppsworkload.service
 
+import io.micrometer.core.instrument.MeterRegistry
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Qualifier
@@ -32,6 +33,7 @@ const val SCORE_UNAVAILABLE = "Score Unavailable"
 private const val NOT_APPLICABLE = "N/A"
 private const val REFERENCE_ID = "referenceId"
 private const val CRN = "crn"
+private const val FAILED_ALLOCATION_COUNTER = "failed_allocation_notification"
 
 @Service
 class NotificationService(
@@ -41,6 +43,7 @@ class NotificationService(
   @Qualifier("assessRisksNeedsClientUserEnhanced") private val assessRisksNeedsApiClient: AssessRisksNeedsApiClient,
   private val sqsSuccessPublisher: SqsSuccessPublisher,
   private val workforceAllocationsToDeliusApiClient: WorkforceAllocationsToDeliusApiClient,
+  private val meterRegistry: MeterRegistry,
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
 
@@ -85,7 +88,8 @@ class NotificationService(
       MDC.put(CRN, caseDetails.crn)
       log.info("Email request sent to Notify for crn: ${caseDetails.crn} with reference ID: $emailReferenceId")
     } catch (exception: Exception) {
-      log.error("Failed to send notification", exception)
+      meterRegistry.counter(FAILED_ALLOCATION_COUNTER, "type", "email not send").increment()
+      log.error("Failed to send allocation email to {} from {} for {}: {}", emailTo, allocationDemandDetails.staff.name.getCombinedName(), allocationDemandDetails.crn, exception.message)
     } finally {
       MDC.remove(REFERENCE_ID)
       MDC.remove(CRN)
