@@ -2,21 +2,25 @@ package uk.gov.justice.digital.hmpps.hmppsworkload.listener
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.awspring.cloud.sqs.annotation.SqsListener
+import io.micrometer.core.instrument.MeterRegistry
 import org.slf4j.LoggerFactory
 import org.springframework.messaging.handler.annotation.Header
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.hmppsworkload.service.NotificationEmail
-import uk.gov.justice.digital.hmpps.hmppsworkload.service.NotificationService.NotificationInvalidSenderException
 import uk.gov.service.notify.NotificationClientApi
 import uk.gov.service.notify.NotificationClientException
 import uk.gov.service.notify.SendEmailResponse
 
 private const val MAX_RETRIES = 3
+private const val OFFICER = "officer_name"
+private const val CRN = "crn"
+private const val FAILED_ALLOCATION_COUNTER = "failed_allocation_notification"
 
 @Component
 class NotificationListener(
   private val notificationClient: NotificationClientApi,
   private val objectMapper: ObjectMapper,
+  private val meterRegistry: MeterRegistry,
 ) {
   companion object {
     private val log = LoggerFactory.getLogger(this::class.java)
@@ -29,13 +33,21 @@ class NotificationListener(
     notification.emailTo.map { email ->
       log.info("Sending email to $email")
       log.info("Email template: ${notification.emailTemplate}")
-      handleError(email) {
-        notificationClient.sendEmail(
-          notification.emailTemplate,
-          email,
-          notification.emailParameters,
-          notification.emailReferenceId,
-        )
+      try {
+        handleError(email) {
+          notificationClient.sendEmail(
+            notification.emailTemplate,
+            email,
+            notification.emailParameters,
+            notification.emailReferenceId,
+          )
+        }
+      } catch (notificationException: NotificationClientException) {
+        val crn = notification.emailParameters.getOrDefault(CRN, "UNKNOWN CRN")
+        val officer = notification.emailParameters.getOrDefault(OFFICER, "Unknown Officer")
+        meterRegistry.counter(FAILED_ALLOCATION_COUNTER, "type", "email not send").increment()
+        log.warn("Failed to send allocation email to {} from {} for {}: {}", email, officer, crn, notificationException.message)
+        // continue to next email address
       }
     }
   }
@@ -54,7 +66,8 @@ class NotificationListener(
           continue
         }
         if (notificationException.httpResult == 400) {
-          throw NotificationInvalidSenderException(emailRecipient, notificationException)
+          log.warn("Failed to  send for {} ", notificationException.message)
+          log.error("Unable to deliver to recipient $emailRecipient (Invalid Sender)")
         }
         throw notificationException
       }

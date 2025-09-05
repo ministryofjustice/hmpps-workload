@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.hmppsworkload.integration.listener
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import io.micrometer.core.instrument.MeterRegistry
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.Test
@@ -14,8 +15,9 @@ import java.util.*
 class NotificationEventListenerTest : IntegrationTestBase() {
 
   private val notificationClient = mockk<NotificationClient>()
+  private val meterRegistry = mockk<MeterRegistry>()
   override var objectMapper = ObjectMapper()
-  var cut = NotificationListener(notificationClient, objectMapper)
+  var cut = NotificationListener(notificationClient, objectMapper, meterRegistry)
 
   @Test
   fun `must listen to notification event`() {

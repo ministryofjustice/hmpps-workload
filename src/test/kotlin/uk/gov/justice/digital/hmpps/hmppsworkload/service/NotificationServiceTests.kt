@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.hmppsworkload.service
 
+import io.micrometer.core.instrument.MeterRegistry
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
@@ -41,6 +42,7 @@ class NotificationServiceTests {
   private val templateId = "templateId"
   private val laoTemplateID = "laoTemplateId"
   private val workforceAllocationsToDeliusApiClient = mockk<WorkforceAllocationsToDeliusApiClient>()
+  private val meterRegistry = mockk<MeterRegistry>()
   private val notificationService = NotificationService(
     notificationClient,
     templateId,
@@ -48,6 +50,7 @@ class NotificationServiceTests {
     assessRisksNeedsApiClient,
     sqsSuccessPublisher,
     workforceAllocationsToDeliusApiClient,
+    meterRegistry,
   )
   private val allocateCase = AllocateCase("CRN1111", sendEmailCopyToAllocatingOfficer = false, eventNumber = 1, allocationJustificationNotes = "Some Notes", sensitiveNotes = false, spoOversightNotes = "spo notes", sensitiveOversightNotes = null, laoCase = false)
   private val parameters = mapOf(
