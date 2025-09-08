@@ -10,7 +10,7 @@ spec:
     - name: hmpps-workload-notifications
       rules:
         - alert: NotificationFailedException
-          expr: increase(failed_allocation_notification{type="email not send"}[5m]) > 0 (EDIT THIS!)
+          expr: increase(failed_allocation_notification{type="email not send"}[5m]) > 0
           for: 0m
           labels: { severity: hmpps-workload-prod-alerts, service: hmpps-workload }
           annotations:
