@@ -1,5 +1,7 @@
 package uk.gov.justice.digital.hmpps.hmppsworkload.service
 
+import io.micrometer.core.instrument.Counter
+import io.micrometer.core.instrument.MeterRegistry
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
@@ -25,6 +27,7 @@ import uk.gov.justice.digital.hmpps.hmppsworkload.integration.getAllocationDetai
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.entity.CaseDetailsEntity
 import uk.gov.justice.digital.hmpps.hmppsworkload.utils.DateUtils
 import uk.gov.service.notify.NotificationClientApi
+import uk.gov.service.notify.NotificationClientException
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.time.LocalDate
@@ -41,6 +44,8 @@ class NotificationServiceTests {
   private val templateId = "templateId"
   private val laoTemplateID = "laoTemplateId"
   private val workforceAllocationsToDeliusApiClient = mockk<WorkforceAllocationsToDeliusApiClient>()
+  private val meterRegistry = mockk<MeterRegistry>()
+  private val counter = mockk<Counter>()
   private val notificationService = NotificationService(
     notificationClient,
     templateId,
@@ -48,6 +53,7 @@ class NotificationServiceTests {
     assessRisksNeedsApiClient,
     sqsSuccessPublisher,
     workforceAllocationsToDeliusApiClient,
+    meterRegistry,
   )
   private val allocateCase = AllocateCase("CRN1111", sendEmailCopyToAllocatingOfficer = false, eventNumber = 1, allocationJustificationNotes = "Some Notes", sensitiveNotes = false, spoOversightNotes = "spo notes", sensitiveOversightNotes = null, laoCase = false)
   private val parameters = mapOf(
@@ -448,5 +454,18 @@ class NotificationServiceTests {
 
     Assertions.assertEquals(emailTo.size, 3)
     Assertions.assertFalse(emailTo.contains(allocationDetails.allocatingStaff.email!!))
+  }
+
+  @Test
+  fun `Calls meter registry if email send fails`() = runBlocking {
+    val allocationDetails = getAllocationDetails(allocateCase.crn)
+    val firstEmail = "first@justice.gov.uk"
+    val secondEmail = "second@justice.gov.ww"
+    val allocateCase = AllocateCase("CRN1111", "instructions", listOf(firstEmail, secondEmail), false, 1, allocationJustificationNotes = "some notes", sensitiveNotes = false, spoOversightNotes = "spo notes", sensitiveOversightNotes = null, laoCase = false)
+    coEvery { sqsSuccessPublisher.sendNotification(any()) } throws NotificationClientException("Failed to send email")
+    coEvery { meterRegistry.counter(any(), any(), any()) } returns counter
+    coEvery { counter.increment() } returns Unit
+    notificationService.notifyAllocation(allocationDetails, allocateCase, caseDetails)
+    coVerify { meterRegistry.counter(any(), any(), any()) }
   }
 }
