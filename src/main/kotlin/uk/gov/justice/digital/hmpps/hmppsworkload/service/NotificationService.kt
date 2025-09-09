@@ -59,7 +59,7 @@ class NotificationService(
         "officer_name" to allocationDemandDetails.staff.name.getCombinedName(),
         "allocating_email" to allocationDemandDetails.allocatingStaff.email!!,
         "practitioner_email" to allocationDemandDetails.staff.email!!,
-        ).plus(getLoggedInUserParameters(allocationDemandDetails.allocatingStaff))
+      ).plus(getLoggedInUserParameters(allocationDemandDetails.allocatingStaff))
         .plus(CRN to allocationDemandDetails.crn)
     } else {
       templateId = allocationTemplateId
