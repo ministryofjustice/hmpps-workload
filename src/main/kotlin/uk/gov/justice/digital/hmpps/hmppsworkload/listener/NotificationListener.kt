@@ -45,8 +45,10 @@ class NotificationListener(
       } catch (notificationException: NotificationClientException) {
         val crn = notification.emailParameters.getOrDefault(CRN, "UNKNOWN CRN")
         val officer = notification.emailParameters.getOrDefault(OFFICER, "Unknown Officer")
+        val emailTo = notification.emailParameters.getOrDefault("practitioner_email", "Unknown sender")
+        val allocatingEmail = notification.emailParameters.getOrDefault("allocating_email", "Unknown allocating email")
         meterRegistry.counter(FAILED_ALLOCATION_COUNTER, "type", "email not send").increment()
-        log.warn("Failed to send allocation email to {} from {} for {}: {}", notification.emailTo.toString(), officer, crn, notificationException.message)
+        log.warn("Failed to send allocation email_to {} email_from {} from_officer {}: for_crn {} : {}", emailTo, allocatingEmail, officer, crn, notificationException.message)
         throw notificationException
       }
     }

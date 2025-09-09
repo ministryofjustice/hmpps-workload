@@ -78,7 +78,14 @@ class NotificationListenerTest {
     var rawMessage = "{\"Message\":{\"Text\":\"Some Message\"},\"MessageId\":\"002\"}"
     var templateId = UUID.randomUUID().toString()
     var referenceId = UUID.randomUUID().toString()
-    var emailParameters = mapOf("george" to "mildred")
+    var emailParameters = mapOf(
+      "george" to "mildred",
+      "allocating_email" to "allocateby@me.con",
+      "practitioner_email" to "allocateto@them.com",
+      "officer_name" to "Mr mackay",
+      "crn" to "CR1234",
+    )
+
     var sendEmailResponse = SendEmailResponse(
       """
     {
