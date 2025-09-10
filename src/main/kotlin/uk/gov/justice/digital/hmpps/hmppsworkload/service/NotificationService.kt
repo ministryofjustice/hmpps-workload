@@ -57,6 +57,8 @@ class NotificationService(
       templateId = allocationTemplateLAOId
       parameters = mapOf(
         "officer_name" to allocationDemandDetails.staff.name.getCombinedName(),
+        "allocating_email" to allocationDemandDetails.allocatingStaff.email!!,
+        "practitioner_email" to allocationDemandDetails.staff.email!!,
       ).plus(getLoggedInUserParameters(allocationDemandDetails.allocatingStaff))
         .plus(CRN to allocationDemandDetails.crn)
     } else {
@@ -65,10 +67,13 @@ class NotificationService(
         "officer_name" to allocationDemandDetails.staff.name.getCombinedName(),
         "induction_statement" to mapInductionAppointment(allocationDemandDetails.initialAppointment, caseDetails.type),
         "requirements" to mapRequirements(allocationDemandDetails.activeRequirements),
+        "allocating_email" to allocationDemandDetails.allocatingStaff.email!!,
+        "practitioner_email" to allocationDemandDetails.staff.email!!,
       ).plus(getRiskParameters(notifyData.riskSummary, notifyData.riskPredictors, allocationDemandDetails.ogrs))
         .plus(getConvictionParameters(allocationDemandDetails))
         .plus(getPersonOnProbationParameters(allocationDemandDetails.name.getCombinedName(), allocateCase))
         .plus(getLoggedInUserParameters(allocationDemandDetails.allocatingStaff))
+        .plus(CRN to allocationDemandDetails.crn)
     }
     logProbationEstateDetails(allocationDemandDetails.allocatingStaff.code, allocationDemandDetails.crn, allocationDemandDetails.staff.code)
     val emailTo = HashSet(allocateCase.emailTo ?: emptySet())
@@ -89,7 +94,7 @@ class NotificationService(
       log.info("Email request sent to Notify for crn: ${caseDetails.crn} with reference ID: $emailReferenceId")
     } catch (exception: Exception) {
       meterRegistry.counter(FAILED_ALLOCATION_COUNTER, "type", "email not send").increment()
-      log.error("Failed to send allocation email to {} from {} for {}: {}", emailTo, allocationDemandDetails.staff.name.getCombinedName(), allocationDemandDetails.crn, exception.message)
+      log.error("Failed to send allocation email_to: {} email_from {} from_officer {}: for_crn {}", emailTo, allocationDemandDetails.staff.email, allocationDemandDetails.staff.name.getCombinedName(), allocationDemandDetails.crn, exception.message)
     } finally {
       MDC.remove(REFERENCE_ID)
       MDC.remove(CRN)
