@@ -1,12 +1,12 @@
 plugins {
   id("com.gorylenko.gradle-git-properties") version "2.5.3"
   id("uk.gov.justice.hmpps.gradle-spring-boot") version "9.0.1"
-  kotlin("plugin.spring") version "2.2.10"
-  kotlin("plugin.jpa") version "2.2.10"
-  kotlin("jvm") version "2.2.10"
+  kotlin("plugin.spring") version "2.2.20"
+  kotlin("plugin.jpa") version "2.2.20"
+  kotlin("jvm") version "2.2.20"
   id("io.gitlab.arturbosch.detekt").version("1.23.8")
   id("org.owasp.dependencycheck") version "12.1.3"
-  kotlin("plugin.allopen").version("2.2.10")
+  kotlin("plugin.allopen").version("2.2.20")
 }
 
 configurations {
@@ -51,7 +51,7 @@ dependencies {
   agentDeps("com.microsoft.azure:applicationinsights-agent:3.7.4")
 
   implementation("uk.gov.service.notify:notifications-java-client:5.2.1-RELEASE")
-  implementation("io.hypersistence:hypersistence-utils-hibernate-63:3.10.3")
+  implementation("io.hypersistence:hypersistence-utils-hibernate-63:3.11.0")
 
   runtimeOnly("com.zaxxer:HikariCP")
   implementation("org.flywaydb:flyway-core")
