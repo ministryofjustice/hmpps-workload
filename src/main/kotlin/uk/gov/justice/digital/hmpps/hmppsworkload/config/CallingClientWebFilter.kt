@@ -15,7 +15,7 @@ private const val CLIENT_ID = "client_id"
 class CallingClientWebFilter : WebFilter {
   override fun filter(exchange: ServerWebExchange, chain: WebFilterChain): Mono<Void> {
     val path = exchange.request.uri.path
-    if (path.startsWith("/v3/api") || path.startsWith("/health") || path.startsWith("/info") || path.startsWith("/swagger")) {
+    if (path.startsWith("/v3/api") || path.startsWith("/health") || path.startsWith("/info") || path.startsWith("/swagger") || path.startsWith("/queue-admin")) {
       return chain.filter(exchange)
     }
     val auth = exchange.request.headers.get(HttpHeaders.AUTHORIZATION)
