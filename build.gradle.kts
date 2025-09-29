@@ -1,12 +1,12 @@
 plugins {
   id("com.gorylenko.gradle-git-properties") version "2.5.3"
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "9.0.1"
-  kotlin("plugin.spring") version "2.2.10"
-  kotlin("plugin.jpa") version "2.2.10"
-  kotlin("jvm") version "2.2.10"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "9.1.1"
+  kotlin("plugin.spring") version "2.2.20"
+  kotlin("plugin.jpa") version "2.2.20"
+  kotlin("jvm") version "2.2.20"
   id("io.gitlab.arturbosch.detekt").version("1.23.8")
-  id("org.owasp.dependencycheck") version "12.1.3"
-  kotlin("plugin.allopen").version("2.2.10")
+  id("org.owasp.dependencycheck") version "12.1.6"
+  kotlin("plugin.allopen").version("2.2.20")
 }
 
 configurations {
@@ -30,7 +30,7 @@ dependencies {
   implementation(kotlin("stdlib"))
   implementation("org.springframework.boot:spring-boot-starter-webflux")
   implementation("org.springframework.boot:spring-boot-starter-data-jpa")
-  implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:5.4.10")
+  implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:5.4.11")
 
   implementation("org.springdoc:springdoc-openapi-starter-webflux-ui:2.8.13")
 
@@ -46,17 +46,17 @@ dependencies {
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:1.10.2")
 
   // go to open telemetry, when upgrading to spring boot 3 these can be removed
-  implementation("io.opentelemetry:opentelemetry-api:1.54.0")
-  implementation("com.microsoft.azure:applicationinsights-core:3.7.4")
-  agentDeps("com.microsoft.azure:applicationinsights-agent:3.7.4")
+  implementation("io.opentelemetry:opentelemetry-api:1.54.1")
+  implementation("com.microsoft.azure:applicationinsights-core:3.7.5")
+  agentDeps("com.microsoft.azure:applicationinsights-agent:3.7.5")
 
   implementation("uk.gov.service.notify:notifications-java-client:5.2.1-RELEASE")
-  implementation("io.hypersistence:hypersistence-utils-hibernate-63:3.10.3")
+  implementation("io.hypersistence:hypersistence-utils-hibernate-63:3.11.0")
 
   runtimeOnly("com.zaxxer:HikariCP")
   implementation("org.flywaydb:flyway-core")
   implementation("org.flywaydb:flyway-database-postgresql")
-  runtimeOnly("org.postgresql:postgresql:42.7.7")
+  runtimeOnly("org.postgresql:postgresql:42.7.8")
 
   testImplementation("io.jsonwebtoken:jjwt-impl:0.13.0")
   testImplementation("io.jsonwebtoken:jjwt-jackson:0.13.0")
