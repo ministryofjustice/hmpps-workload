@@ -22,13 +22,25 @@ class AuditService(
       ?: throw MissingQueueException("HmppsQueue hmppsauditqueue not found")
   }
 
-  suspend fun auditData(data: Any) {
+  suspend fun auditData(auditData: Any, loggedInUser: String) {
     val sendMessage = SendMessageRequest.builder()
       .queueUrl(hmppsAuditQueue.queueUrl)
-      .messageBody(objectMapper.writeValueAsString(data))
+      .messageBody(
+        objectMapper.writeValueAsString(
+          AuditMessage(operationId = UUID.randomUUID().toString(), what = "Manage a Workforce Audit", who = loggedInUser, details = objectMapper.writeValueAsString(auditData)),
+        ),
+      )
       .build()
 
+    log.debug(
+      objectMapper.writeValueAsString(
+        AuditMessage(operationId = UUID.randomUUID().toString(), what = "Manage a Workforce Audit", who = loggedInUser, details = objectMapper.writeValueAsString(auditData)),
+      ),
+    )
+
     hmppsAuditQueue.sqsClient.sendMessage(sendMessage)
+
+    log.debug("done")
   }
 
   companion object {
