@@ -12,7 +12,7 @@ import java.util.*
 
 @Service
 @ConditionalOnProperty("hmpps.sqs.topics.hmppsdomaintopic.arn")
-class AuditService(
+class MawAuditService(
   val hmppsQueueService: HmppsQueueService,
   val objectMapper: ObjectMapper,
 ) {

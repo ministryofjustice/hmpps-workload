@@ -10,15 +10,15 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
-import uk.gov.justice.digital.hmpps.hmppsworkload.service.AuditService
+import uk.gov.justice.digital.hmpps.hmppsworkload.service.MawAuditService
 
 @RestController
 @RequestMapping(produces = [MediaType.APPLICATION_JSON_VALUE])
 class AuditController(
-  private val auditService: AuditService,
+  private val mawAuditService: MawAuditService,
 ) {
 
-  @Operation(summary = "Retrieve Team summary by Team Code")
+  @Operation(summary = "Post an audit message")
   @ApiResponses(
     value = [
       ApiResponse(responseCode = "200", description = "OK"),
@@ -26,5 +26,5 @@ class AuditController(
   )
   @PreAuthorize("hasRole('ROLE_WORKLOAD_MEASUREMENT') or hasRole('ROLE_WORKLOAD_READ')")
   @PostMapping("/audit/data")
-  suspend fun auditData(@RequestBody auditData: Any, authentication: Authentication) = auditService.auditData(auditData, authentication.name)
+  suspend fun auditData(@RequestBody auditData: Any, authentication: Authentication) = mawAuditService.auditData(auditData, authentication.name)
 }
