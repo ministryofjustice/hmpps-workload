@@ -14,12 +14,14 @@ import org.springframework.web.reactive.function.client.WebClient
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.AssessRisksNeedsApiClient
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.HmppsTierApiClient
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.WorkforceAllocationsToDeliusApiClient
+import uk.gov.justice.digital.hmpps.hmppsworkload.client.FeatureFlagClient
 
 @Configuration
 class WebClientConfiguration(
   @Value("\${hmpps-tier.endpoint.url}") private val hmppsTierApiRootUri: String,
   @Value("\${workforce-allocations-to-delius.endpoint.url}") private val workforceAllocationsToDeliusApiRootUri: String,
   @Value("\${assess-risks-needs.endpoint.url}") private val assessRisksNeedsApiRootUri: String,
+  @Value("\${feature-flag.endpoint.url}") private val featureFlagApiRootUri: String,
 ) {
 
   @Bean
@@ -63,6 +65,13 @@ class WebClientConfiguration(
   @Bean
   fun hmppsTierApiClient(@Qualifier("hmppsTierWebClientAppScope") webClient: WebClient): HmppsTierApiClient = HmppsTierApiClient(webClient)
 
+  @Bean
+  fun featureFlagClient(builder: WebClient.Builder): FeatureFlagClient{
+    val rootUri = featureFlagApiRootUri
+    val apiKey = System.getenv("FLIPT_API_KEY")
+    return FeatureFlagClient(getFliptWebClient(builder, rootUri, apiKey))
+  }
+  @
   private fun getOAuthWebClient(
     authorizedClientManager: ReactiveOAuth2AuthorizedClientManager,
     builder: WebClient.Builder,
@@ -75,4 +84,13 @@ class WebClientConfiguration(
       .filter(oauth2Client)
       .build()
   }
+
+  private fun getFliptWebClient(
+    builder: WebClient.Builder,
+    rootUri: String,
+    apiKey: String,
+  ): WebClient = builder
+  .baseUrl(rootUri)
+  .defaultHeader("Authorization", "Bearer $apiKey")
+  .build()
 }
