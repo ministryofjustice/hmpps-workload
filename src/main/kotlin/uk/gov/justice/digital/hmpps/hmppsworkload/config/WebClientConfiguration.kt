@@ -71,7 +71,7 @@ class WebClientConfiguration(
     val apiKey = System.getenv("FLIPT_API_KEY")
     return FeatureFlagClient(getFliptWebClient(builder, rootUri, apiKey))
   }
-  @
+  
   private fun getOAuthWebClient(
     authorizedClientManager: ReactiveOAuth2AuthorizedClientManager,
     builder: WebClient.Builder,
