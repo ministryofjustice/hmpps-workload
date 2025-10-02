@@ -31,7 +31,7 @@ class FeatureFlagService(
       context = null,
     )
     return featureFlagClient.getFeatureFlags(request)
-  } 
+  }
 
   @Scheduled(cron = "0 */10 * * * *")
   @CacheEvict(value = ["featureFlags"], allEntries = true)

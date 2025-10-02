@@ -22,7 +22,7 @@ data class FeatureFlagRequest(
   val namespace: String = "ManageAWorkforce",
   val entityId: String,
   val flagKey: String,
-  val context: Map<String, String>? = null ,
+  val context: Map<String, String>? = null,
 )
 
 data class FeatureFlagResponse(
