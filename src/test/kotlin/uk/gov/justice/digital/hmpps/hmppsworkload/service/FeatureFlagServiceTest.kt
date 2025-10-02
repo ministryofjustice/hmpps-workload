@@ -3,11 +3,13 @@ package uk.gov.justice.digital.hmpps.hmppsworkload.service
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.Test
+import org.springframework.test.context.ActiveProfiles
 import reactor.core.publisher.Mono
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.FeatureFlagClient
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.FeatureFlagRequest
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.FeatureFlagResponse
 
+@ActiveProfiles("test")
 class FeatureFlagServiceTest {
 
   private val featureFlagClient = mockk<FeatureFlagClient>()

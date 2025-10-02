@@ -95,3 +95,5 @@ oauth:
       secret: client-secret
 ingress:
   url: localhost:8080
+FLIPT_API_KEY: test-api-key
+FLIPT_API_URL: http://localhost:8083

@@ -21,7 +21,8 @@ class WebClientConfiguration(
   @Value("\${hmpps-tier.endpoint.url}") private val hmppsTierApiRootUri: String,
   @Value("\${workforce-allocations-to-delius.endpoint.url}") private val workforceAllocationsToDeliusApiRootUri: String,
   @Value("\${assess-risks-needs.endpoint.url}") private val assessRisksNeedsApiRootUri: String,
-  @Value("\${feature-flag.endpoint.url}") private val featureFlagApiRootUri: String,
+  @Value("\${FLIPT_API_URL:http://someurl:8089}") private val featureFlagApiRootUri: String,
+  @Value("\${FLIPT_API_KEY:someTestToken}") private val featureFlagApiKey: String,
 ) {
 
   @Bean
@@ -66,11 +67,7 @@ class WebClientConfiguration(
   fun hmppsTierApiClient(@Qualifier("hmppsTierWebClientAppScope") webClient: WebClient): HmppsTierApiClient = HmppsTierApiClient(webClient)
 
   @Bean
-  fun featureFlagClient(builder: WebClient.Builder): FeatureFlagClient {
-    val rootUri = featureFlagApiRootUri
-    val apiKey = System.getenv("FLIPT_API_KEY")
-    return FeatureFlagClient(getFliptWebClient(builder, rootUri, apiKey))
-  }
+  fun featureFlagClient(builder: WebClient.Builder): FeatureFlagClient = FeatureFlagClient(getFliptWebClient(builder))
 
   private fun getOAuthWebClient(
     authorizedClientManager: ReactiveOAuth2AuthorizedClientManager,
@@ -87,13 +84,11 @@ class WebClientConfiguration(
 
   private fun getFliptWebClient(
     builder: WebClient.Builder,
-    rootUri: String,
-    apiKey: String,
   ): WebClient = builder
-    .baseUrl(rootUri)
+    .baseUrl(featureFlagApiRootUri)
     .defaultHeader(
       "Authorization",
-      "Bearer $apiKey",
+      "Bearer $featureFlagApiKey",
     )
     .build()
 }
