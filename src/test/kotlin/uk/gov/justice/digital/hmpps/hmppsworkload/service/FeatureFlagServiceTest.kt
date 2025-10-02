@@ -2,7 +2,6 @@ package uk.gov.justice.digital.hmpps.hmppsworkload.service
 
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.verify
 import org.junit.jupiter.api.Test
 import reactor.core.publisher.Mono
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.FeatureFlagClient
@@ -11,29 +10,30 @@ import uk.gov.justice.digital.hmpps.hmppsworkload.client.FeatureFlagResponse
 
 class FeatureFlagServiceTest {
 
-    private val featureFlagClient = mockk<FeatureFlagClient>()
-    private val service = FeatureFlagService(featureFlagClient)
+  private val featureFlagClient = mockk<FeatureFlagClient>()
+  private val service = FeatureFlagService(featureFlagClient)
 
-    @Test
-    fun `should return feature flag response from client`() {
-        val flagKey = "test-flag"
-        val context = mapOf("user" to "test-user")
-        val expectedResponse = FeatureFlagResponse(enabled = true)
-        val request = FeatureFlagRequest(
-            entityId = flagKey,
-            flagKey = flagKey,
-            context = context
-        )
-        every { featureFlagClient.getFeatureFlags(request) } returns Mono.just(expectedResponse)
+  @Test
+  fun `should return feature flag response from client`() {
+    val flagKey = "test-flag"
+    val context = mapOf("user" to "test-user")
+    val expectedResponse = FeatureFlagResponse(enabled = true)
+    val request = FeatureFlagRequest(
+      namespace = "ManageAWorkforce",
+      entityId = flagKey,
+      flagKey = flagKey,
+      context = context,
+    )
+    every { featureFlagClient.getFeatureFlags(request) } returns Mono.just(expectedResponse)
 
-        val result = service.isFeatureEnabled(flagKey, context).block()
+    val result = service.isFeatureEnabled(flagKey, context).block()
 
-        assert(result == expectedResponse)
-    }
+    assert(result == expectedResponse)
+  }
 
-    @Test
-    fun `should evict featureFlags cache`() {
-        // Just call the method to ensure it does not throw
-        service.evictFeatureFlagsCache()
-    }
+  @Test
+  fun `should evict featureFlags cache`() {
+    // Just call the method to ensure it does not throw
+    service.evictFeatureFlagsCache()
+  }
 }
