@@ -24,6 +24,15 @@ class FeatureFlagService(
     return featureFlagClient.getFeatureFlags(request)
   }
 
+  fun isFeatureEnabled(flagKey: String): Mono<FeatureFlagResponse> {
+    val request = FeatureFlagRequest(
+      entityId = flagKey,
+      flagKey = flagKey,
+      context = null,
+    )
+    return featureFlagClient.getFeatureFlags(request)
+  } 
+
   @Scheduled(cron = "0 */10 * * * *")
   @CacheEvict(value = ["featureFlags"], allEntries = true)
   fun evictFeatureFlagsCache() {

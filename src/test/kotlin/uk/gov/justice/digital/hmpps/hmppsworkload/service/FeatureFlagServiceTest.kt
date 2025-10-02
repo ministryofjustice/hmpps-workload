@@ -34,6 +34,23 @@ class FeatureFlagServiceTest {
   }
 
   @Test
+  fun `should return feature flag response from client without context`() {
+    val flagKey = "test-flag"
+    val expectedResponse = FeatureFlagResponse(enabled = false)
+    val request = FeatureFlagRequest(
+      namespace = "ManageAWorkforce",
+      entityId = flagKey,
+      flagKey = flagKey,
+      context = null,
+    )
+    every { featureFlagClient.getFeatureFlags(request) } returns Mono.just(expectedResponse)
+
+    val result = service.isFeatureEnabled(flagKey).block()
+
+    assert(result == expectedResponse)
+  }
+
+  @Test
   fun `should evict featureFlags cache`() {
     // Just call the method to ensure it does not throw
     service.evictFeatureFlagsCache()
