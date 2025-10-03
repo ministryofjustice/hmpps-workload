@@ -90,5 +90,6 @@ class WebClientConfiguration(
       "Authorization",
       "Bearer $featureFlagApiKey",
     )
+    .defaultHeader("Content-Type", "application/json ")
     .build()
 }

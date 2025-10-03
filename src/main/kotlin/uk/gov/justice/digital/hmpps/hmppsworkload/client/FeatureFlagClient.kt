@@ -12,7 +12,6 @@ class FeatureFlagClient(private val webClient: WebClient) {
     return webClient.post()
       .uri(evaluationPath)
       .bodyValue(request)
-      .header("Content-Type", "application/json ")
       .retrieve()
       .bodyToMono(FeatureFlagResponse::class.java)
   }
