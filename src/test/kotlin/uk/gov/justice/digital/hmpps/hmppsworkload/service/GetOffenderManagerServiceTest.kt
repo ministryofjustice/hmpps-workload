@@ -30,6 +30,7 @@ import uk.gov.justice.digital.hmpps.hmppsworkload.service.staff.GetOffenderManag
 import uk.gov.justice.digital.hmpps.hmppsworkload.service.staff.JpaBasedGetEventManager
 import java.math.BigDecimal
 import java.math.BigInteger
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZonedDateTime
 
@@ -188,7 +189,9 @@ class GetOffenderManagerServiceTest {
     val name = Name("Jim", "A", "Bond")
     val staffIdentifier = StaffIdentifier(STAFF_CODE, STAFF_TEAM_CODE)
 
-    coEvery { workforceAllocationsToDeliusApiClient.staffActiveCases(staffIdentifier.staffCode, any()) } returns StaffActiveCases("002", name, OFFICER_GRADE, OFFICER_EMAIL, listOf(ActiveCase(crn, name, "CUSTODY")))
+    val now = LocalDate.now()
+
+    coEvery { workforceAllocationsToDeliusApiClient.staffActiveCases(staffIdentifier.staffCode, any()) } returns StaffActiveCases("002", name, OFFICER_GRADE, OFFICER_EMAIL, listOf(ActiveCase(crn, name, "CUSTODY", now)))
 
     val caseDetailsEntity = CaseDetailsEntity(crn, Tier.A1, CaseType.CUSTODY, "John", "Smith")
     coEvery { caseDetailsRepository.findAllById(listOf("002")) } returns listOf(caseDetailsEntity)
@@ -199,6 +202,6 @@ class GetOffenderManagerServiceTest {
     assertEquals(cases?.name, name)
     assertEquals(cases?.code, "002")
     assertEquals(cases?.grade, "SPO")
-    assertEquals(cases?.activeCases, listOf(OffenderManagerActiveCase(crn, Tier.A1.toString(), name, "CUSTODY")))
+    assertEquals(cases?.activeCases, listOf(OffenderManagerActiveCase(crn, Tier.A1.toString(), name, "CUSTODY", now)))
   }
 }

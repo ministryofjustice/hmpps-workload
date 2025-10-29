@@ -6,6 +6,7 @@ import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.ActiveCase
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.Name
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.StaffActiveCases
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.entity.CaseDetailsEntity
+import java.time.LocalDate
 
 data class OffenderManagerCases @JsonCreator constructor(
   @Schema(description = "Probation Practitioner name")
@@ -32,8 +33,10 @@ data class OffenderManagerActiveCase(
   val name: Name,
   @Schema(description = "type")
   val type: String,
+  @Schema(description = "Initial allocation date")
+  val initialAllocationDate: LocalDate?,
 ) {
   companion object {
-    fun from(activeCase: ActiveCase, caseDetails: CaseDetailsEntity): OffenderManagerActiveCase = OffenderManagerActiveCase(activeCase.crn, caseDetails.tier.name, activeCase.name, activeCase.type)
+    fun from(activeCase: ActiveCase, caseDetails: CaseDetailsEntity): OffenderManagerActiveCase = OffenderManagerActiveCase(activeCase.crn, caseDetails.tier.name, activeCase.name, activeCase.type, activeCase.initialAllocationDate)
   }
 }
