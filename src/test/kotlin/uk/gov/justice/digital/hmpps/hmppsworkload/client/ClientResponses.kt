@@ -120,6 +120,16 @@ class ClientResponses {
               "surname": "Smith"
             },
             "type": "LICENSE"
+          },
+          {
+            "crn": "X999998",
+            "name": {
+              "forename": "Rob",
+              "middleName": "Tim",
+              "surname": "Jones"
+            },
+            "type": "LICENSE",
+            "initialAllocationDate": "2025-05-22"
           }
         ]
       }
