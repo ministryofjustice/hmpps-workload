@@ -290,6 +290,8 @@ class WorkforceAllocationsToDeliusApiClientTest {
     assertEquals("Jones", result.name.surname)
     assertEquals("X999999", result.cases[0].crn)
     assertEquals("LICENSE", result.cases[0].type)
+    assertNull(result.cases[0].initialAllocationDate)
+    assertEquals(LocalDate.parse("2025-05-22"), result.cases[1].initialAllocationDate)
   }
 
   @Test
