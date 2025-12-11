@@ -101,25 +101,7 @@ class NotificationService(
     val emailTo = HashSet(allocateCase.emailTo ?: emptySet())
     emailTo.add(allocationDemandDetails.staff.email!!)
 
-    try {
-      sqsSuccessPublisher.sendNotification(
-        NotificationEmail(
-          emailTo = emailTo,
-          emailTemplate = templateId,
-          emailReferenceId = emailReferenceId,
-          emailParameters = parameters,
-        ),
-      )
-      MDC.put(REFERENCE_ID, emailReferenceId)
-      MDC.put(CRN, caseDetails.crn)
-      log.info(EMAIL_SENT_INFO + "${caseDetails.crn} with reference ID: $emailReferenceId")
-    } catch (exception: Exception) {
-      meterRegistry.counter(FAILED_ALLOCATION_COUNTER, "type", "email not send").increment()
-      log.error(FAILED_EMAIL_MSG, emailTo, allocationDemandDetails.staff.email, allocationDemandDetails.staff.name.getCombinedName(), allocationDemandDetails.crn, exception.message)
-    } finally {
-      MDC.remove(REFERENCE_ID)
-      MDC.remove(CRN)
-    }
+    sendNotification(templateId, emailReferenceId, parameters, caseDetails, allocationDemandDetails, emailTo)
 
     return NotificationMessageResponse(templateId, emailReferenceId, emailTo)
   }
@@ -163,25 +145,7 @@ class NotificationService(
     val emailTo = HashSet(allocateCase.emailTo ?: emptySet())
     emailTo.add(allocationDemandDetails.staff.email!!)
 
-    try {
-      sqsSuccessPublisher.sendNotification(
-        NotificationEmail(
-          emailTo = emailTo,
-          emailTemplate = templateId,
-          emailReferenceId = emailReferenceId,
-          emailParameters = parameters,
-        ),
-      )
-      MDC.put(REFERENCE_ID, emailReferenceId)
-      MDC.put(CRN, caseDetails.crn)
-      log.info("Email request sent to Notify for crn: ${caseDetails.crn} with reference ID: $emailReferenceId")
-    } catch (exception: Exception) {
-      meterRegistry.counter(FAILED_ALLOCATION_COUNTER, "type", "email not send").increment()
-      log.error(FAILED_REALLOCATION_EMAIL_MSG, emailTo, allocationDemandDetails.staff.email, allocationDemandDetails.staff.name.getCombinedName(), allocationDemandDetails.crn, exception.message)
-    } finally {
-      MDC.remove(REFERENCE_ID)
-      MDC.remove(CRN)
-    }
+    sendNotification(templateId, emailReferenceId, parameters, caseDetails, allocationDemandDetails, emailTo)
 
     return NotificationMessageResponse(templateId, emailReferenceId, emailTo)
   }
@@ -226,6 +190,13 @@ class NotificationService(
     val emailTo = HashSet<String>()
     emailTo.add(previousEmail)
 
+    sendNotification(templateId, emailReferenceId, parameters, caseDetails, allocationDemandDetails, emailTo)
+
+    return NotificationMessageResponse(templateId, emailReferenceId, emailTo)
+  }
+
+  @Suppress("LongParameterList", "LongMethod", "TooGenericExceptionCaught")
+  private fun sendNotification(templateId: String, emailReferenceId: String, parameters: Map<String, Any>, caseDetails: CaseDetailsEntity, allocationDemandDetails: AllocationDemandDetails, emailTo: HashSet<String>) {
     try {
       sqsSuccessPublisher.sendNotification(
         NotificationEmail(
@@ -245,8 +216,6 @@ class NotificationService(
       MDC.remove(REFERENCE_ID)
       MDC.remove(CRN)
     }
-
-    return NotificationMessageResponse(templateId, emailReferenceId, emailTo)
   }
 
   private fun getLoggedInUserParameters(loggedInUser: StaffMember): Map<String, Any> = mapOf(
