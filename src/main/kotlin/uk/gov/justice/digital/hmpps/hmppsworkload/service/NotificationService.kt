@@ -100,6 +100,7 @@ class NotificationService(
     logProbationEstateDetails(allocationDemandDetails.allocatingStaff.code, allocationDemandDetails.crn, allocationDemandDetails.staff.code)
     val emailTo = HashSet(allocateCase.emailTo ?: emptySet())
     emailTo.add(allocationDemandDetails.staff.email!!)
+    if (allocateCase.sendEmailCopyToAllocatingOfficer) emailTo.add(allocationDemandDetails.allocatingStaff.email)
 
     sendNotification(templateId, emailReferenceId, parameters, caseDetails, allocationDemandDetails, emailTo)
 
