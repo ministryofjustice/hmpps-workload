@@ -11,6 +11,7 @@ import uk.gov.justice.digital.hmpps.hmppsworkload.client.WorkforceAllocationsToD
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.AllocationDemandDetails
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.InitialAppointment
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.OffenceDetails
+import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.ReallocationDetails
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.Requirement
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.RiskOGRS
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.RiskPredictor
@@ -34,12 +35,33 @@ private const val NOT_APPLICABLE = "N/A"
 private const val REFERENCE_ID = "referenceId"
 private const val CRN = "crn"
 private const val FAILED_ALLOCATION_COUNTER = "failed_allocation_notification"
+private const val OFFICER_NAME = "officer_name"
+private const val ALLOCATING_EMAIL = "allocating_email"
+private const val PRACTITIONER_EMAIL = "practitioner_email"
+private const val REQUIREMENTS = "requirements"
+private const val OFFICER_GRADE = "officerGrade"
+private const val INDUCTION_STATEMENT = "induction_statement"
+private const val TIER = "tier"
+private const val PREVIOUS_PRACTITIONER = "previous_pp"
+private const val PREVIOUS_PRACTITIONER_GRADE = "previous_pp_grade"
+private const val REALLOCATION_REASON = "reallocation_reason"
+private const val FAILURE_TO_COMPLY_SINCE = "failure_to_comply_since"
+private const val NEXT_APPOINTMENT = "next_appointment"
+private const val OASYS_LAST_UPDATED = "oasys_last_updated"
+private const val EMAIL_SENT_INFO = "Email request sent to Notify for crn: "
+private const val FAILED_EMAIL_MSG = "Failed to send allocation email_to: {} email_from {} from_officer {}: for_crn {}"
+private const val FAILED_REALLOCATION_EMAIL_MSG = "Failed to send reallocation email_to: {} email_from {} from_officer {}: for_crn {}"
 
 @Service
+@Suppress("LongParameterList", "LongMethod", "LargeClass", "TooManyFunctions")
 class NotificationService(
   private val notificationClient: NotificationClientApi,
   @Value("\${application.notify.allocation.template}") private val allocationTemplateId: String,
   @Value("\${application.notify.allocation.laoTemplate}") private val allocationTemplateLAOId: String,
+  @Value("\${application.notify.reallocation.new.template}") private val reallocationTemplateId: String,
+  @Value("\${application.notify.reallocation.new.laoTemplate}") private val reallocationTemplateLAOId: String,
+  @Value("\${application.notify.reallocation.previous.template}") private val reallocationPreviousTemplateId: String,
+  @Value("\${application.notify.reallocation.previous.laoTemplate}") private val reallocationPreviousTemplateLAOId: String,
   @Qualifier("assessRisksNeedsClientUserEnhanced") private val assessRisksNeedsApiClient: AssessRisksNeedsApiClient,
   private val sqsSuccessPublisher: SqsSuccessPublisher,
   private val workforceAllocationsToDeliusApiClient: WorkforceAllocationsToDeliusApiClient,
@@ -56,19 +78,19 @@ class NotificationService(
     if (allocateCase.laoCase) {
       templateId = allocationTemplateLAOId
       parameters = mapOf(
-        "officer_name" to allocationDemandDetails.staff.name.getCombinedName(),
-        "allocating_email" to allocationDemandDetails.allocatingStaff.email!!,
-        "practitioner_email" to allocationDemandDetails.staff.email!!,
+        OFFICER_NAME to allocationDemandDetails.staff.name.getCombinedName(),
+        ALLOCATING_EMAIL to allocationDemandDetails.allocatingStaff.email!!,
+        PRACTITIONER_EMAIL to allocationDemandDetails.staff.email!!,
       ).plus(getLoggedInUserParameters(allocationDemandDetails.allocatingStaff))
         .plus(CRN to allocationDemandDetails.crn)
     } else {
       templateId = allocationTemplateId
       parameters = mapOf(
-        "officer_name" to allocationDemandDetails.staff.name.getCombinedName(),
-        "induction_statement" to mapInductionAppointment(allocationDemandDetails.initialAppointment, caseDetails.type),
-        "requirements" to mapRequirements(allocationDemandDetails.activeRequirements),
-        "allocating_email" to allocationDemandDetails.allocatingStaff.email!!,
-        "practitioner_email" to allocationDemandDetails.staff.email!!,
+        OFFICER_NAME to allocationDemandDetails.staff.name.getCombinedName(),
+        INDUCTION_STATEMENT to mapInductionAppointment(allocationDemandDetails.initialAppointment, caseDetails.type),
+        REQUIREMENTS to mapRequirements(allocationDemandDetails.activeRequirements),
+        ALLOCATING_EMAIL to allocationDemandDetails.allocatingStaff.email!!,
+        PRACTITIONER_EMAIL to allocationDemandDetails.staff.email!!,
       ).plus(getRiskParameters(notifyData.riskSummary, notifyData.riskPredictors, allocationDemandDetails.ogrs))
         .plus(getConvictionParameters(allocationDemandDetails))
         .plus(getPersonOnProbationParameters(allocationDemandDetails.name.getCombinedName(), allocateCase))
@@ -78,7 +100,68 @@ class NotificationService(
     logProbationEstateDetails(allocationDemandDetails.allocatingStaff.code, allocationDemandDetails.crn, allocationDemandDetails.staff.code)
     val emailTo = HashSet(allocateCase.emailTo ?: emptySet())
     emailTo.add(allocationDemandDetails.staff.email!!)
-    if (allocateCase.sendEmailCopyToAllocatingOfficer) emailTo.add(allocationDemandDetails.allocatingStaff.email)
+
+    try {
+      sqsSuccessPublisher.sendNotification(
+        NotificationEmail(
+          emailTo = emailTo,
+          emailTemplate = templateId,
+          emailReferenceId = emailReferenceId,
+          emailParameters = parameters,
+        ),
+      )
+      MDC.put(REFERENCE_ID, emailReferenceId)
+      MDC.put(CRN, caseDetails.crn)
+      log.info(EMAIL_SENT_INFO + "${caseDetails.crn} with reference ID: $emailReferenceId")
+    } catch (exception: Exception) {
+      meterRegistry.counter(FAILED_ALLOCATION_COUNTER, "type", "email not send").increment()
+      log.error(FAILED_EMAIL_MSG, emailTo, allocationDemandDetails.staff.email, allocationDemandDetails.staff.name.getCombinedName(), allocationDemandDetails.crn, exception.message)
+    } finally {
+      MDC.remove(REFERENCE_ID)
+      MDC.remove(CRN)
+    }
+
+    return NotificationMessageResponse(templateId, emailReferenceId, emailTo)
+  }
+
+  @Suppress("LongParameterList", "LongMethod", "TooGenericExceptionCaught")
+  suspend fun notifyReallocation(allocationDemandDetails: AllocationDemandDetails, allocateCase: AllocateCase, caseDetails: CaseDetailsEntity, reallocationDetail: ReallocationDetails): NotificationMessageResponse {
+    val emailReferenceId = UUID.randomUUID().toString()
+    val notifyData = getNotifyData(allocateCase.crn)
+    val parameters: Map<String, Any>
+    val templateId: String
+    if (allocateCase.laoCase) {
+      templateId = reallocationTemplateLAOId
+      parameters = mapOf(
+        OFFICER_NAME to allocationDemandDetails.staff.name.getCombinedName(),
+        ALLOCATING_EMAIL to allocationDemandDetails.allocatingStaff.email!!,
+        PRACTITIONER_EMAIL to allocationDemandDetails.staff.email!!,
+      ).plus(getLoggedInUserParameters(allocationDemandDetails.allocatingStaff))
+        .plus(CRN to allocationDemandDetails.crn)
+    } else {
+      templateId = reallocationTemplateId
+      parameters = mapOf(
+        OFFICER_NAME to allocationDemandDetails.staff.name.getCombinedName(),
+        OFFICER_GRADE to allocationDemandDetails.staff.getGrade(),
+        REQUIREMENTS to mapRequirements(allocationDemandDetails.activeRequirements),
+        ALLOCATING_EMAIL to allocationDemandDetails.allocatingStaff.email!!,
+        OFFICER_GRADE to allocationDemandDetails.staff.getGrade(),
+        PREVIOUS_PRACTITIONER to reallocationDetail.previouslyManagedBy.name.getCombinedName(),
+        PREVIOUS_PRACTITIONER_GRADE to reallocationDetail.previouslyManagedBy.getGrade(),
+        REALLOCATION_REASON to reallocationDetail.reason,
+        OASYS_LAST_UPDATED to (reallocationDetail.oasysLastUpdated ?: ""),
+        NEXT_APPOINTMENT to (reallocationDetail.nextAppointment ?: ""),
+        FAILURE_TO_COMPLY_SINCE to (reallocationDetail.failureToComply ?: ""),
+        TIER to caseDetails.tier,
+      ).plus(getRiskParameters(notifyData.riskSummary, notifyData.riskPredictors, allocationDemandDetails.ogrs))
+        .plus(getConvictionParameters(allocationDemandDetails))
+        .plus(getPersonOnProbationParameters(allocationDemandDetails.name.getCombinedName(), allocateCase))
+        .plus(getLoggedInUserParameters(allocationDemandDetails.allocatingStaff))
+        .plus(CRN to allocationDemandDetails.crn)
+    }
+    logProbationEstateDetails(allocationDemandDetails.allocatingStaff.code, allocationDemandDetails.crn, allocationDemandDetails.staff.code)
+    val emailTo = HashSet(allocateCase.emailTo ?: emptySet())
+    emailTo.add(allocationDemandDetails.staff.email!!)
 
     try {
       sqsSuccessPublisher.sendNotification(
@@ -94,7 +177,7 @@ class NotificationService(
       log.info("Email request sent to Notify for crn: ${caseDetails.crn} with reference ID: $emailReferenceId")
     } catch (exception: Exception) {
       meterRegistry.counter(FAILED_ALLOCATION_COUNTER, "type", "email not send").increment()
-      log.error("Failed to send allocation email_to: {} email_from {} from_officer {}: for_crn {}", emailTo, allocationDemandDetails.staff.email, allocationDemandDetails.staff.name.getCombinedName(), allocationDemandDetails.crn, exception.message)
+      log.error(FAILED_REALLOCATION_EMAIL_MSG, emailTo, allocationDemandDetails.staff.email, allocationDemandDetails.staff.name.getCombinedName(), allocationDemandDetails.crn, exception.message)
     } finally {
       MDC.remove(REFERENCE_ID)
       MDC.remove(CRN)
@@ -103,7 +186,68 @@ class NotificationService(
     return NotificationMessageResponse(templateId, emailReferenceId, emailTo)
   }
 
-  class NotificationInvalidSenderException(emailRecipient: String, cause: Throwable) : Exception("Unable to deliver to recipient $emailRecipient", cause)
+  @Suppress("LongParameterList", "LongMethod", "TooGenericExceptionCaught")
+  suspend fun notifyReallocationPreviousPractitioner(allocationDemandDetails: AllocationDemandDetails, allocateCase: AllocateCase, caseDetails: CaseDetailsEntity, reallocationDetail: ReallocationDetails): NotificationMessageResponse {
+    val emailReferenceId = UUID.randomUUID().toString()
+    val notifyData = getNotifyData(allocateCase.crn)
+    val parameters: Map<String, Any>
+    val templateId: String
+    if (allocateCase.laoCase) {
+      templateId = reallocationPreviousTemplateLAOId
+      parameters = mapOf(
+        OFFICER_NAME to reallocationDetail.previouslyManagedBy.name.getCombinedName(),
+        ALLOCATING_EMAIL to allocationDemandDetails.allocatingStaff.email!!,
+      ).plus(getLoggedInUserParameters(allocationDemandDetails.allocatingStaff))
+        .plus(CRN to allocationDemandDetails.crn)
+    } else {
+      templateId = reallocationPreviousTemplateId
+      parameters = mapOf(
+        OFFICER_NAME to allocationDemandDetails.staff.name.getCombinedName(),
+        OFFICER_GRADE to allocationDemandDetails.staff.getGrade(),
+        REQUIREMENTS to mapRequirements(allocationDemandDetails.activeRequirements),
+        ALLOCATING_EMAIL to allocationDemandDetails.allocatingStaff.email!!,
+        OFFICER_GRADE to allocationDemandDetails.staff.getGrade(),
+        PREVIOUS_PRACTITIONER to reallocationDetail.previouslyManagedBy.name.getCombinedName(),
+        PREVIOUS_PRACTITIONER_GRADE to reallocationDetail.previouslyManagedBy.getGrade(),
+        REALLOCATION_REASON to reallocationDetail.reason,
+        OASYS_LAST_UPDATED to (reallocationDetail.oasysLastUpdated ?: ""),
+        NEXT_APPOINTMENT to (reallocationDetail.nextAppointment ?: ""),
+        FAILURE_TO_COMPLY_SINCE to (reallocationDetail.failureToComply ?: ""),
+        TIER to caseDetails.tier,
+
+      ).plus(getRiskParameters(notifyData.riskSummary, notifyData.riskPredictors, allocationDemandDetails.ogrs))
+        .plus(getConvictionParameters(allocationDemandDetails))
+        .plus(getPersonOnProbationParameters(allocationDemandDetails.name.getCombinedName(), allocateCase))
+        .plus(getLoggedInUserParameters(allocationDemandDetails.allocatingStaff))
+        .plus(CRN to allocationDemandDetails.crn)
+    }
+    logProbationEstateDetails(allocationDemandDetails.allocatingStaff.code, allocationDemandDetails.crn, allocationDemandDetails.staff.code)
+    val previousEmail = reallocationDetail.previouslyManagedBy.email!!
+    val emailTo = HashSet<String>()
+    emailTo.add(previousEmail)
+
+    try {
+      sqsSuccessPublisher.sendNotification(
+        NotificationEmail(
+          emailTo = emailTo,
+          emailTemplate = templateId,
+          emailReferenceId = emailReferenceId,
+          emailParameters = parameters,
+        ),
+      )
+      MDC.put(REFERENCE_ID, emailReferenceId)
+      MDC.put(CRN, caseDetails.crn)
+      log.info("Email request sent to Notify for crn: ${caseDetails.crn} with reference ID: $emailReferenceId")
+    } catch (exception: Exception) {
+      meterRegistry.counter(FAILED_ALLOCATION_COUNTER, "type", "email not send").increment()
+      log.error(FAILED_REALLOCATION_EMAIL_MSG, emailTo, allocationDemandDetails.staff.email, allocationDemandDetails.staff.name.getCombinedName(), allocationDemandDetails.crn, exception.message)
+    } finally {
+      MDC.remove(REFERENCE_ID)
+      MDC.remove(CRN)
+    }
+
+    return NotificationMessageResponse(templateId, emailReferenceId, emailTo)
+  }
 
   private fun getLoggedInUserParameters(loggedInUser: StaffMember): Map<String, Any> = mapOf(
     "allocatingOfficerName" to loggedInUser.name.getCombinedName(),

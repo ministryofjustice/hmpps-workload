@@ -43,6 +43,10 @@ class NotificationServiceTests {
   private val assessRisksNeedsApiClient = mockk<AssessRisksNeedsApiClient>()
   private val templateId = "templateId"
   private val laoTemplateID = "laoTemplateId"
+  private val reallocationTemplateId = "reallocationTemplateId"
+  private val reallocationTemplateLAOId = "reallocationLaoTemplateId"
+  private val reallocationPreviousTemplateId = "reallocationPreviousTemplateId"
+  private val reallocationPreviousTemplateLAOId = "reallocationPreviousTemplateLaoId"
   private val workforceAllocationsToDeliusApiClient = mockk<WorkforceAllocationsToDeliusApiClient>()
   private val meterRegistry = mockk<MeterRegistry>()
   private val counter = mockk<Counter>()
@@ -50,6 +54,10 @@ class NotificationServiceTests {
     notificationClient,
     templateId,
     laoTemplateID,
+    reallocationTemplateId,
+    reallocationTemplateLAOId,
+    reallocationPreviousTemplateId,
+    reallocationPreviousTemplateLAOId,
     assessRisksNeedsApiClient,
     sqsSuccessPublisher,
     workforceAllocationsToDeliusApiClient,
