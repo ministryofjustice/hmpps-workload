@@ -16,10 +16,12 @@ import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.DeliusTeams
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.Manager
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.Name
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.OffenceDetails
+import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.ReallocationDetails
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.Requirement
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.RiskOGRS
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.RiskPredictor
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.RiskSummary
+import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.StaffMember
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.AllocateCase
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.CaseType
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.Tier
@@ -43,6 +45,10 @@ class NotificationServiceTests {
   private val assessRisksNeedsApiClient = mockk<AssessRisksNeedsApiClient>()
   private val templateId = "templateId"
   private val laoTemplateID = "laoTemplateId"
+  private val reallocationTemplateId = "reallocationTemplateId"
+  private val reallocationTemplateLAOId = "reallocationLaoTemplateId"
+  private val reallocationPreviousTemplateId = "reallocationPreviousTemplateId"
+  private val reallocationPreviousTemplateLAOId = "reallocationPreviousTemplateLaoId"
   private val workforceAllocationsToDeliusApiClient = mockk<WorkforceAllocationsToDeliusApiClient>()
   private val meterRegistry = mockk<MeterRegistry>()
   private val counter = mockk<Counter>()
@@ -50,6 +56,10 @@ class NotificationServiceTests {
     notificationClient,
     templateId,
     laoTemplateID,
+    reallocationTemplateId,
+    reallocationTemplateLAOId,
+    reallocationPreviousTemplateId,
+    reallocationPreviousTemplateLAOId,
     assessRisksNeedsApiClient,
     sqsSuccessPublisher,
     workforceAllocationsToDeliusApiClient,
@@ -440,6 +450,51 @@ class NotificationServiceTests {
     Assertions.assertEquals(emailTo.size, 4)
     Assertions.assertTrue(emailTo.contains(allocationDetails.allocatingStaff.email!!))
   }
+
+  @Test
+  fun `must send reallocation email to new  officer and not allocating officer or previous officer`() = runBlocking {
+    val allocationDetails = getAllocationDetails(allocateCase.crn)
+    val firstEmail = "first@justice.gov.uk"
+    val secondEmail = "second@justice.gov.uk"
+    val allocateCase = AllocateCase("CRN1111", "instructions", listOf(firstEmail, secondEmail), true, 1, allocationJustificationNotes = "some notes", sensitiveNotes = false, spoOversightNotes = "spo notes", sensitiveOversightNotes = null, laoCase = false)
+    val reallocationDetails = ReallocationDetails("Laziness", "never", "tomorrow", "12", getManager())
+    notificationService.notifyReallocation(allocationDetails, allocateCase, caseDetails, reallocationDetails)
+    val parameters = slot<NotificationEmail>()
+    coVerify(exactly = 1) { sqsSuccessPublisher.sendNotification(capture(parameters)) }
+    val emailTo = HashSet<String>(parameters.captured.emailTo ?: emptySet())
+
+    Assertions.assertEquals(emailTo.size, 3)
+    Assertions.assertFalse(emailTo.contains("reallocatedFrom@notifications.service.gov.uk"))
+    Assertions.assertTrue(emailTo.contains("simulate-delivered@notifications.service.gov.uk"))
+    Assertions.assertFalse(emailTo.contains("simulate-delivered@justice.gov.uk"))
+  }
+
+  @Test
+  fun `must send reallocation email to previous officer only`() = runBlocking {
+    val allocationDetails = getAllocationDetails(allocateCase.crn)
+    val firstEmail = "first@justice.gov.uk"
+    val secondEmail = "second@justice.gov.uk"
+    val allocateCase = AllocateCase("CRN1111", "instructions", listOf(firstEmail, secondEmail), true, 1, allocationJustificationNotes = "some notes", sensitiveNotes = false, spoOversightNotes = "spo notes", sensitiveOversightNotes = null, laoCase = false)
+    val reallocationDetails = ReallocationDetails("Laziness", "never", "tomorrow", "12", getManager())
+    notificationService.notifyReallocationPreviousPractitioner(allocationDetails, allocateCase, caseDetails, reallocationDetails)
+    val parameters = slot<NotificationEmail>()
+    coVerify(exactly = 1) { sqsSuccessPublisher.sendNotification(capture(parameters)) }
+    val emailTo = HashSet<String>(parameters.captured.emailTo ?: emptySet())
+
+    Assertions.assertEquals(emailTo.size, 1)
+    Assertions.assertTrue(emailTo.contains("reallocatedFrom@notifications.service.gov.uk"))
+  }
+
+  fun getManager() = StaffMember(
+    "STAFF1",
+    Name(
+      "Staff",
+      "",
+      "Member",
+    ),
+    "reallocatedFrom@notifications.service.gov.uk",
+    "PO",
+  )
 
   @Test
   fun `must not send email to allocating officer if opted out `() = runBlocking {

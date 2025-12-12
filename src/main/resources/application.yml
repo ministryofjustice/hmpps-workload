@@ -77,6 +77,13 @@ application:
     allocation:
       template: 5db23c80-9cb6-4b8e-a0f6-56061e50a9ef
       laoTemplate: fc55e1ce-47d6-479c-ac80-3ac77c9fe609
+    reallocation:
+      previous:
+        template: 2310eefc-f1d2-4276-a83a-14592ab38b71
+        laoTemplate: f5f588c7-806f-4bd0-af36-34939bbbaf9e
+      new:
+        template: 624ebf00-ba51-4734-8f04-130d68d52ee9
+        laoTemplate: 5defb8bd-69ba-440c-99d1-745c346c9dcc
 person:
   manager:
     getByIdPath: /allocation/person/{id}
