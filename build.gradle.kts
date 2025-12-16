@@ -63,7 +63,7 @@ dependencies {
   testImplementation("org.mock-server:mockserver-netty:5.15.0")
   testImplementation("org.awaitility:awaitility-kotlin:4.3.0")
   testImplementation("io.mockk:mockk:1.14.7")
-  testImplementation("com.ninja-squad:springmockk:4.0.2")
+  testImplementation("com.ninja-squad:springmockk:5.0.1")
 
   testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.10.2")
 }
