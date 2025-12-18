@@ -13,4 +13,21 @@ data class AllocateCase @JsonCreator constructor(
   val spoOversightNotes: String?,
   val sensitiveOversightNotes: Boolean?,
   val laoCase: Boolean,
+  val allocationReason: AllocationReason?,
+  val nextAppointmentDate: String?,
+  val lastOasysAssessmentDate: String?,
+  val failureToComply: String?,
 )
+
+enum class AllocationReason {
+  ALLOCATED_TO_RESPONSIBLE_OFFICER,
+  CASELOAD_ADJUSTMENT,
+  CHANGE_IN_TIER_OR_RISK,
+  CHANGE_OF_ADDRESS,
+  OFFICER_LEFT,
+  OTHER,
+  RISK_TO_STAFF,
+  TRANSFER_IN,
+  PROBATION_RESET,
+  INITIAL_ALLOCATION,
+}
