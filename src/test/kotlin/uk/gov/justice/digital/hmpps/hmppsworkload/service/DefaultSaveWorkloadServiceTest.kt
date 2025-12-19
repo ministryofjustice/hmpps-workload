@@ -82,7 +82,7 @@ class DefaultSaveWorkloadServiceTest {
       val loggedInUser = "me"
       val allocateCase = AllocateCase(
         crn, instructions = "", emailTo = null, sendEmailCopyToAllocatingOfficer = false, eventNumber = 1, allocationJustificationNotes = "Some Notes", sensitiveNotes = false, spoOversightNotes = "spo notes", sensitiveOversightNotes = null,
-        laoCase = false, allocationReason = null, nextAppointmentDate = null, lastOasysAssessmentDate = null, failureToComply = null,
+        laoCase = false, allocationReason = AllocationReason.INITIAL_ALLOCATION, nextAppointmentDate = null, lastOasysAssessmentDate = null, failureToComply = null,
       )
 
       val eventNumber = 1
