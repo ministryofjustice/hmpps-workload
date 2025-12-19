@@ -4,6 +4,7 @@ import jakarta.transaction.Transactional
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.StaffMember
+import uk.gov.justice.digital.hmpps.hmppsworkload.domain.AllocationReason
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.SaveResult
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.StaffIdentifier
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.entity.PersonManagerEntity
@@ -22,12 +23,13 @@ class JpaBasedSavePersonManagerService(
     deliusStaff: StaffMember,
     loggedInUser: String,
     crn: String,
+    allocationReason: AllocationReason?,
   ): SaveResult<PersonManagerEntity> = personManagerRepository.findFirstByCrnOrderByCreatedDateDesc(crn)?.let { personManager ->
     if (personManager.staffCode == deliusStaff.code && personManager.teamCode == teamCode) {
       SaveResult(personManager, false)
     } else {
       val currentPersonManager = getPersonManager.findLatestByCrn(crn)
-      createPersonManager(deliusStaff, teamCode, loggedInUser, crn).also {
+      createPersonManager(deliusStaff, teamCode, loggedInUser, crn, allocationReason).also {
         personManager.isActive = false
         personManagerRepository.save(personManager)
         workloadCalculationService.saveWorkloadCalculation(
@@ -36,13 +38,14 @@ class JpaBasedSavePersonManagerService(
         )
       }
     }
-  } ?: createPersonManager(deliusStaff, teamCode, loggedInUser, crn)
+  } ?: createPersonManager(deliusStaff, teamCode, loggedInUser, crn, allocationReason)
 
   private fun createPersonManager(
     deliusStaff: StaffMember,
     teamCode: String,
     loggedInUser: String,
     crn: String,
+    allocationReason: AllocationReason?,
   ): SaveResult<PersonManagerEntity> {
     val personManagerEntity = PersonManagerEntity(
       crn = crn,
@@ -50,6 +53,7 @@ class JpaBasedSavePersonManagerService(
       teamCode = teamCode,
       createdBy = loggedInUser,
       isActive = true,
+      allocationReason = allocationReason,
     )
     personManagerRepository.save(personManagerEntity)
     workloadCalculationService.saveWorkloadCalculation(StaffIdentifier(deliusStaff.code, teamCode), deliusStaff.getGrade())

@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.hmppsworkload.integration.team
 
 import org.junit.jupiter.api.Test
+import uk.gov.justice.digital.hmpps.hmppsworkload.domain.AllocationReason
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.CaseType
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.Tier
 import uk.gov.justice.digital.hmpps.hmppsworkload.integration.IntegrationTestBase
@@ -25,16 +26,16 @@ class ChoosePractitionersByTeamCodes : IntegrationTestBase() {
     val secondOm = secondWmtStaff.offenderManager.code
     val noWorkloadStaffCode = "NOWORKLOAD1"
 
-    val storedPersonManager = PersonManagerEntity(crn = "CRN5", staffCode = firstOm, teamCode = teamCode, createdBy = "USER1", isActive = true)
+    val storedPersonManager = PersonManagerEntity(crn = "CRN5", staffCode = firstOm, teamCode = teamCode, createdBy = "USER1", isActive = true, allocationReason = AllocationReason.INITIAL_ALLOCATION)
     personManagerRepository.save(storedPersonManager)
 
-    val movedPersonManager = PersonManagerEntity(crn = "CRN3", staffCode = firstOm, teamCode = teamCode, createdBy = "USER1", createdDate = ZonedDateTime.now().minusDays(5L), isActive = false)
+    val movedPersonManager = PersonManagerEntity(crn = "CRN3", staffCode = firstOm, teamCode = teamCode, createdBy = "USER1", createdDate = ZonedDateTime.now().minusDays(5L), isActive = false, allocationReason = AllocationReason.INITIAL_ALLOCATION)
     personManagerRepository.save(movedPersonManager)
 
-    val newPersonManager = PersonManagerEntity(crn = "CRN3", staffCode = secondOm, teamCode = teamCode2, createdBy = "USER2", createdDate = ZonedDateTime.now().minusDays(2L), isActive = true)
+    val newPersonManager = PersonManagerEntity(crn = "CRN3", staffCode = secondOm, teamCode = teamCode2, createdBy = "USER2", createdDate = ZonedDateTime.now().minusDays(2L), isActive = true, allocationReason = AllocationReason.INITIAL_ALLOCATION)
     personManagerRepository.save(newPersonManager)
 
-    val personManagerWithNoWorkload = PersonManagerEntity(crn = "CRN4", staffCode = noWorkloadStaffCode, teamCode = "T1", createdBy = "USER2", createdDate = ZonedDateTime.now().minusDays(2L), isActive = true)
+    val personManagerWithNoWorkload = PersonManagerEntity(crn = "CRN4", staffCode = noWorkloadStaffCode, teamCode = "T1", createdBy = "USER2", createdDate = ZonedDateTime.now().minusDays(2L), isActive = true, allocationReason = AllocationReason.INITIAL_ALLOCATION)
     personManagerRepository.save(personManagerWithNoWorkload)
 
     webTestClient.get()
@@ -123,16 +124,16 @@ class ChoosePractitionersByTeamCodes : IntegrationTestBase() {
     val secondOm = secondWmtStaff.offenderManager.code
     val noWorkloadStaffCode = "NOWORKLOAD1"
 
-    val storedPersonManager = PersonManagerEntity(crn = "CRN5", staffCode = firstOm, teamCode = teamCode, createdBy = "USER1", isActive = true)
+    val storedPersonManager = PersonManagerEntity(crn = "CRN5", staffCode = firstOm, teamCode = teamCode, createdBy = "USER1", isActive = true, allocationReason = AllocationReason.INITIAL_ALLOCATION)
     personManagerRepository.save(storedPersonManager)
 
-    val movedPersonManager = PersonManagerEntity(crn = "CRN3", staffCode = firstOm, teamCode = teamCode, createdBy = "USER1", createdDate = ZonedDateTime.now().minusDays(5L), isActive = false)
+    val movedPersonManager = PersonManagerEntity(crn = "CRN3", staffCode = firstOm, teamCode = teamCode, createdBy = "USER1", createdDate = ZonedDateTime.now().minusDays(5L), isActive = false, allocationReason = AllocationReason.INITIAL_ALLOCATION)
     personManagerRepository.save(movedPersonManager)
 
-    val newPersonManager = PersonManagerEntity(crn = "CRN3", staffCode = secondOm, teamCode = teamCode2, createdBy = "USER2", createdDate = ZonedDateTime.now().minusDays(2L), isActive = true)
+    val newPersonManager = PersonManagerEntity(crn = "CRN3", staffCode = secondOm, teamCode = teamCode2, createdBy = "USER2", createdDate = ZonedDateTime.now().minusDays(2L), isActive = true, allocationReason = AllocationReason.INITIAL_ALLOCATION)
     personManagerRepository.save(newPersonManager)
 
-    val personManagerWithNoWorkload = PersonManagerEntity(crn = "CRN4", staffCode = noWorkloadStaffCode, teamCode = "T1", createdBy = "USER2", createdDate = ZonedDateTime.now().minusDays(2L), isActive = true)
+    val personManagerWithNoWorkload = PersonManagerEntity(crn = "CRN4", staffCode = noWorkloadStaffCode, teamCode = "T1", createdBy = "USER2", createdDate = ZonedDateTime.now().minusDays(2L), isActive = true, allocationReason = AllocationReason.INITIAL_ALLOCATION)
     personManagerRepository.save(personManagerWithNoWorkload)
 
     webTestClient.get()
@@ -215,10 +216,10 @@ class ChoosePractitionersByTeamCodes : IntegrationTestBase() {
 
     val firstOm = firstWmtStaff.offenderManager.code
 
-    val storedPersonManager = PersonManagerEntity(crn = "CRN5", staffCode = firstOm, teamCode = teamCode, createdBy = "USER1", isActive = true)
+    val storedPersonManager = PersonManagerEntity(crn = "CRN5", staffCode = firstOm, teamCode = teamCode, createdBy = "USER1", isActive = true, allocationReason = AllocationReason.INITIAL_ALLOCATION)
     personManagerRepository.save(storedPersonManager)
 
-    val movedPersonManager = PersonManagerEntity(crn = "CRN3", staffCode = firstOm, teamCode = teamCode, createdBy = "USER1", createdDate = ZonedDateTime.now().minusDays(5L), isActive = false)
+    val movedPersonManager = PersonManagerEntity(crn = "CRN3", staffCode = firstOm, teamCode = teamCode, createdBy = "USER1", createdDate = ZonedDateTime.now().minusDays(5L), isActive = false, allocationReason = AllocationReason.INITIAL_ALLOCATION)
     personManagerRepository.save(movedPersonManager)
 
     webTestClient.get()
@@ -260,16 +261,16 @@ class ChoosePractitionersByTeamCodes : IntegrationTestBase() {
     val secondOm = secondWmtStaff.offenderManager.code
     val noWorkloadStaffCode = "NOWORKLOAD1"
 
-    val storedPersonManager = PersonManagerEntity(crn = "CRN5", staffCode = firstOm, teamCode = teamCode, createdBy = "USER1", isActive = true)
+    val storedPersonManager = PersonManagerEntity(crn = "CRN5", staffCode = firstOm, teamCode = teamCode, createdBy = "USER1", isActive = true, allocationReason = AllocationReason.INITIAL_ALLOCATION)
     personManagerRepository.save(storedPersonManager)
 
-    val movedPersonManager = PersonManagerEntity(crn = "CRN3", staffCode = firstOm, teamCode = teamCode, createdBy = "USER1", createdDate = ZonedDateTime.now().minusDays(5L), isActive = false)
+    val movedPersonManager = PersonManagerEntity(crn = "CRN3", staffCode = firstOm, teamCode = teamCode, createdBy = "USER1", createdDate = ZonedDateTime.now().minusDays(5L), isActive = false, allocationReason = AllocationReason.INITIAL_ALLOCATION)
     personManagerRepository.save(movedPersonManager)
 
-    val newPersonManager = PersonManagerEntity(crn = "CRN3", staffCode = secondOm, teamCode = teamCode2, createdBy = "USER2", createdDate = ZonedDateTime.now().minusDays(2L), isActive = true)
+    val newPersonManager = PersonManagerEntity(crn = "CRN3", staffCode = secondOm, teamCode = teamCode2, createdBy = "USER2", createdDate = ZonedDateTime.now().minusDays(2L), isActive = true, allocationReason = AllocationReason.INITIAL_ALLOCATION)
     personManagerRepository.save(newPersonManager)
 
-    val personManagerWithNoWorkload = PersonManagerEntity(crn = "CRN4", staffCode = noWorkloadStaffCode, teamCode = "T1", createdBy = "USER2", createdDate = ZonedDateTime.now().minusDays(2L), isActive = true)
+    val personManagerWithNoWorkload = PersonManagerEntity(crn = "CRN4", staffCode = noWorkloadStaffCode, teamCode = "T1", createdBy = "USER2", createdDate = ZonedDateTime.now().minusDays(2L), isActive = true, allocationReason = AllocationReason.INITIAL_ALLOCATION)
     personManagerRepository.save(personManagerWithNoWorkload)
 
     webTestClient.get()
@@ -343,10 +344,10 @@ class ChoosePractitionersByTeamCodes : IntegrationTestBase() {
     casesDbService.insertCaseDetails("Don", "Cole", Tier.B3, CaseType.CUSTODY, crn)
     workforceAllocationsToDelius.choosePractitionerByTeamCodesResponse(listOf(teamCode), crn)
 
-    val movedPersonManager = PersonManagerEntity(crn = "CRN3", staffCode = staffCode, teamCode = teamCode, createdBy = "USER1", isActive = false)
+    val movedPersonManager = PersonManagerEntity(crn = "CRN3", staffCode = staffCode, teamCode = teamCode, createdBy = "USER1", isActive = false, allocationReason = AllocationReason.INITIAL_ALLOCATION)
     personManagerRepository.save(movedPersonManager)
 
-    val newPersonManager = PersonManagerEntity(crn = "CRN3", staffCode = "STAFF2", teamCode = "TEAM2", createdBy = "USER2", isActive = true)
+    val newPersonManager = PersonManagerEntity(crn = "CRN3", staffCode = "STAFF2", teamCode = "TEAM2", createdBy = "USER2", isActive = true, allocationReason = AllocationReason.INITIAL_ALLOCATION)
     personManagerRepository.save(newPersonManager)
 
     webTestClient.get()
@@ -396,7 +397,7 @@ class ChoosePractitionersByTeamCodes : IntegrationTestBase() {
 
     val firstOm = firstWmtStaff.offenderManager.code
 
-    val storedPersonManager = PersonManagerEntity(crn = "CRN1", staffCode = firstOm, teamCode = teamCode, createdBy = "USER1", isActive = true)
+    val storedPersonManager = PersonManagerEntity(crn = "CRN1", staffCode = firstOm, teamCode = teamCode, createdBy = "USER1", isActive = true, allocationReason = AllocationReason.INITIAL_ALLOCATION)
     personManagerRepository.save(storedPersonManager)
 
     webTestClient.get()
@@ -425,7 +426,7 @@ class ChoosePractitionersByTeamCodes : IntegrationTestBase() {
 
     val firstOm = firstWmtStaff.offenderManager.code
 
-    val storedPersonManager = PersonManagerEntity(crn = "CRN1", staffCode = firstOm, teamCode = teamCode, createdBy = "USER1", isActive = true)
+    val storedPersonManager = PersonManagerEntity(crn = "CRN1", staffCode = firstOm, teamCode = teamCode, createdBy = "USER1", isActive = true, allocationReason = AllocationReason.INITIAL_ALLOCATION)
     personManagerRepository.save(storedPersonManager)
 
     webTestClient.get()
@@ -456,7 +457,7 @@ class ChoosePractitionersByTeamCodes : IntegrationTestBase() {
 
     val firstOm = firstWmtStaff.offenderManager.code
 
-    val storedPersonManager = PersonManagerEntity(crn = "CRN1", staffCode = firstOm, teamCode = teamCode, createdBy = "USER1", isActive = true)
+    val storedPersonManager = PersonManagerEntity(crn = "CRN1", staffCode = firstOm, teamCode = teamCode, createdBy = "USER1", isActive = true, allocationReason = AllocationReason.INITIAL_ALLOCATION)
     personManagerRepository.save(storedPersonManager)
 
     webTestClient.get()

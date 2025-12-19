@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Test
 import org.springframework.data.repository.findByIdOrNull
 import software.amazon.awssdk.services.sns.model.MessageAttributeValue
 import software.amazon.awssdk.services.sns.model.PublishRequest
+import uk.gov.justice.digital.hmpps.hmppsworkload.domain.AllocationReason
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.CaseType
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.Tier
 import uk.gov.justice.digital.hmpps.hmppsworkload.integration.IntegrationTestBase
@@ -73,7 +74,7 @@ class SentenceChangedEventListenerTests : IntegrationTestBase() {
 
     hmppsTier.tierCalculationResponse(crn)
     workforceAllocationsToDelius.personResponseByCrn(crn)
-    personManagerRepository.save(PersonManagerEntity(crn = crn, staffCode = staffCode, teamCode = teamCode, createdBy = "createdby", isActive = true))
+    personManagerRepository.save(PersonManagerEntity(crn = crn, staffCode = staffCode, teamCode = teamCode, createdBy = "createdby", isActive = true, allocationReason = AllocationReason.INITIAL_ALLOCATION))
 
     placeSentenceChangedEventOnOffenderTopic(crn)
 
@@ -102,7 +103,7 @@ class SentenceChangedEventListenerTests : IntegrationTestBase() {
     workforceAllocationsToDelius.personResponseByCrn(crn)
     hmppsTier.tierCalculationResponse(crn, Tier.C3.name)
 
-    personManagerRepository.save(PersonManagerEntity(crn = crn, staffCode = staffCode, teamCode = teamCode, createdBy = "createdby", isActive = true))
+    personManagerRepository.save(PersonManagerEntity(crn = crn, staffCode = staffCode, teamCode = teamCode, createdBy = "createdby", isActive = true, allocationReason = AllocationReason.INITIAL_ALLOCATION))
 
     placeSentenceChangedEventOnOffenderTopic(crn)
     placeSentenceChangedEventOnOffenderTopic(crn)
@@ -135,7 +136,7 @@ class SentenceChangedEventListenerTests : IntegrationTestBase() {
     val crn = "J678910"
     casesDbService.insertCaseDetails("Jane", "Doe", Tier.C1, CaseType.COMMUNITY, crn)
 
-    val personManagerEntity = personManagerRepository.save(PersonManagerEntity(crn = crn, staffCode = "STFFCDE", teamCode = "TM1", createdBy = "USER1", isActive = true))
+    val personManagerEntity = personManagerRepository.save(PersonManagerEntity(crn = crn, staffCode = "STFFCDE", teamCode = "TM1", createdBy = "USER1", isActive = true, allocationReason = AllocationReason.INITIAL_ALLOCATION))
     val eventManagerEntity = eventManagerRepository.save(
       EventManagerEntity(
         crn = crn,
@@ -157,6 +158,7 @@ class SentenceChangedEventListenerTests : IntegrationTestBase() {
         createdBy = "USER1",
         isActive = true,
         eventNumber = 1,
+        allocationReason = AllocationReason.INITIAL_ALLOCATION,
       ),
     )
 
@@ -188,7 +190,7 @@ class SentenceChangedEventListenerTests : IntegrationTestBase() {
     hmppsTier.tierCalculationResponse(crn)
 
     val caseDetailsEntity = CaseDetailsEntity(crn, Tier.C3, CaseType.COMMUNITY, "Jane", "Doe")
-    personManagerRepository.save(PersonManagerEntity(crn = crn, staffCode = staffCode, teamCode = teamCode, createdBy = "createdby", isActive = true))
+    personManagerRepository.save(PersonManagerEntity(crn = crn, staffCode = staffCode, teamCode = teamCode, createdBy = "createdby", isActive = true, allocationReason = AllocationReason.INITIAL_ALLOCATION))
     casesDbService.insertCaseDetails("Jane", "Doe", Tier.C3, CaseType.COMMUNITY, crn)
 
     placeSentenceChangedEventOnOffenderTopic(crn)
@@ -211,7 +213,7 @@ class SentenceChangedEventListenerTests : IntegrationTestBase() {
     casesDbService.insertCaseDetails("Jane", "Doe", Tier.C3, CaseType.COMMUNITY, crn)
 
     workforceAllocationsToDelius.officerViewResponse(staffCode)
-    personManagerRepository.save(PersonManagerEntity(crn = crn, staffCode = staffCode, teamCode = teamCode, createdBy = "createdby", isActive = true))
+    personManagerRepository.save(PersonManagerEntity(crn = crn, staffCode = staffCode, teamCode = teamCode, createdBy = "createdby", isActive = true, allocationReason = AllocationReason.INITIAL_ALLOCATION))
 
     placeSentenceChangedEventOnOffenderTopic(crn)
 

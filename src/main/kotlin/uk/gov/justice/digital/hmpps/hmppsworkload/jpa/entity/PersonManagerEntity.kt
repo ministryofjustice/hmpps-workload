@@ -3,12 +3,15 @@ package uk.gov.justice.digital.hmpps.hmppsworkload.jpa.entity
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.EntityListeners
+import jakarta.persistence.EnumType
+import jakarta.persistence.Enumerated
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.Table
 import org.springframework.data.annotation.CreatedDate
 import org.springframework.data.jpa.domain.support.AuditingEntityListener
+import uk.gov.justice.digital.hmpps.hmppsworkload.domain.AllocationReason
 import java.time.ZonedDateTime
 import java.util.UUID
 
@@ -42,5 +45,9 @@ data class PersonManagerEntity(
 
   @Column
   var isActive: Boolean,
+
+  @Column
+  @Enumerated(EnumType.STRING)
+  var allocationReason: AllocationReason?,
 
 )

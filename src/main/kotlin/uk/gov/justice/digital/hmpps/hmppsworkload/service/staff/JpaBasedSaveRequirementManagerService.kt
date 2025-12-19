@@ -49,6 +49,7 @@ class JpaBasedSaveRequirementManagerService(
       createdBy = loggedInUser,
       isActive = true,
       eventNumber = allocateCase.eventNumber,
+      allocationReason = allocateCase.allocationReason,
     )
     requirementManagerRepository.save(requirementManagerEntity)
     return SaveResult(requirementManagerEntity, true)

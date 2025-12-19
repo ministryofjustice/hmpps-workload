@@ -109,6 +109,14 @@ class NotificationService(
 
   @Suppress("LongParameterList", "LongMethod", "TooGenericExceptionCaught")
   suspend fun notifyReallocation(allocationDemandDetails: AllocationDemandDetails, allocateCase: AllocateCase, caseDetails: CaseDetailsEntity, reallocationDetail: ReallocationDetails): NotificationMessageResponse {
+    val response = notifyReallocationNewPractitioner(allocationDemandDetails, allocateCase, caseDetails, reallocationDetail)
+    notifyReallocationPreviousPractitioner(allocationDemandDetails, allocateCase, caseDetails, reallocationDetail)
+
+    return response
+  }
+
+  @Suppress("LongParameterList", "LongMethod", "TooGenericExceptionCaught")
+  suspend fun notifyReallocationNewPractitioner(allocationDemandDetails: AllocationDemandDetails, allocateCase: AllocateCase, caseDetails: CaseDetailsEntity, reallocationDetail: ReallocationDetails): NotificationMessageResponse {
     val emailReferenceId = UUID.randomUUID().toString()
     val notifyData = getNotifyData(allocateCase.crn)
     val parameters: Map<String, Any>

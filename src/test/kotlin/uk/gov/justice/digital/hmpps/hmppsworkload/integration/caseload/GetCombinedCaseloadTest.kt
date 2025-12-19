@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.hmppsworkload.integration.caseload
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
+import uk.gov.justice.digital.hmpps.hmppsworkload.domain.AllocationReason
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.Case
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.CaseType
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.StaffIdentifier
@@ -59,6 +60,7 @@ class GetCombinedCaseloadTest : IntegrationTestBase() {
         teamCode = teamCode,
         createdBy = "createdBy",
         isActive = true,
+        allocationReason = AllocationReason.INITIAL_ALLOCATION,
       ),
     )
 
@@ -85,6 +87,7 @@ class GetCombinedCaseloadTest : IntegrationTestBase() {
         teamCode = teamCode,
         createdBy = "createdBy",
         isActive = true,
+        allocationReason = AllocationReason.INITIAL_ALLOCATION,
       ),
     )
 
@@ -112,6 +115,7 @@ class GetCombinedCaseloadTest : IntegrationTestBase() {
         teamCode = teamCode,
         createdBy = "createdBy",
         isActive = false,
+        allocationReason = AllocationReason.INITIAL_ALLOCATION,
       ),
     )
 
@@ -122,6 +126,7 @@ class GetCombinedCaseloadTest : IntegrationTestBase() {
         teamCode = teamCode,
         createdBy = "createdBy",
         isActive = true,
+        allocationReason = AllocationReason.INITIAL_ALLOCATION,
       ),
     )
 

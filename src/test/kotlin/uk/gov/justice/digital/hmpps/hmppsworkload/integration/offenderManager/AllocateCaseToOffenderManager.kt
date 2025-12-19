@@ -22,6 +22,7 @@ import org.junit.jupiter.api.Test
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.MediaType
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.AllocateCase
+import uk.gov.justice.digital.hmpps.hmppsworkload.domain.AllocationReason
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.CaseAllocated
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.CaseType
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.Tier
@@ -172,7 +173,7 @@ class AllocateCaseToOffenderManager : IntegrationTestBase() {
   @Test
   fun `can allocate an already managed CRN to same staff member`() {
     val createdDate = ZonedDateTime.now()
-    val storedPersonManager = PersonManagerEntity(crn = crn, staffCode = staffCode, teamCode = teamCode, createdBy = "USER1", createdDate = createdDate, isActive = true)
+    val storedPersonManager = PersonManagerEntity(crn = crn, staffCode = staffCode, teamCode = teamCode, createdBy = "USER1", createdDate = createdDate, isActive = true, allocationReason = AllocationReason.INITIAL_ALLOCATION)
     personManagerRepository.save(storedPersonManager)
     val storedEventManager = EventManagerEntity(
       crn = crn,
@@ -195,6 +196,7 @@ class AllocateCaseToOffenderManager : IntegrationTestBase() {
       createdDate = createdDate,
       isActive = true,
       eventNumber = eventNumber,
+      allocationReason = AllocationReason.INITIAL_ALLOCATION,
     )
     requirementManagerRepository.save(storedRequirementManager)
 
@@ -219,7 +221,7 @@ class AllocateCaseToOffenderManager : IntegrationTestBase() {
 
   @Test
   fun `can allocate an already managed CRN to different staff member`() {
-    val otherPersonManager = PersonManagerEntity(crn = crn, staffCode = "ADIFFERENTCODE", teamCode = "TEAMCODE", createdBy = "USER1", isActive = true)
+    val otherPersonManager = PersonManagerEntity(crn = crn, staffCode = "ADIFFERENTCODE", teamCode = "TEAMCODE", createdBy = "USER1", isActive = true, allocationReason = AllocationReason.INITIAL_ALLOCATION)
     workforceAllocationsToDelius.officerViewResponse(otherPersonManager.staffCode)
     val storedPersonManager = personManagerRepository.save(otherPersonManager)
     val storedEventManager = eventManagerRepository.save(
@@ -579,7 +581,7 @@ class AllocateCaseToOffenderManager : IntegrationTestBase() {
     val nowTimeCheck = ZonedDateTime.now()
     val createdDateToTest = ZonedDateTime.now().minusMinutes(20)
 
-    val storedPersonManager = PersonManagerEntity(crn = crn, staffCode = staffCode, teamCode = teamCode, createdBy = "USER1", isActive = true)
+    val storedPersonManager = PersonManagerEntity(crn = crn, staffCode = staffCode, teamCode = teamCode, createdBy = "USER1", isActive = true, allocationReason = AllocationReason.INITIAL_ALLOCATION)
     personManagerRepository.save(storedPersonManager)
     val storedEventManager = EventManagerEntity(
       crn = crn,
@@ -606,6 +608,7 @@ class AllocateCaseToOffenderManager : IntegrationTestBase() {
       createdBy = "USER1",
       isActive = true,
       eventNumber = eventNumber,
+      allocationReason = AllocationReason.INITIAL_ALLOCATION,
     )
     requirementManagerRepository.save(storedRequirementManager)
 
@@ -632,7 +635,7 @@ class AllocateCaseToOffenderManager : IntegrationTestBase() {
   @Test
   fun `Does not allocate an already managed CRN to same staff member if allocated  too recently`() {
     val createdDateToTest = ZonedDateTime.now().minusMinutes(2)
-    val storedPersonManager = PersonManagerEntity(crn = crn, staffCode = staffCode, teamCode = teamCode, createdBy = "USER1", isActive = true)
+    val storedPersonManager = PersonManagerEntity(crn = crn, staffCode = staffCode, teamCode = teamCode, createdBy = "USER1", isActive = true, allocationReason = AllocationReason.INITIAL_ALLOCATION)
     personManagerRepository.save(storedPersonManager)
     val storedEventManager = EventManagerEntity(
       crn = crn,
@@ -658,6 +661,7 @@ class AllocateCaseToOffenderManager : IntegrationTestBase() {
       createdBy = "USER1",
       isActive = true,
       eventNumber = eventNumber,
+      allocationReason = AllocationReason.INITIAL_ALLOCATION,
     )
     requirementManagerRepository.save(storedRequirementManager)
 
