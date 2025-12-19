@@ -13,7 +13,7 @@ data class AllocateCase @JsonCreator constructor(
   val spoOversightNotes: String?,
   val sensitiveOversightNotes: Boolean?,
   val laoCase: Boolean,
-  val allocationReason: AllocationReason?,
+  val allocationReason: AllocationReason? = AllocationReason.INITIAL_ALLOCATION,
   val nextAppointmentDate: String?,
   val lastOasysAssessmentDate: String?,
   val failureToComply: String?,

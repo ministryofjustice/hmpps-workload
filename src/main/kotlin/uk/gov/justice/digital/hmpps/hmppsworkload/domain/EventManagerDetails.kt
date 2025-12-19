@@ -30,8 +30,10 @@ data class EventManagerDetails @JsonCreator constructor(
   val spoStaffCode: String?,
   @Schema(description = "SPO Name")
   val spoName: String?,
+  @Schema(description = "Allocation reason")
+  val allocationReason: AllocationReason?,
 ) {
   companion object {
-    fun from(eventManagerEntity: EventManagerEntity, eventManagerAuditEntity: EventManagerAuditEntity?): EventManagerDetails = EventManagerDetails(eventManagerEntity.uuid, eventManagerEntity.staffCode, eventManagerEntity.teamCode, eventManagerEntity.createdDate!!, eventManagerEntity.eventNumber, eventManagerAuditEntity?.spoOversightNotes, eventManagerAuditEntity?.sensitiveOversightNotes, eventManagerAuditEntity?.allocationJustificationNotes, eventManagerAuditEntity?.sensitiveNotes, eventManagerEntity.spoStaffCode, eventManagerEntity.spoName)
+    fun from(eventManagerEntity: EventManagerEntity, eventManagerAuditEntity: EventManagerAuditEntity?): EventManagerDetails = EventManagerDetails(eventManagerEntity.uuid, eventManagerEntity.staffCode, eventManagerEntity.teamCode, eventManagerEntity.createdDate!!, eventManagerEntity.eventNumber, eventManagerAuditEntity?.spoOversightNotes, eventManagerAuditEntity?.sensitiveOversightNotes, eventManagerAuditEntity?.allocationJustificationNotes, eventManagerAuditEntity?.sensitiveNotes, eventManagerEntity.spoStaffCode, eventManagerEntity.spoName, eventManagerEntity.allocationReason)
   }
 }

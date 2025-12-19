@@ -112,11 +112,11 @@ class DefaultSaveWorkloadServiceTest {
       coEvery { saveEventManagerService.saveEventManager("Reds", any(), any(), loggedInUser, STAFF_CODE, name.getCombinedName()) } returns
         eventManagerEntity
 
-      val personManagerEntity = PersonManagerEntity(1L, uuid, crn, STAFF_CODE, STAFF_TEAM_CODE, loggedInUser, ZonedDateTime.now(), true)
-      coEvery { savePersonManagerService.savePersonManager("Reds", staffMember, loggedInUser, crn) } returns
+      val personManagerEntity = PersonManagerEntity(1L, uuid, crn, STAFF_CODE, STAFF_TEAM_CODE, loggedInUser, ZonedDateTime.now(), true, allocationReason = AllocationReason.INITIAL_ALLOCATION)
+      coEvery { savePersonManagerService.savePersonManager("Reds", staffMember, loggedInUser, crn, allocationReason = AllocationReason.INITIAL_ALLOCATION) } returns
         SaveResult(personManagerEntity, true)
 
-      val requirementManagerEntity = RequirementManagerEntity(1L, uuid, crn, BigInteger.valueOf(1L), STAFF_CODE, STAFF_TEAM_CODE, "someone", ZonedDateTime.now(), true, 1)
+      val requirementManagerEntity = RequirementManagerEntity(1L, uuid, crn, BigInteger.valueOf(1L), STAFF_CODE, STAFF_TEAM_CODE, "someone", ZonedDateTime.now(), true, 1, allocationReason = AllocationReason.INITIAL_ALLOCATION)
       coEvery { saveRequirementManagerService.saveRequirementManagers(STAFF_TEAM_CODE, staffMember, allocateCase, loggedInUser, any()) } returns
         listOf(
           SaveResult(requirementManagerEntity, true),
@@ -164,7 +164,7 @@ class DefaultSaveWorkloadServiceTest {
       val loggedInUser = "me"
       val allocateCase = AllocateCase(
         crn, instructions = "", emailTo = null, sendEmailCopyToAllocatingOfficer = false, eventNumber = 1, allocationJustificationNotes = "Some Notes", sensitiveNotes = false, spoOversightNotes = "spo notes", sensitiveOversightNotes = null,
-        laoCase = false, allocationReason = AllocationReason.ALLOCATED_TO_RESPONSIBLE_OFFICER, nextAppointmentDate = null, lastOasysAssessmentDate = null, failureToComply = null,
+        laoCase = false, allocationReason = AllocationReason.RISK_TO_STAFF, nextAppointmentDate = null, lastOasysAssessmentDate = null, failureToComply = null,
       )
 
       val name = Name("Jim", "A", "Bond")
@@ -218,11 +218,11 @@ class DefaultSaveWorkloadServiceTest {
       coEvery { saveEventManagerService.saveEventManager("Reds", any(), any(), loggedInUser, STAFF_CODE, name.getCombinedName()) } returns
         eventManagerEntity
 
-      val personManagerEntity = PersonManagerEntity(1L, uuid, crn, STAFF_CODE, STAFF_TEAM_CODE, loggedInUser, ZonedDateTime.now(), true)
-      coEvery { savePersonManagerService.savePersonManager("Reds", staffMember, loggedInUser, crn) } returns
+      val personManagerEntity = PersonManagerEntity(1L, uuid, crn, STAFF_CODE, STAFF_TEAM_CODE, loggedInUser, ZonedDateTime.now(), true, AllocationReason.RISK_TO_STAFF)
+      coEvery { savePersonManagerService.savePersonManager("Reds", staffMember, loggedInUser, crn, AllocationReason.RISK_TO_STAFF) } returns
         SaveResult(personManagerEntity, true)
 
-      val requirementManagerEntity = RequirementManagerEntity(1L, uuid, crn, BigInteger.valueOf(1L), STAFF_CODE, STAFF_TEAM_CODE, "someone", ZonedDateTime.now(), true, 1)
+      val requirementManagerEntity = RequirementManagerEntity(1L, uuid, crn, BigInteger.valueOf(1L), STAFF_CODE, STAFF_TEAM_CODE, "someone", ZonedDateTime.now(), true, 1, AllocationReason.RISK_TO_STAFF)
       coEvery { saveRequirementManagerService.saveRequirementManagers(STAFF_TEAM_CODE, staffMember, allocateCase, loggedInUser, any()) } returns
         listOf(
           SaveResult(requirementManagerEntity, true),

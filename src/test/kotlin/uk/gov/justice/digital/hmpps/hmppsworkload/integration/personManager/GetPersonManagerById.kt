@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.hmppsworkload.integration.personManager
 
 import org.junit.jupiter.api.Test
+import uk.gov.justice.digital.hmpps.hmppsworkload.domain.AllocationReason
 import uk.gov.justice.digital.hmpps.hmppsworkload.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.entity.PersonManagerEntity
 import java.util.UUID
@@ -9,7 +10,7 @@ class GetPersonManagerById : IntegrationTestBase() {
 
   @Test
   fun `can get person manager by Id`() {
-    val storedPersonManager = PersonManagerEntity(crn = "CRN1", staffCode = "OM1", teamCode = "T1", createdBy = "USER1", isActive = true)
+    val storedPersonManager = PersonManagerEntity(crn = "CRN1", staffCode = "OM1", teamCode = "T1", createdBy = "USER1", isActive = true, allocationReason = AllocationReason.INITIAL_ALLOCATION)
     personManagerRepository.save(storedPersonManager)
     webTestClient.get()
       .uri("/allocation/person/${storedPersonManager.uuid}")

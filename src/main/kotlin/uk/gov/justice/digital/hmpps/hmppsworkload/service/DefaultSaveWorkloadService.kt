@@ -75,6 +75,7 @@ class DefaultSaveWorkloadService(
       staff,
       loggedInUser,
       allocateCase.crn,
+      allocateCase.allocationReason,
     ).also { afterPersonManagerSaved(it, staff, caseDetails) }
     return personManagerSaveResult
   }
