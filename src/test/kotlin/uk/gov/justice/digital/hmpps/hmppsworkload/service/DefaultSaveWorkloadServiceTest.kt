@@ -29,6 +29,7 @@ import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.StaffMember
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.AllocateCase
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.AllocationReason
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.CaseType
+import uk.gov.justice.digital.hmpps.hmppsworkload.domain.ReallocateCase
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.SaveResult
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.StaffIdentifier
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.Tier
@@ -82,7 +83,7 @@ class DefaultSaveWorkloadServiceTest {
       val loggedInUser = "me"
       val allocateCase = AllocateCase(
         crn, instructions = "", emailTo = null, sendEmailCopyToAllocatingOfficer = false, eventNumber = 1, allocationJustificationNotes = "Some Notes", sensitiveNotes = false, spoOversightNotes = "spo notes", sensitiveOversightNotes = null,
-        laoCase = false, allocationReason = AllocationReason.INITIAL_ALLOCATION, nextAppointmentDate = null, lastOasysAssessmentDate = null, failureToComply = null,
+        laoCase = false,
       )
 
       val eventNumber = 1
@@ -117,7 +118,7 @@ class DefaultSaveWorkloadServiceTest {
         SaveResult(personManagerEntity, true)
 
       val requirementManagerEntity = RequirementManagerEntity(1L, uuid, crn, BigInteger.valueOf(1L), STAFF_CODE, STAFF_TEAM_CODE, "someone", ZonedDateTime.now(), true, 1, allocationReason = AllocationReason.INITIAL_ALLOCATION)
-      coEvery { saveRequirementManagerService.saveRequirementManagers(STAFF_TEAM_CODE, staffMember, allocateCase, loggedInUser, any()) } returns
+      coEvery { saveRequirementManagerService.saveRequirementManagers(STAFF_TEAM_CODE, staffMember, allocateCase.crn, allocateCase.eventNumber, AllocationReason.INITIAL_ALLOCATION, loggedInUser, any()) } returns
         listOf(
           SaveResult(requirementManagerEntity, true),
         )
@@ -162,8 +163,8 @@ class DefaultSaveWorkloadServiceTest {
     runBlocking {
       val crn = "1234"
       val loggedInUser = "me"
-      val allocateCase = AllocateCase(
-        crn, instructions = "", emailTo = null, sendEmailCopyToAllocatingOfficer = false, eventNumber = 1, allocationJustificationNotes = "Some Notes", sensitiveNotes = false, spoOversightNotes = "spo notes", sensitiveOversightNotes = null,
+      val allocateCase = ReallocateCase(
+        crn, emailTo = null, sensitiveNotes = false, reallocationNotes = "spo notes",
         laoCase = false, allocationReason = AllocationReason.RISK_TO_STAFF, nextAppointmentDate = null, lastOasysAssessmentDate = null, failureToComply = null,
       )
 
@@ -223,7 +224,7 @@ class DefaultSaveWorkloadServiceTest {
         SaveResult(personManagerEntity, true)
 
       val requirementManagerEntity = RequirementManagerEntity(1L, uuid, crn, BigInteger.valueOf(1L), STAFF_CODE, STAFF_TEAM_CODE, "someone", ZonedDateTime.now(), true, 1, AllocationReason.RISK_TO_STAFF)
-      coEvery { saveRequirementManagerService.saveRequirementManagers(STAFF_TEAM_CODE, staffMember, allocateCase, loggedInUser, any()) } returns
+      coEvery { saveRequirementManagerService.saveRequirementManagers(STAFF_TEAM_CODE, staffMember, allocateCase.crn, 1, AllocationReason.RISK_TO_STAFF, loggedInUser, any()) } returns
         listOf(
           SaveResult(requirementManagerEntity, true),
         )

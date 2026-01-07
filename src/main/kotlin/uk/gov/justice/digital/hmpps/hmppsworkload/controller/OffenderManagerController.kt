@@ -20,6 +20,7 @@ import uk.gov.justice.digital.hmpps.hmppsworkload.domain.CaseReallocated
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.OffenderManagerCases
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.OffenderManagerOverview
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.OffenderManagerPotentialWorkload
+import uk.gov.justice.digital.hmpps.hmppsworkload.domain.ReallocateCase
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.StaffIdentifier
 import uk.gov.justice.digital.hmpps.hmppsworkload.service.DefaultSaveWorkloadService
 import uk.gov.justice.digital.hmpps.hmppsworkload.service.staff.GetOffenderManagerService
@@ -81,7 +82,7 @@ class OffenderManagerController(
     @PathVariable(required = true) teamCode: String,
     @PathVariable(required = true) staffCode: String,
     @PathVariable(required = true) previousStaffCode: String,
-    @RequestBody allocateCase: AllocateCase,
+    @RequestBody allocateCase: ReallocateCase,
     authentication: Authentication,
   ): CaseReallocated? {
     val username = authentication.name

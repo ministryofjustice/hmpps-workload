@@ -12,6 +12,7 @@ import uk.gov.justice.digital.hmpps.hmppsworkload.domain.AllocateCase
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.AllocationReason
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.CaseAllocated
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.CaseReallocated
+import uk.gov.justice.digital.hmpps.hmppsworkload.domain.ReallocateCase
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.SaveResult
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.StaffIdentifier
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.entity.CaseDetailsEntity
@@ -48,7 +49,7 @@ class DefaultSaveWorkloadService(
     val eventManagerSaveResult = saveEventManager(allocatedStaffId, allocationData, allocateCase, loggedInUser, caseDetails)
 
     val unallocatedRequirements = allocationData.activeRequirements.filter { !it.manager.allocated }
-    val requirementManagerSaveResults = saveRequirementManagerService.saveRequirementManagers(allocatedStaffId.teamCode, allocationData.staff, allocateCase, loggedInUser, unallocatedRequirements)
+    val requirementManagerSaveResults = saveRequirementManagerService.saveRequirementManagers(allocatedStaffId.teamCode, allocationData.staff, allocateCase.crn, allocateCase.eventNumber, AllocationReason.INITIAL_ALLOCATION, loggedInUser, unallocatedRequirements)
       .also { afterRequirementManagersSaved(it, caseDetails) }
 
     try {
@@ -69,13 +70,30 @@ class DefaultSaveWorkloadService(
     return eventManagerSaveResult
   }
 
+  @Suppress("LongParameterList")
+  private fun saveEventManager(allocatedStaffId: StaffIdentifier, allocationData: AllocationDemandDetails, allocateCase: ReallocateCase, loggedInUser: String, caseDetails: CaseDetailsEntity, eventNumber: Int): SaveResult<EventManagerEntity> {
+    val eventManagerSaveResult = saveEventManagerService.saveEventManager(allocatedStaffId.teamCode, allocationData.staff, allocateCase, loggedInUser, allocationData.allocatingStaff.code, allocationData.allocatingStaff.name.getCombinedName(), eventNumber)
+      .also { afterEventManagerSaved(it, caseDetails) }
+    return eventManagerSaveResult
+  }
+
   private suspend fun savePersonManager(allocatedStaffId: StaffIdentifier, staff: StaffMember, loggedInUser: String, allocateCase: AllocateCase, caseDetails: CaseDetailsEntity): SaveResult<PersonManagerEntity> {
     val personManagerSaveResult = savePersonManagerService.savePersonManager(
       allocatedStaffId.teamCode,
       staff,
       loggedInUser,
       allocateCase.crn,
-      allocateCase.allocationReason,
+      AllocationReason.INITIAL_ALLOCATION,
+    ).also { afterPersonManagerSaved(it, staff, caseDetails) }
+    return personManagerSaveResult
+  }
+  private suspend fun savePersonManager(allocatedStaffId: StaffIdentifier, staff: StaffMember, loggedInUser: String, reason: AllocationReason?, caseDetails: CaseDetailsEntity): SaveResult<PersonManagerEntity> {
+    val personManagerSaveResult = savePersonManagerService.savePersonManager(
+      allocatedStaffId.teamCode,
+      staff,
+      loggedInUser,
+      caseDetails.crn,
+      reason,
     ).also { afterPersonManagerSaved(it, staff, caseDetails) }
     return personManagerSaveResult
   }
@@ -102,10 +120,11 @@ class DefaultSaveWorkloadService(
     }
   }
 
+  @Suppress("LongMethod")
   suspend fun saveReallocatedWorkLoad(
     allocatedStaffId: StaffIdentifier,
     previousStaffCode: String,
-    allocateCase: AllocateCase,
+    allocateCase: ReallocateCase,
     loggedInUser: String,
   ): CaseReallocated? {
     val caseDetails: CaseDetailsEntity = caseDetailsRepository.findByIdOrNull(allocateCase.crn)!!
@@ -127,15 +146,15 @@ class DefaultSaveWorkloadService(
 
     var allocationData = workforceAllocationsToDeliusApiClient.allocationDetails(allocateCase.crn, firstEvent, allocatedStaffId.staffCode, loggedInUser)
 
-    val personManagerSaveResult = savePersonManager(allocatedStaffId, allocationData.staff, loggedInUser, allocateCase, caseDetails)
+    val personManagerSaveResult = savePersonManager(allocatedStaffId, allocationData.staff, loggedInUser, allocateCase.allocationReason, caseDetails)
     val allUnallocatedRequirements = arrayListOf<Requirement>()
 
     for (event in events) {
       allocationData = workforceAllocationsToDeliusApiClient.allocationDetails(allocateCase.crn, event, allocatedStaffId.staffCode, loggedInUser)
 
-      val eventManagerSaveResult = saveEventManager(allocatedStaffId, allocationData, allocateCase, loggedInUser, caseDetails)
+      val eventManagerSaveResult = saveEventManager(allocatedStaffId, allocationData, allocateCase, loggedInUser, caseDetails, event)
       val unallocatedRequirements = allocationData.activeRequirements.filter { !it.manager.allocated || it.manager.code == previousStaffCode }
-      val requirementManagerSaveResults = saveRequirementManagerService.saveRequirementManagers(allocatedStaffId.teamCode, allocationData.staff, allocateCase, loggedInUser, unallocatedRequirements)
+      val requirementManagerSaveResults = saveRequirementManagerService.saveRequirementManagers(allocatedStaffId.teamCode, allocationData.staff, allocateCase.crn, event, allocateCase.allocationReason!!, loggedInUser, unallocatedRequirements)
         .also { afterRequirementManagersSaved(it, caseDetails) }
       eventManagerSaveResults.addLast(eventManagerSaveResult)
       allRequirementManagerSaveResults.addAll(requirementManagerSaveResults)

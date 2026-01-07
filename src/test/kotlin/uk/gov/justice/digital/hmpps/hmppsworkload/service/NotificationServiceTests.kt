@@ -24,6 +24,7 @@ import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.RiskSummary
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.StaffMember
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.AllocateCase
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.CaseType
+import uk.gov.justice.digital.hmpps.hmppsworkload.domain.ReallocateCase
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.Tier
 import uk.gov.justice.digital.hmpps.hmppsworkload.integration.getAllocationDetails
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.entity.CaseDetailsEntity
@@ -66,8 +67,14 @@ class NotificationServiceTests {
     meterRegistry,
   )
   private val allocateCase = AllocateCase(
-    "CRN1111", sendEmailCopyToAllocatingOfficer = false, eventNumber = 1, allocationJustificationNotes = "Some Notes", sensitiveNotes = false, spoOversightNotes = "spo notes", sensitiveOversightNotes = null,
-    laoCase = false, allocationReason = null, nextAppointmentDate = null, lastOasysAssessmentDate = null, failureToComply = null,
+    "CRN1111",
+    sendEmailCopyToAllocatingOfficer = false,
+    eventNumber = 1,
+    allocationJustificationNotes = "Some Notes",
+    sensitiveNotes = false,
+    spoOversightNotes = "spo notes",
+    sensitiveOversightNotes = null,
+    laoCase = false,
   )
   private val parameters = mapOf(
     "officer_name" to "Staff Member",
@@ -399,10 +406,8 @@ class NotificationServiceTests {
   @Test
   fun `must add notes when they exist`() = runBlocking {
     val allocationDetails = getAllocationDetails(allocateCase.crn)
-    val allocateCase = AllocateCase(
-      "CRN1111", "Some Notes", sendEmailCopyToAllocatingOfficer = false, eventNumber = 1, allocationJustificationNotes = "Some Notes", sensitiveNotes = false, spoOversightNotes = "spo notes", sensitiveOversightNotes = null,
-      laoCase = false, allocationReason = null, nextAppointmentDate = null, lastOasysAssessmentDate = null, failureToComply = null,
-    )
+    val allocateCase = AllocateCase("CRN1111", "Some Notes", sendEmailCopyToAllocatingOfficer = false, eventNumber = 1, allocationJustificationNotes = "Some Notes", sensitiveNotes = false, spoOversightNotes = "spo notes", sensitiveOversightNotes = null, laoCase = false)
+
     notificationService.notifyAllocation(allocationDetails, allocateCase, caseDetails)
     val parameters = slot<NotificationEmail>()
     coVerify(exactly = 1) { sqsSuccessPublisher.sendNotification(capture(parameters)) }
@@ -412,10 +417,7 @@ class NotificationServiceTests {
   @Test
   fun `must add allocating officer name`() = runBlocking {
     val allocationDetails = getAllocationDetails(allocateCase.crn)
-    val allocateCase = AllocateCase(
-      "CRN1111", "Some Notes", sendEmailCopyToAllocatingOfficer = false, eventNumber = 1, allocationJustificationNotes = "some notes", sensitiveNotes = false, spoOversightNotes = "spo notes", sensitiveOversightNotes = null,
-      laoCase = false, allocationReason = null, nextAppointmentDate = null, lastOasysAssessmentDate = null, failureToComply = null,
-    )
+    val allocateCase = AllocateCase("CRN1111", "Some Notes", sendEmailCopyToAllocatingOfficer = false, eventNumber = 1, allocationJustificationNotes = "some notes", sensitiveNotes = false, spoOversightNotes = "spo notes", sensitiveOversightNotes = null, laoCase = false)
 
     notificationService.notifyAllocation(allocationDetails, allocateCase, caseDetails)
     val parameters = slot<NotificationEmail>()
@@ -438,10 +440,7 @@ class NotificationServiceTests {
     val allocationDetails = getAllocationDetails(allocateCase.crn)
     val firstEmail = "first@email.com"
     val secondEmail = "second@email.com"
-    val allocateCase = AllocateCase(
-      "CRN1111", "instructions", listOf(firstEmail, secondEmail), false, 1, allocationJustificationNotes = "some notes", sensitiveNotes = false, spoOversightNotes = "spo notes", sensitiveOversightNotes = null,
-      laoCase = false, allocationReason = null, nextAppointmentDate = null, lastOasysAssessmentDate = null, failureToComply = null,
-    )
+    val allocateCase = AllocateCase("CRN1111", "instructions", listOf(firstEmail, secondEmail), false, 1, allocationJustificationNotes = "some notes", sensitiveNotes = false, spoOversightNotes = "spo notes", sensitiveOversightNotes = null, laoCase = false)
     notificationService.notifyAllocation(allocationDetails, allocateCase, caseDetails)
     val parameters = slot<NotificationEmail>()
     coVerify(exactly = 1) { sqsSuccessPublisher.sendNotification(capture(parameters)) }
@@ -452,10 +451,7 @@ class NotificationServiceTests {
     val allocationDetails = getAllocationDetails(allocateCase.crn)
     val firstEmail = "first@justice.gov.uk"
     val secondEmail = "second@justice.gov.uk"
-    val allocateCase = AllocateCase(
-      "CRN1111", "instructions", listOf(firstEmail, secondEmail), true, 1, allocationJustificationNotes = "some notes", sensitiveNotes = false, spoOversightNotes = "spo notes", sensitiveOversightNotes = null,
-      laoCase = false, allocationReason = null, nextAppointmentDate = null, lastOasysAssessmentDate = null, failureToComply = null,
-    )
+    val allocateCase = AllocateCase("CRN1111", "instructions", listOf(firstEmail, secondEmail), true, 1, allocationJustificationNotes = "some notes", sensitiveNotes = false, spoOversightNotes = "spo notes", sensitiveOversightNotes = null, laoCase = false)
     notificationService.notifyAllocation(allocationDetails, allocateCase, caseDetails)
     val parameters = slot<NotificationEmail>()
     coVerify(exactly = 1) { sqsSuccessPublisher.sendNotification(capture(parameters)) }
@@ -470,8 +466,8 @@ class NotificationServiceTests {
     val allocationDetails = getAllocationDetails(allocateCase.crn)
     val firstEmail = "first@justice.gov.uk"
     val secondEmail = "second@justice.gov.uk"
-    val allocateCase = AllocateCase(
-      "CRN1111", "instructions", listOf(firstEmail, secondEmail), true, 1, allocationJustificationNotes = "some notes", sensitiveNotes = false, spoOversightNotes = "spo notes", sensitiveOversightNotes = null,
+    val allocateCase = ReallocateCase(
+      "CRN1111", listOf(firstEmail, secondEmail), true, "spo notes",
       laoCase = false, allocationReason = null, nextAppointmentDate = null, lastOasysAssessmentDate = null, failureToComply = null,
     )
     val reallocationDetails = ReallocationDetails("Laziness", "never", "tomorrow", "12", getManager())
@@ -491,8 +487,8 @@ class NotificationServiceTests {
     val allocationDetails = getAllocationDetails(allocateCase.crn)
     val firstEmail = "first@justice.gov.uk"
     val secondEmail = "second@justice.gov.uk"
-    val allocateCase = AllocateCase(
-      "CRN1111", "instructions", listOf(firstEmail, secondEmail), true, 1, allocationJustificationNotes = "some notes", sensitiveNotes = false, spoOversightNotes = "spo notes", sensitiveOversightNotes = null,
+    val allocateCase = ReallocateCase(
+      "CRN1111", listOf(firstEmail, secondEmail), true, "spo notes",
       laoCase = false, allocationReason = null, nextAppointmentDate = null, lastOasysAssessmentDate = null, failureToComply = null,
     )
     val reallocationDetails = ReallocationDetails("Laziness", "never", "tomorrow", "12", getManager())
@@ -523,7 +519,7 @@ class NotificationServiceTests {
     val secondEmail = "second@justice.gov.uk"
     val allocateCase = AllocateCase(
       "CRN1111", "instructions", listOf(firstEmail, secondEmail), false, 1, allocationJustificationNotes = "some notes", sensitiveNotes = false, spoOversightNotes = "spo notes", sensitiveOversightNotes = null,
-      laoCase = false, allocationReason = null, nextAppointmentDate = null, lastOasysAssessmentDate = null, failureToComply = null,
+      laoCase = false,
     )
     notificationService.notifyAllocation(allocationDetails, allocateCase, caseDetails)
     val parameters = slot<NotificationEmail>()
@@ -541,7 +537,7 @@ class NotificationServiceTests {
     val secondEmail = "second@justice.gov.ww"
     val allocateCase = AllocateCase(
       "CRN1111", "instructions", listOf(firstEmail, secondEmail), false, 1, allocationJustificationNotes = "some notes", sensitiveNotes = false, spoOversightNotes = "spo notes", sensitiveOversightNotes = null,
-      laoCase = false, allocationReason = null, nextAppointmentDate = null, lastOasysAssessmentDate = null, failureToComply = null,
+      laoCase = false,
     )
     coEvery { sqsSuccessPublisher.sendNotification(any()) } throws NotificationClientException("Failed to send email")
     coEvery { meterRegistry.counter(any(), any(), any()) } returns counter

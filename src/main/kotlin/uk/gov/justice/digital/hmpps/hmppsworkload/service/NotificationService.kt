@@ -19,6 +19,7 @@ import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.RiskSummary
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.StaffMember
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.AllocateCase
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.CaseType
+import uk.gov.justice.digital.hmpps.hmppsworkload.domain.ReallocateCase
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.entity.CaseDetailsEntity
 import uk.gov.justice.digital.hmpps.hmppsworkload.utils.DateUtils
 import uk.gov.justice.digital.hmpps.hmppsworkload.utils.capitalize
@@ -93,7 +94,7 @@ class NotificationService(
         PRACTITIONER_EMAIL to allocationDemandDetails.staff.email!!,
       ).plus(getRiskParameters(notifyData.riskSummary, notifyData.riskPredictors, allocationDemandDetails.ogrs))
         .plus(getConvictionParameters(allocationDemandDetails))
-        .plus(getPersonOnProbationParameters(allocationDemandDetails.name.getCombinedName(), allocateCase))
+        .plus(getPersonOnProbationParameters(allocationDemandDetails.name.getCombinedName(), allocateCase.crn, allocateCase.allocationJustificationNotes))
         .plus(getLoggedInUserParameters(allocationDemandDetails.allocatingStaff))
         .plus(CRN to allocationDemandDetails.crn)
     }
@@ -108,7 +109,7 @@ class NotificationService(
   }
 
   @Suppress("LongParameterList", "LongMethod", "TooGenericExceptionCaught")
-  suspend fun notifyReallocation(allocationDemandDetails: AllocationDemandDetails, allocateCase: AllocateCase, caseDetails: CaseDetailsEntity, reallocationDetail: ReallocationDetails): NotificationMessageResponse {
+  suspend fun notifyReallocation(allocationDemandDetails: AllocationDemandDetails, allocateCase: ReallocateCase, caseDetails: CaseDetailsEntity, reallocationDetail: ReallocationDetails): NotificationMessageResponse {
     val response = notifyReallocationNewPractitioner(allocationDemandDetails, allocateCase, caseDetails, reallocationDetail)
     notifyReallocationPreviousPractitioner(allocationDemandDetails, allocateCase, caseDetails, reallocationDetail)
 
@@ -116,7 +117,7 @@ class NotificationService(
   }
 
   @Suppress("LongParameterList", "LongMethod", "TooGenericExceptionCaught")
-  suspend fun notifyReallocationNewPractitioner(allocationDemandDetails: AllocationDemandDetails, allocateCase: AllocateCase, caseDetails: CaseDetailsEntity, reallocationDetail: ReallocationDetails): NotificationMessageResponse {
+  suspend fun notifyReallocationNewPractitioner(allocationDemandDetails: AllocationDemandDetails, allocateCase: ReallocateCase, caseDetails: CaseDetailsEntity, reallocationDetail: ReallocationDetails): NotificationMessageResponse {
     val emailReferenceId = UUID.randomUUID().toString()
     val notifyData = getNotifyData(allocateCase.crn)
     val parameters: Map<String, Any>
@@ -146,7 +147,7 @@ class NotificationService(
         TIER to caseDetails.tier,
       ).plus(getRiskParameters(notifyData.riskSummary, notifyData.riskPredictors, allocationDemandDetails.ogrs))
         .plus(getConvictionParameters(allocationDemandDetails))
-        .plus(getPersonOnProbationParameters(allocationDemandDetails.name.getCombinedName(), allocateCase))
+        .plus(getPersonOnProbationParameters(allocationDemandDetails.name.getCombinedName(), allocateCase.crn, allocateCase.reallocationNotes))
         .plus(getLoggedInUserParameters(allocationDemandDetails.allocatingStaff))
         .plus(CRN to allocationDemandDetails.crn)
     }
@@ -160,7 +161,7 @@ class NotificationService(
   }
 
   @Suppress("LongParameterList", "LongMethod", "TooGenericExceptionCaught")
-  suspend fun notifyReallocationPreviousPractitioner(allocationDemandDetails: AllocationDemandDetails, allocateCase: AllocateCase, caseDetails: CaseDetailsEntity, reallocationDetail: ReallocationDetails): NotificationMessageResponse {
+  suspend fun notifyReallocationPreviousPractitioner(allocationDemandDetails: AllocationDemandDetails, allocateCase: ReallocateCase, caseDetails: CaseDetailsEntity, reallocationDetail: ReallocationDetails): NotificationMessageResponse {
     val emailReferenceId = UUID.randomUUID().toString()
     val notifyData = getNotifyData(allocateCase.crn)
     val parameters: Map<String, Any>
@@ -190,7 +191,7 @@ class NotificationService(
 
       ).plus(getRiskParameters(notifyData.riskSummary, notifyData.riskPredictors, allocationDemandDetails.ogrs))
         .plus(getConvictionParameters(allocationDemandDetails))
-        .plus(getPersonOnProbationParameters(allocationDemandDetails.name.getCombinedName(), allocateCase))
+        .plus(getPersonOnProbationParameters(allocationDemandDetails.name.getCombinedName(), allocateCase.crn, allocateCase.reallocationNotes))
         .plus(getLoggedInUserParameters(allocationDemandDetails.allocatingStaff))
         .plus(CRN to allocationDemandDetails.crn)
     }
@@ -242,10 +243,10 @@ class NotificationService(
     MDC.remove("ProbationEstateDetails")
   }
 
-  private fun getPersonOnProbationParameters(name: String, allocateCase: AllocateCase): Map<String, Any> = mapOf(
+  private fun getPersonOnProbationParameters(name: String, crn: String, notes: String?): Map<String, Any> = mapOf(
     "case_name" to name,
-    "crn" to allocateCase.crn,
-    "notes" to allocateCase.allocationJustificationNotes.toString(),
+    "crn" to crn,
+    "notes" to notes.toString(),
   )
 
   private fun getConvictionParameters(allocationDemandDetails: AllocationDemandDetails): Map<String, Any> {
