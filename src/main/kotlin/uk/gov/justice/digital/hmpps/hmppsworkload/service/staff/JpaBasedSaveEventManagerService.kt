@@ -94,17 +94,4 @@ class JpaBasedSaveEventManagerService(
       ),
     )
   }
-
-  private fun auditEventManagerAllocation(reallocateCase: ReallocateCase, loggedInUser: String, eventManagerEntity: EventManagerEntity) {
-    eventManagerAuditRepository.save(
-      EventManagerAuditEntity(
-        spoOversightNotes = reallocateCase.reallocationNotes,
-        sensitiveOversightNotes = reallocateCase.sensitiveNotes,
-        allocationJustificationNotes = null,
-        sensitiveNotes = null,
-        createdBy = loggedInUser,
-        eventManager = eventManagerEntity,
-      ),
-    )
-  }
 }

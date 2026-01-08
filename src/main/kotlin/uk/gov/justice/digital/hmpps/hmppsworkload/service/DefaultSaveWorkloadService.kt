@@ -138,8 +138,8 @@ class DefaultSaveWorkloadService(
       return null
     }
 
-    val firstEvent = caseView.activeEvents.stream().map { event -> event.number }.findFirst().get()
-    val events = caseView.activeEvents.stream().map { event -> event.number }
+    val events = caseView.activeEvents.stream().map { event -> event.number }.toList()
+    val firstEvent = events[0]
 
     val eventManagerSaveResults: ArrayList<SaveResult<EventManagerEntity>> = arrayListOf<SaveResult<EventManagerEntity>>()
     val allRequirementManagerSaveResults: ArrayList<SaveResult<RequirementManagerEntity>> = arrayListOf<SaveResult<RequirementManagerEntity>>()
