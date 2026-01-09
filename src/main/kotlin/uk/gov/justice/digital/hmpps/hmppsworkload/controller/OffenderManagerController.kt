@@ -16,9 +16,11 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.AllocateCase
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.CaseAllocated
+import uk.gov.justice.digital.hmpps.hmppsworkload.domain.CaseReallocated
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.OffenderManagerCases
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.OffenderManagerOverview
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.OffenderManagerPotentialWorkload
+import uk.gov.justice.digital.hmpps.hmppsworkload.domain.ReallocateCase
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.StaffIdentifier
 import uk.gov.justice.digital.hmpps.hmppsworkload.service.DefaultSaveWorkloadService
 import uk.gov.justice.digital.hmpps.hmppsworkload.service.staff.GetOffenderManagerService
@@ -72,6 +74,20 @@ class OffenderManagerController(
     val username = authentication.name
     log.info("Allocating case for crn ${allocateCase.crn} to staffCode $staffCode in teamCode $teamCode by $username")
     return saveWorkloadService.saveWorkload(StaffIdentifier(staffCode, teamCode), allocateCase, authentication.name)
+  }
+
+  @PreAuthorize("hasRole('ROLE_MANAGE_A_WORKFORCE_ALLOCATE')")
+  @PostMapping("/team/{teamCode}/offenderManager/{staffCode}/{previousStaffCode}/case")
+  suspend fun reallocateCaseToOffenderManager(
+    @PathVariable(required = true) teamCode: String,
+    @PathVariable(required = true) staffCode: String,
+    @PathVariable(required = true) previousStaffCode: String,
+    @RequestBody allocateCase: ReallocateCase,
+    authentication: Authentication,
+  ): CaseReallocated? {
+    val username = authentication.name
+    log.info("Allocating case for crn ${allocateCase.crn} to staffCode $staffCode in teamCode $teamCode by $username")
+    return saveWorkloadService.saveReallocatedWorkLoad(StaffIdentifier(staffCode, teamCode), previousStaffCode, allocateCase, authentication.name)
   }
 
   @Operation(summary = "Retrieves all cases allocated to an Offender Manager")

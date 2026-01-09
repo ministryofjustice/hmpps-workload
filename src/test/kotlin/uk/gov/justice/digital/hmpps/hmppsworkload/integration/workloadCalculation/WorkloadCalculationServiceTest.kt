@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
+import uk.gov.justice.digital.hmpps.hmppsworkload.domain.AllocationReason
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.CaseType
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.StaffIdentifier
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.Tier
@@ -118,7 +119,7 @@ internal class WorkloadCalculationServiceTest : IntegrationTestBase() {
     val teamCode = "TM1"
     val staffGrade = "PO"
 
-    personManagerRepository.save(PersonManagerEntity(crn = "CRN1", staffCode = staffCode, teamCode = teamCode, createdBy = "USER", isActive = true))
+    personManagerRepository.save(PersonManagerEntity(crn = "CRN1", staffCode = staffCode, teamCode = teamCode, createdBy = "USER", isActive = true, allocationReason = AllocationReason.INITIAL_ALLOCATION))
 
     caseDetailsRepository.save(CaseDetailsEntity("CRN1", Tier.B2, CaseType.COMMUNITY, "Jane", "Doe"))
 
