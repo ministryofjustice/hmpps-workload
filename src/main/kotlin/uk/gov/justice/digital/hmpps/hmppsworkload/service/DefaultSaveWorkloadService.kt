@@ -1,8 +1,10 @@
 package uk.gov.justice.digital.hmpps.hmppsworkload.service
 
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.hmppsworkload.client.HmppsTierApiClient
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.WorkforceAllocationsToDeliusApiClient
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.AllocationDemandDetails
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.ReallocationDetails
@@ -25,6 +27,7 @@ import uk.gov.justice.digital.hmpps.hmppsworkload.service.staff.SavePersonManage
 import uk.gov.justice.digital.hmpps.hmppsworkload.service.staff.SaveRequirementManagerService
 import uk.gov.justice.digital.hmpps.hmppsworkload.utils.capitalize
 
+@Suppress("LongParameterList")
 @Service
 class DefaultSaveWorkloadService(
   private val savePersonManagerService: SavePersonManagerService,
@@ -35,6 +38,7 @@ class DefaultSaveWorkloadService(
   private val telemetryService: TelemetryService,
   private val sqsSuccessPublisher: SqsSuccessPublisher,
   private val caseDetailsRepository: CaseDetailsRepository,
+  @Qualifier("hmppsTierApiClient") private val hmppsTierApiClient: HmppsTierApiClient,
 ) {
 
   @Suppress("TooGenericExceptionCaught")
@@ -50,13 +54,13 @@ class DefaultSaveWorkloadService(
 
     val unallocatedRequirements = allocationData.activeRequirements.filter { !it.manager.allocated }
     val requirementManagerSaveResults = saveRequirementManagerService.saveRequirementManagers(allocatedStaffId.teamCode, allocationData.staff, allocateCase.crn, allocateCase.eventNumber, AllocationReason.INITIAL_ALLOCATION, loggedInUser, unallocatedRequirements)
-      .also { afterRequirementManagersSaved(it, caseDetails) }
+      .also { afterRequirementManagersSaved(it, caseDetails?.type?.name) }
 
     try {
       notificationService.notifyAllocation(allocationData, allocateCase, caseDetails)
-      log.info("Allocation notified for case: ${caseDetails.crn}, conviction number: ${allocateCase.eventNumber}, to: ${allocationData.staff.code}, from: ${allocationData.allocatingStaff.code}")
+      log.info("Allocation notified for case: ${allocateCase.crn}, conviction number: ${allocateCase.eventNumber}, to: ${allocationData.staff.code}, from: ${allocationData.allocatingStaff.code}")
       sqsSuccessPublisher.auditAllocation(allocateCase.crn, allocateCase.eventNumber, loggedInUser, unallocatedRequirements.map { it.id })
-      log.info("Case allocated: ${caseDetails.crn}, by ${allocationData.allocatingStaff.code}")
+      log.info("Case allocated: ${allocateCase.crn}, by ${allocationData.allocatingStaff.code}")
       return CaseAllocated(personManagerSaveResult.entity.uuid, eventManagerSaveResult.entity.uuid, requirementManagerSaveResults.map { it.entity.uuid })
     } catch (e: Exception) {
       log.error("Failed to send notification and allocate", e)
@@ -66,14 +70,14 @@ class DefaultSaveWorkloadService(
 
   private fun saveEventManager(allocatedStaffId: StaffIdentifier, allocationData: AllocationDemandDetails, allocateCase: AllocateCase, loggedInUser: String, caseDetails: CaseDetailsEntity): SaveResult<EventManagerEntity> {
     val eventManagerSaveResult = saveEventManagerService.saveEventManager(allocatedStaffId.teamCode, allocationData.staff, allocateCase, loggedInUser, allocationData.allocatingStaff.code, allocationData.allocatingStaff.name.getCombinedName())
-      .also { afterEventManagerSaved(it, caseDetails) }
+      .also { afterEventManagerSaved(it, caseDetails?.type?.name) }
     return eventManagerSaveResult
   }
 
   @Suppress("LongParameterList")
-  private fun saveEventManager(allocatedStaffId: StaffIdentifier, allocationData: AllocationDemandDetails, allocateCase: ReallocateCase, loggedInUser: String, caseDetails: CaseDetailsEntity, eventNumber: Int): SaveResult<EventManagerEntity> {
+  private fun saveEventManager(allocatedStaffId: StaffIdentifier, allocationData: AllocationDemandDetails, allocateCase: ReallocateCase, loggedInUser: String, caseType: String?, eventNumber: Int): SaveResult<EventManagerEntity> {
     val eventManagerSaveResult = saveEventManagerService.saveEventManager(allocatedStaffId.teamCode, allocationData.staff, allocateCase, loggedInUser, allocationData.allocatingStaff.code, allocationData.allocatingStaff.name.getCombinedName(), eventNumber)
-      .also { afterEventManagerSaved(it, caseDetails) }
+      .also { afterEventManagerSaved(it, caseType) }
     return eventManagerSaveResult
   }
 
@@ -84,24 +88,24 @@ class DefaultSaveWorkloadService(
       loggedInUser,
       allocateCase.crn,
       AllocationReason.INITIAL_ALLOCATION,
-    ).also { afterPersonManagerSaved(it, staff, caseDetails) }
+    ).also { afterPersonManagerSaved(it, staff, caseDetails.type?.name, caseDetails.tier?.name) }
     return personManagerSaveResult
   }
 
-  private suspend fun savePersonManager(allocatedStaffId: StaffIdentifier, staff: StaffMember, loggedInUser: String, reason: AllocationReason?, caseDetails: CaseDetailsEntity): SaveResult<PersonManagerEntity> {
+  private suspend fun savePersonManager(allocatedStaffId: StaffIdentifier, staff: StaffMember, loggedInUser: String, reason: AllocationReason?, crn: String, type: String?, tier: String?): SaveResult<PersonManagerEntity> {
     val personManagerSaveResult = savePersonManagerService.savePersonManager(
       allocatedStaffId.teamCode,
       staff,
       loggedInUser,
-      caseDetails.crn,
+      crn,
       reason,
-    ).also { afterPersonManagerSaved(it, staff, caseDetails) }
+    ).also { afterPersonManagerSaved(it, staff, type, tier) }
     return personManagerSaveResult
   }
 
-  private fun afterPersonManagerSaved(personManagerSaveResult: SaveResult<PersonManagerEntity>, deliusStaff: StaffMember, caseDetails: CaseDetailsEntity) {
-    telemetryService.trackPersonManagerAllocated(personManagerSaveResult.entity, caseDetails)
-    telemetryService.trackStaffGradeToTierAllocated(caseDetails, deliusStaff, personManagerSaveResult.entity.teamCode)
+  private fun afterPersonManagerSaved(personManagerSaveResult: SaveResult<PersonManagerEntity>, deliusStaff: StaffMember, type: String?, tier: String?) {
+    telemetryService.trackPersonManagerAllocated(personManagerSaveResult.entity, type)
+    telemetryService.trackStaffGradeToTierAllocated(tier, deliusStaff, personManagerSaveResult.entity.teamCode)
     sqsSuccessPublisher.updatePerson(
       personManagerSaveResult.entity.crn,
       personManagerSaveResult.entity.uuid,
@@ -109,14 +113,14 @@ class DefaultSaveWorkloadService(
     )
   }
 
-  private fun afterEventManagerSaved(eventManagerSaveResult: SaveResult<EventManagerEntity>, caseDetails: CaseDetailsEntity) {
-    telemetryService.trackEventManagerAllocated(eventManagerSaveResult.entity, caseDetails)
+  private fun afterEventManagerSaved(eventManagerSaveResult: SaveResult<EventManagerEntity>, caseType: String?) {
+    telemetryService.trackEventManagerAllocated(eventManagerSaveResult.entity, caseType)
     sqsSuccessPublisher.updateEvent(eventManagerSaveResult.entity.crn, eventManagerSaveResult.entity.uuid, eventManagerSaveResult.entity.createdDate!!)
   }
 
-  private fun afterRequirementManagersSaved(requirementManagerSaveResults: List<SaveResult<RequirementManagerEntity>>, caseDetails: CaseDetailsEntity) {
+  private fun afterRequirementManagersSaved(requirementManagerSaveResults: List<SaveResult<RequirementManagerEntity>>, caseType: String?) {
     requirementManagerSaveResults.filter { it.hasChanged }.forEach { saveResult ->
-      telemetryService.trackRequirementManagerAllocated(saveResult.entity, caseDetails)
+      telemetryService.trackRequirementManagerAllocated(saveResult.entity, caseType)
       sqsSuccessPublisher.updateRequirement(saveResult.entity.crn, saveResult.entity.uuid, saveResult.entity.createdDate!!)
     }
   }
@@ -128,9 +132,10 @@ class DefaultSaveWorkloadService(
     allocateCase: ReallocateCase,
     loggedInUser: String,
   ): CaseReallocated? {
-    val caseDetails: CaseDetailsEntity = caseDetailsRepository.findByIdOrNull(allocateCase.crn)!!
-
     val caseView = workforceAllocationsToDeliusApiClient.getAllocatedCaseView(allocateCase.crn)
+    val tier = hmppsTierApiClient.getTierByCrn(allocateCase.crn)
+    // TODO Need to get case type from Ndelius could be added to the response of the above endpoint
+    val caseType: String? = "TBA"
 
     // Ensure Previous practitoner has not changed
     val checkPractitioner = workforceAllocationsToDeliusApiClient.getCrnDetails(allocateCase.crn).manager.code
@@ -147,16 +152,16 @@ class DefaultSaveWorkloadService(
 
     var allocationData = workforceAllocationsToDeliusApiClient.allocationDetails(allocateCase.crn, firstEvent, allocatedStaffId.staffCode, loggedInUser)
 
-    val personManagerSaveResult = savePersonManager(allocatedStaffId, allocationData.staff, loggedInUser, allocateCase.allocationReason, caseDetails)
+    val personManagerSaveResult = savePersonManager(allocatedStaffId, allocationData.staff, loggedInUser, allocateCase.allocationReason, allocateCase.crn, caseType, tier)
     val allUnallocatedRequirements = arrayListOf<Requirement>()
 
     for (event in events) {
       allocationData = workforceAllocationsToDeliusApiClient.allocationDetails(allocateCase.crn, event, allocatedStaffId.staffCode, loggedInUser)
 
-      val eventManagerSaveResult = saveEventManager(allocatedStaffId, allocationData, allocateCase, loggedInUser, caseDetails, event)
+      val eventManagerSaveResult = saveEventManager(allocatedStaffId, allocationData, allocateCase, loggedInUser, caseType, event)
       val unallocatedRequirements = allocationData.activeRequirements.filter { !it.manager.allocated || it.manager.code == previousStaffCode }
       val requirementManagerSaveResults = saveRequirementManagerService.saveRequirementManagers(allocatedStaffId.teamCode, allocationData.staff, allocateCase.crn, event, allocateCase.allocationReason!!, loggedInUser, unallocatedRequirements)
-        .also { afterRequirementManagersSaved(it, caseDetails) }
+        .also { afterRequirementManagersSaved(it, caseType) }
       eventManagerSaveResults.addLast(eventManagerSaveResult)
       allRequirementManagerSaveResults.addAll(requirementManagerSaveResults)
       allUnallocatedRequirements.addAll(unallocatedRequirements)
@@ -165,10 +170,10 @@ class DefaultSaveWorkloadService(
     val reallocationNotificationDetails = getAdditionalNotificationDetails(previousStaffCode, allocateCase)
 
     try {
-      notificationService.notifyReallocation(allocationData, allocateCase, caseDetails, reallocationNotificationDetails)
-      log.info("Reallocation notified for case: ${caseDetails.crn}, to: ${allocationData.staff.code}, from: ${allocationData.allocatingStaff.code}")
+      notificationService.notifyReallocation(allocationData, allocateCase, tier, reallocationNotificationDetails)
+      log.info("Reallocation notified for case: ${allocateCase.crn}, to: ${allocationData.staff.code}, from: ${allocationData.allocatingStaff.code}")
       sqsSuccessPublisher.auditAllocation(allocateCase.crn, null, loggedInUser, allUnallocatedRequirements.map { it.id })
-      log.info("Case reallocated: ${caseDetails.crn}, by ${allocationData.allocatingStaff.code}")
+      log.info("Case reallocated: ${allocateCase.crn}, by ${allocationData.allocatingStaff.code}")
       return CaseReallocated(personManagerSaveResult.entity.uuid, eventManagerSaveResults.map { it.entity.uuid }, allRequirementManagerSaveResults.map { it.entity.uuid })
     } catch (e: Exception) {
       log.error("Failed to send notification and allocate", e)

@@ -4,7 +4,6 @@ import com.microsoft.applicationinsights.TelemetryClient
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.StaffMember
-import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.entity.CaseDetailsEntity
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.entity.EventManagerEntity
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.entity.PersonManagerEntity
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.entity.RequirementManagerEntity
@@ -23,12 +22,12 @@ private const val EVENT_NUMBER = "eventNumber"
 @Component
 class TelemetryService(@Autowired private val telemetryClient: TelemetryClient) {
 
-  fun trackPersonManagerAllocated(personManagerEntity: PersonManagerEntity, caseDetails: CaseDetailsEntity) {
+  fun trackPersonManagerAllocated(personManagerEntity: PersonManagerEntity, caseType: String?) {
     trackEvent(
       TelemetryEventType.PERSON_MANAGER_ALLOCATED,
       mapOf(
         CRN to personManagerEntity.crn,
-        CASE_TYPE to caseDetails.type.name,
+        CASE_TYPE to caseType,
         TEAM_CODE to personManagerEntity.teamCode,
         STAFF_CODE to personManagerEntity.staffCode,
         "wmtPeriod" to getWmtPeriod(LocalDateTime.now()),
@@ -36,12 +35,12 @@ class TelemetryService(@Autowired private val telemetryClient: TelemetryClient) 
     )
   }
 
-  fun trackEventManagerAllocated(eventManagerEntity: EventManagerEntity, caseDetails: CaseDetailsEntity) {
+  fun trackEventManagerAllocated(eventManagerEntity: EventManagerEntity, caseType: String?) {
     trackEvent(
       TelemetryEventType.EVENT_MANAGER_ALLOCATED,
       mapOf(
         CRN to eventManagerEntity.crn,
-        CASE_TYPE to caseDetails.type.name,
+        CASE_TYPE to caseType,
         TEAM_CODE to eventManagerEntity.teamCode,
         // allocatedTeamCode is a temporary field while improving metrics from hmpps-allocations
         "allocatedTeamCode" to eventManagerEntity.teamCode,
@@ -51,12 +50,12 @@ class TelemetryService(@Autowired private val telemetryClient: TelemetryClient) 
     )
   }
 
-  fun trackRequirementManagerAllocated(requirementManagerEntity: RequirementManagerEntity, caseDetails: CaseDetailsEntity) {
+  fun trackRequirementManagerAllocated(requirementManagerEntity: RequirementManagerEntity, caseType: String?) {
     trackEvent(
       TelemetryEventType.REQUIREMENT_MANAGER_ALLOCATED,
       mapOf(
         CRN to requirementManagerEntity.crn,
-        CASE_TYPE to caseDetails.type.name,
+        CASE_TYPE to caseType,
         TEAM_CODE to requirementManagerEntity.teamCode,
         STAFF_CODE to requirementManagerEntity.staffCode,
         EVENT_NUMBER to requirementManagerEntity.eventNumber.toString(10),
@@ -65,16 +64,17 @@ class TelemetryService(@Autowired private val telemetryClient: TelemetryClient) 
     )
   }
 
-  fun trackStaffGradeToTierAllocated(caseDetailsEntity: CaseDetailsEntity?, deliusStaff: StaffMember, teamCode: String) {
+  fun trackStaffGradeToTierAllocated(tier: String?, deliusStaff: StaffMember, teamCode: String) {
     trackEvent(
       TelemetryEventType.STAFF_GRADE_TIER_ALLOCATED,
       mapOf(
         TEAM_CODE to teamCode,
         "staffGrade" to deliusStaff.getGrade(),
-        "tier" to caseDetailsEntity?.tier?.name,
+        "tier" to tier,
       ),
     )
   }
+
   private fun trackEvent(eventType: TelemetryEventType, customDimensions: Map<String, String?>) {
     telemetryClient.trackEvent(eventType.eventName, customDimensions, null)
   }

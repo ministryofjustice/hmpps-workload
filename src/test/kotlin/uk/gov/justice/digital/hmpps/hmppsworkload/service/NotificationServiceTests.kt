@@ -471,7 +471,7 @@ class NotificationServiceTests {
       laoCase = false, allocationReason = null, nextAppointmentDate = null, lastOasysAssessmentDate = null, failureToComply = null,
     )
     val reallocationDetails = ReallocationDetails("Laziness", "never", "tomorrow", "12", getManager())
-    notificationService.notifyReallocationNewPractitioner(allocationDetails, allocateCase, caseDetails, reallocationDetails)
+    notificationService.notifyReallocationNewPractitioner(allocationDetails, allocateCase, Tier.A1.name, reallocationDetails)
     val parameters = slot<NotificationEmail>()
     coVerify(exactly = 1) { sqsSuccessPublisher.sendNotification(capture(parameters)) }
     val emailTo = HashSet<String>(parameters.captured.emailTo ?: emptySet())
@@ -492,7 +492,7 @@ class NotificationServiceTests {
       laoCase = false, allocationReason = null, nextAppointmentDate = null, lastOasysAssessmentDate = null, failureToComply = null,
     )
     val reallocationDetails = ReallocationDetails("Laziness", "never", "tomorrow", "12", getManager())
-    notificationService.notifyReallocationPreviousPractitioner(allocationDetails, allocateCase, caseDetails, reallocationDetails)
+    notificationService.notifyReallocationPreviousPractitioner(allocationDetails, allocateCase, Tier.A1.name, reallocationDetails)
     val parameters = slot<NotificationEmail>()
     coVerify(exactly = 1) { sqsSuccessPublisher.sendNotification(capture(parameters)) }
     val emailTo = HashSet<String>(parameters.captured.emailTo ?: emptySet())

@@ -103,21 +103,21 @@ class NotificationService(
     emailTo.add(allocationDemandDetails.staff.email!!)
     if (allocateCase.sendEmailCopyToAllocatingOfficer) emailTo.add(allocationDemandDetails.allocatingStaff.email)
 
-    sendNotification(templateId, emailReferenceId, parameters, caseDetails, allocationDemandDetails, emailTo)
+    sendNotification(templateId, emailReferenceId, parameters, caseDetails.crn, allocationDemandDetails, emailTo)
 
     return NotificationMessageResponse(templateId, emailReferenceId, emailTo)
   }
 
   @Suppress("LongParameterList", "LongMethod", "TooGenericExceptionCaught")
-  suspend fun notifyReallocation(allocationDemandDetails: AllocationDemandDetails, allocateCase: ReallocateCase, caseDetails: CaseDetailsEntity, reallocationDetail: ReallocationDetails): NotificationMessageResponse {
-    val response = notifyReallocationNewPractitioner(allocationDemandDetails, allocateCase, caseDetails, reallocationDetail)
-    notifyReallocationPreviousPractitioner(allocationDemandDetails, allocateCase, caseDetails, reallocationDetail)
+  suspend fun notifyReallocation(allocationDemandDetails: AllocationDemandDetails, allocateCase: ReallocateCase, tier: String?, reallocationDetail: ReallocationDetails): NotificationMessageResponse {
+    val response = notifyReallocationNewPractitioner(allocationDemandDetails, allocateCase, tier, reallocationDetail)
+    notifyReallocationPreviousPractitioner(allocationDemandDetails, allocateCase, tier, reallocationDetail)
 
     return response
   }
 
   @Suppress("LongParameterList", "LongMethod", "TooGenericExceptionCaught")
-  suspend fun notifyReallocationNewPractitioner(allocationDemandDetails: AllocationDemandDetails, allocateCase: ReallocateCase, caseDetails: CaseDetailsEntity, reallocationDetail: ReallocationDetails): NotificationMessageResponse {
+  suspend fun notifyReallocationNewPractitioner(allocationDemandDetails: AllocationDemandDetails, allocateCase: ReallocateCase, tier: String?, reallocationDetail: ReallocationDetails): NotificationMessageResponse {
     val emailReferenceId = UUID.randomUUID().toString()
     val notifyData = getNotifyData(allocateCase.crn)
     val parameters: Map<String, Any>
@@ -144,7 +144,7 @@ class NotificationService(
         OASYS_LAST_UPDATED to (reallocationDetail.oasysLastUpdated ?: ""),
         NEXT_APPOINTMENT to (reallocationDetail.nextAppointment ?: ""),
         FAILURE_TO_COMPLY_SINCE to (reallocationDetail.failureToComply ?: ""),
-        TIER to caseDetails.tier,
+        TIER to (tier ?: ""),
       ).plus(getRiskParameters(notifyData.riskSummary, notifyData.riskPredictors, allocationDemandDetails.ogrs))
         .plus(getConvictionParameters(allocationDemandDetails))
         .plus(getPersonOnProbationParameters(allocationDemandDetails.name.getCombinedName(), allocateCase.crn, allocateCase.reallocationNotes))
@@ -155,13 +155,13 @@ class NotificationService(
     val emailTo = HashSet(allocateCase.emailTo ?: emptySet())
     emailTo.add(allocationDemandDetails.staff.email!!)
 
-    sendNotification(templateId, emailReferenceId, parameters, caseDetails, allocationDemandDetails, emailTo)
+    sendNotification(templateId, emailReferenceId, parameters, allocationDemandDetails.crn, allocationDemandDetails, emailTo)
 
     return NotificationMessageResponse(templateId, emailReferenceId, emailTo)
   }
 
   @Suppress("LongParameterList", "LongMethod", "TooGenericExceptionCaught")
-  suspend fun notifyReallocationPreviousPractitioner(allocationDemandDetails: AllocationDemandDetails, allocateCase: ReallocateCase, caseDetails: CaseDetailsEntity, reallocationDetail: ReallocationDetails): NotificationMessageResponse {
+  suspend fun notifyReallocationPreviousPractitioner(allocationDemandDetails: AllocationDemandDetails, allocateCase: ReallocateCase, tier: String?, reallocationDetail: ReallocationDetails): NotificationMessageResponse {
     val emailReferenceId = UUID.randomUUID().toString()
     val notifyData = getNotifyData(allocateCase.crn)
     val parameters: Map<String, Any>
@@ -187,7 +187,7 @@ class NotificationService(
         OASYS_LAST_UPDATED to (reallocationDetail.oasysLastUpdated ?: ""),
         NEXT_APPOINTMENT to (reallocationDetail.nextAppointment ?: ""),
         FAILURE_TO_COMPLY_SINCE to (reallocationDetail.failureToComply ?: ""),
-        TIER to caseDetails.tier,
+        TIER to allocationDemandDetails.crn,
 
       ).plus(getRiskParameters(notifyData.riskSummary, notifyData.riskPredictors, allocationDemandDetails.ogrs))
         .plus(getConvictionParameters(allocationDemandDetails))
@@ -200,13 +200,13 @@ class NotificationService(
     val emailTo = HashSet<String>()
     emailTo.add(previousEmail)
 
-    sendNotification(templateId, emailReferenceId, parameters, caseDetails, allocationDemandDetails, emailTo)
+    sendNotification(templateId, emailReferenceId, parameters, allocationDemandDetails.crn, allocationDemandDetails, emailTo)
 
     return NotificationMessageResponse(templateId, emailReferenceId, emailTo)
   }
 
   @Suppress("LongParameterList", "LongMethod", "TooGenericExceptionCaught")
-  private fun sendNotification(templateId: String, emailReferenceId: String, parameters: Map<String, Any>, caseDetails: CaseDetailsEntity, allocationDemandDetails: AllocationDemandDetails, emailTo: HashSet<String>) {
+  private fun sendNotification(templateId: String, emailReferenceId: String, parameters: Map<String, Any>, crn: String, allocationDemandDetails: AllocationDemandDetails, emailTo: HashSet<String>) {
     try {
       sqsSuccessPublisher.sendNotification(
         NotificationEmail(
@@ -217,8 +217,8 @@ class NotificationService(
         ),
       )
       MDC.put(REFERENCE_ID, emailReferenceId)
-      MDC.put(CRN, caseDetails.crn)
-      log.info("Email request sent to Notify for crn: ${caseDetails.crn} with reference ID: $emailReferenceId")
+      MDC.put(CRN, crn)
+      log.info("Email request sent to Notify for crn: $crn with reference ID: $emailReferenceId")
     } catch (exception: Exception) {
       meterRegistry.counter(FAILED_ALLOCATION_COUNTER, "type", "email not send").increment()
       log.error(FAILED_REALLOCATION_EMAIL_MSG, emailTo, allocationDemandDetails.staff.email, allocationDemandDetails.staff.name.getCombinedName(), allocationDemandDetails.crn, exception.message)

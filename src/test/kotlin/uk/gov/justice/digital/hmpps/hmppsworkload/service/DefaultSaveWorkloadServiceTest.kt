@@ -9,6 +9,7 @@ import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.springframework.data.repository.findByIdOrNull
+import uk.gov.justice.digital.hmpps.hmppsworkload.client.HmppsTierApiClient
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.WorkforceAllocationsToDeliusApiClient
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.AllocatedActiveEvent
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.AllocatedCaseView
@@ -63,6 +64,7 @@ class DefaultSaveWorkloadServiceTest {
   private val telemetryService = mockk<TelemetryService>()
   private val caseDetailsRepository = mockk<CaseDetailsRepository>()
   private val sqsSuccessPublisher = mockk<SqsSuccessPublisher>()
+  private val tierService = mockk<HmppsTierApiClient>()
 
   private val defaultSaveWorkloadService = DefaultSaveWorkloadService(
     savePersonManagerService,
@@ -73,6 +75,7 @@ class DefaultSaveWorkloadServiceTest {
     telemetryService,
     sqsSuccessPublisher,
     caseDetailsRepository,
+    tierService,
   )
 
   @Test
@@ -123,11 +126,11 @@ class DefaultSaveWorkloadServiceTest {
           SaveResult(requirementManagerEntity, true),
         )
 
-      coEvery { telemetryService.trackRequirementManagerAllocated(requirementManagerEntity, caseDetails) } just Runs
-      coEvery { telemetryService.trackPersonManagerAllocated(personManagerEntity, caseDetails) } just Runs
-      coEvery { telemetryService.trackEventManagerAllocated(eventManagerEntity.entity, caseDetails) } just Runs
-      coEvery { telemetryService.trackEventManagerAllocated(eventManagerEntity.entity, caseDetails) } just Runs
-      coEvery { telemetryService.trackStaffGradeToTierAllocated(caseDetails, staffMember, STAFF_TEAM_CODE) } just Runs
+      coEvery { telemetryService.trackRequirementManagerAllocated(requirementManagerEntity, CaseType.CUSTODY.name) } just Runs
+      coEvery { telemetryService.trackPersonManagerAllocated(personManagerEntity, CaseType.CUSTODY.name) } just Runs
+      coEvery { telemetryService.trackEventManagerAllocated(eventManagerEntity.entity, CaseType.CUSTODY.name) } just Runs
+      coEvery { telemetryService.trackEventManagerAllocated(eventManagerEntity.entity, CaseType.CUSTODY.name) } just Runs
+      coEvery { telemetryService.trackStaffGradeToTierAllocated(Tier.A1.name, staffMember, STAFF_TEAM_CODE) } just Runs
 
       coEvery { sqsSuccessPublisher.updatePerson(crn, any(), any()) } just Runs
       coEvery { sqsSuccessPublisher.updateEvent(crn, any(), any()) } just Runs
@@ -150,10 +153,10 @@ class DefaultSaveWorkloadServiceTest {
       coVerify(exactly = 1) { sqsSuccessPublisher.updateRequirement(crn, any(), any()) }
       coVerify(exactly = 1) { sqsSuccessPublisher.auditAllocation(crn, any(), any(), any()) }
 
-      coVerify(exactly = 1) { telemetryService.trackStaffGradeToTierAllocated(caseDetails, staffMember, STAFF_TEAM_CODE) }
-      coVerify(exactly = 1) { telemetryService.trackPersonManagerAllocated(personManagerEntity, caseDetails) }
-      coVerify(exactly = 1) { telemetryService.trackEventManagerAllocated(eventManagerEntity.entity, caseDetails) }
-      coVerify(exactly = 1) { telemetryService.trackRequirementManagerAllocated(requirementManagerEntity, caseDetails) }
+      coVerify(exactly = 1) { telemetryService.trackStaffGradeToTierAllocated(Tier.A1.name, staffMember, STAFF_TEAM_CODE) }
+      coVerify(exactly = 1) { telemetryService.trackPersonManagerAllocated(personManagerEntity, CaseType.CUSTODY.name) }
+      coVerify(exactly = 1) { telemetryService.trackEventManagerAllocated(eventManagerEntity.entity, CaseType.CUSTODY.name) }
+      coVerify(exactly = 1) { telemetryService.trackRequirementManagerAllocated(requirementManagerEntity, CaseType.CUSTODY.name) }
     }
   }
 
@@ -203,6 +206,7 @@ class DefaultSaveWorkloadServiceTest {
 
       val allocatedCaseView = AllocatedCaseView(name, LocalDate.now(), "Male", "pnc", null, null, activeEvents)
 
+      coEvery { tierService.getTierByCrn(any()) } returns Tier.A1.name
       coEvery { workforceAllocationsToDeliusApiClient.getCrnDetails(crn) } returns crnDetails
       coEvery { workforceAllocationsToDeliusApiClient.getOfficerView(PREVIOUS_STAFF_CODE) } returns OfficerView(PREVIOUS_STAFF_CODE, name, "SPO", null, BigInteger.ONE, BigInteger.ONE, BigInteger.ONE)
       coEvery { workforceAllocationsToDeliusApiClient.allocationDetails(crn, 1, STAFF_CODE, loggedInUser) } returns
@@ -229,11 +233,11 @@ class DefaultSaveWorkloadServiceTest {
           SaveResult(requirementManagerEntity, true),
         )
 
-      coEvery { telemetryService.trackRequirementManagerAllocated(requirementManagerEntity, caseDetails) } just Runs
-      coEvery { telemetryService.trackPersonManagerAllocated(personManagerEntity, caseDetails) } just Runs
-      coEvery { telemetryService.trackEventManagerAllocated(eventManagerEntity.entity, caseDetails) } just Runs
-      coEvery { telemetryService.trackEventManagerAllocated(eventManagerEntity.entity, caseDetails) } just Runs
-      coEvery { telemetryService.trackStaffGradeToTierAllocated(caseDetails, staffMember, STAFF_TEAM_CODE) } just Runs
+      coEvery { telemetryService.trackRequirementManagerAllocated(requirementManagerEntity, any()) } just Runs
+      coEvery { telemetryService.trackPersonManagerAllocated(personManagerEntity, any()) } just Runs
+      coEvery { telemetryService.trackEventManagerAllocated(eventManagerEntity.entity, any()) } just Runs
+      coEvery { telemetryService.trackEventManagerAllocated(eventManagerEntity.entity, any()) } just Runs
+      coEvery { telemetryService.trackStaffGradeToTierAllocated(Tier.A1.name, staffMember, STAFF_TEAM_CODE) } just Runs
 
       coEvery { sqsSuccessPublisher.updatePerson(crn, any(), any()) } just Runs
       coEvery { sqsSuccessPublisher.updateEvent(crn, any(), any()) } just Runs
@@ -249,7 +253,7 @@ class DefaultSaveWorkloadServiceTest {
         StaffMember(PREVIOUS_STAFF_CODE, name, null, "SPO"),
       )
 
-      coEvery { notificationService.notifyReallocation(allocationDemandDetails, allocateCase, caseDetails, reallocationDetails) } returns
+      coEvery { notificationService.notifyReallocation(allocationDemandDetails, allocateCase, Tier.A1.name, reallocationDetails) } returns
         NotificationMessageResponse("template", "ref1", setOf("me@there.com"))
 
       val workload = defaultSaveWorkloadService.saveReallocatedWorkLoad(staffIdentifier, PREVIOUS_STAFF_CODE, allocateCase, loggedInUser)
@@ -258,17 +262,17 @@ class DefaultSaveWorkloadServiceTest {
       assertEquals(workload.requirementManagerIds, listOf(requirementManagerEntity.uuid, requirementManagerEntity.uuid, requirementManagerEntity.uuid))
       assertEquals(workload.personManagerId, personManagerEntity.uuid)
 
-      coVerify(exactly = 1) { notificationService.notifyReallocation(allocationDemandDetails, allocateCase, caseDetails, reallocationDetails) }
+      coVerify(exactly = 1) { notificationService.notifyReallocation(allocationDemandDetails, allocateCase, Tier.A1.name, reallocationDetails) }
 
       coVerify(exactly = 1) { sqsSuccessPublisher.updatePerson(crn, any(), any()) }
       coVerify(exactly = 3) { sqsSuccessPublisher.updateEvent(crn, any(), any()) }
       coVerify(exactly = 3) { sqsSuccessPublisher.updateRequirement(crn, any(), any()) }
       coVerify(exactly = 1) { sqsSuccessPublisher.auditAllocation(crn, any(), any(), any()) }
 
-      coVerify(exactly = 1) { telemetryService.trackStaffGradeToTierAllocated(caseDetails, staffMember, STAFF_TEAM_CODE) }
-      coVerify(exactly = 1) { telemetryService.trackPersonManagerAllocated(personManagerEntity, caseDetails) }
-      coVerify(exactly = 3) { telemetryService.trackEventManagerAllocated(eventManagerEntity.entity, caseDetails) }
-      coVerify(exactly = 3) { telemetryService.trackRequirementManagerAllocated(requirementManagerEntity, caseDetails) }
+      coVerify(exactly = 1) { telemetryService.trackStaffGradeToTierAllocated(Tier.A1.name, staffMember, STAFF_TEAM_CODE) }
+      coVerify(exactly = 1) { telemetryService.trackPersonManagerAllocated(personManagerEntity, any()) }
+      coVerify(exactly = 3) { telemetryService.trackEventManagerAllocated(eventManagerEntity.entity, any()) }
+      coVerify(exactly = 3) { telemetryService.trackRequirementManagerAllocated(requirementManagerEntity, any()) }
     }
   }
 
