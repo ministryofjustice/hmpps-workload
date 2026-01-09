@@ -87,6 +87,7 @@ class DefaultSaveWorkloadService(
     ).also { afterPersonManagerSaved(it, staff, caseDetails) }
     return personManagerSaveResult
   }
+
   private suspend fun savePersonManager(allocatedStaffId: StaffIdentifier, staff: StaffMember, loggedInUser: String, reason: AllocationReason?, caseDetails: CaseDetailsEntity): SaveResult<PersonManagerEntity> {
     val personManagerSaveResult = savePersonManagerService.savePersonManager(
       allocatedStaffId.teamCode,
@@ -161,17 +162,10 @@ class DefaultSaveWorkloadService(
       allUnallocatedRequirements.addAll(unallocatedRequirements)
     }
 
-    val previousStaff = workforceAllocationsToDeliusApiClient.getOfficerView(previousStaffCode)
-    val reallocationDetails = ReallocationDetails(
-      toText(allocateCase.allocationReason!!),
-      allocateCase.lastOasysAssessmentDate,
-      allocateCase.nextAppointmentDate,
-      allocateCase.failureToComply,
-      StaffMember(previousStaff.code, previousStaff.name, previousStaff.email, previousStaff.getGrade()),
-    )
+    val reallocationNotificationDetails = getAdditionalNotificationDetails(previousStaffCode, allocateCase)
 
     try {
-      notificationService.notifyReallocation(allocationData, allocateCase, caseDetails, reallocationDetails)
+      notificationService.notifyReallocation(allocationData, allocateCase, caseDetails, reallocationNotificationDetails)
       log.info("Reallocation notified for case: ${caseDetails.crn}, to: ${allocationData.staff.code}, from: ${allocationData.allocatingStaff.code}")
       sqsSuccessPublisher.auditAllocation(allocateCase.crn, null, loggedInUser, allUnallocatedRequirements.map { it.id })
       log.info("Case reallocated: ${caseDetails.crn}, by ${allocationData.allocatingStaff.code}")
@@ -180,6 +174,18 @@ class DefaultSaveWorkloadService(
       log.error("Failed to send notification and allocate", e)
     }
     return null
+  }
+
+  private suspend fun getAdditionalNotificationDetails(previousStaffCode: String, allocateCase: ReallocateCase): ReallocationDetails {
+    val previousStaff = workforceAllocationsToDeliusApiClient.getOfficerView(previousStaffCode)
+    val reallocationDetails = ReallocationDetails(
+      toText(allocateCase.allocationReason!!),
+      allocateCase.lastOasysAssessmentDate,
+      allocateCase.nextAppointmentDate,
+      allocateCase.failureToComply,
+      StaffMember(previousStaff.code, previousStaff.name, previousStaff.email, previousStaff.getGrade()),
+    )
+    return reallocationDetails
   }
 
   private fun toText(reason: AllocationReason) = reason.toString().capitalize().replace("_", " ")
