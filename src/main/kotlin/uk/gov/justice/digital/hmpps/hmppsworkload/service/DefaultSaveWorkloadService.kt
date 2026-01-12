@@ -134,8 +134,6 @@ class DefaultSaveWorkloadService(
   ): CaseReallocated? {
     val caseView = workforceAllocationsToDeliusApiClient.getAllocatedCaseView(allocateCase.crn)
     val tier = hmppsTierApiClient.getTierByCrn(allocateCase.crn)
-    // TODO Need to get case type from Ndelius could be added to the response of the above endpoint
-    val caseType: String? = "TBA"
 
     // Ensure Previous practitoner has not changed
     val checkPractitioner = workforceAllocationsToDeliusApiClient.getCrnDetails(allocateCase.crn).manager.code
@@ -152,16 +150,16 @@ class DefaultSaveWorkloadService(
 
     var allocationData = workforceAllocationsToDeliusApiClient.allocationDetails(allocateCase.crn, firstEvent, allocatedStaffId.staffCode, loggedInUser)
 
-    val personManagerSaveResult = savePersonManager(allocatedStaffId, allocationData.staff, loggedInUser, allocateCase.allocationReason, allocateCase.crn, caseType, tier)
+    val personManagerSaveResult = savePersonManager(allocatedStaffId, allocationData.staff, loggedInUser, allocateCase.allocationReason, allocateCase.crn, "", tier)
     val allUnallocatedRequirements = arrayListOf<Requirement>()
 
     for (event in events) {
       allocationData = workforceAllocationsToDeliusApiClient.allocationDetails(allocateCase.crn, event, allocatedStaffId.staffCode, loggedInUser)
 
-      val eventManagerSaveResult = saveEventManager(allocatedStaffId, allocationData, allocateCase, loggedInUser, caseType, event)
+      val eventManagerSaveResult = saveEventManager(allocatedStaffId, allocationData, allocateCase, loggedInUser, "", event)
       val unallocatedRequirements = allocationData.activeRequirements.filter { !it.manager.allocated || it.manager.code == previousStaffCode }
       val requirementManagerSaveResults = saveRequirementManagerService.saveRequirementManagers(allocatedStaffId.teamCode, allocationData.staff, allocateCase.crn, event, allocateCase.allocationReason!!, loggedInUser, unallocatedRequirements)
-        .also { afterRequirementManagersSaved(it, caseType) }
+        .also { afterRequirementManagersSaved(it, "") }
       eventManagerSaveResults.addLast(eventManagerSaveResult)
       allRequirementManagerSaveResults.addAll(requirementManagerSaveResults)
       allUnallocatedRequirements.addAll(unallocatedRequirements)
