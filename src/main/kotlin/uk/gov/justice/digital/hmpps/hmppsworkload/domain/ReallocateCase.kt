@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonCreator
 data class ReallocateCase @JsonCreator constructor(
   val crn: String,
   val emailTo: List<String>? = null,
+  val emailPreviousOfficer: Boolean,
   val sensitiveNotes: Boolean?,
   val reallocationNotes: String?,
   val laoCase: Boolean,

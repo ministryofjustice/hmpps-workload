@@ -467,11 +467,12 @@ class NotificationServiceTests {
     val firstEmail = "first@justice.gov.uk"
     val secondEmail = "second@justice.gov.uk"
     val allocateCase = ReallocateCase(
-      "CRN1111", listOf(firstEmail, secondEmail), true, "spo notes",
+      "CRN1111", listOf(firstEmail, secondEmail), false, true, "spo notes",
       laoCase = false, allocationReason = null, nextAppointmentDate = null, lastOasysAssessmentDate = null, failureToComply = null,
     )
     val reallocationDetails = ReallocationDetails("Laziness", "never", "tomorrow", "12", getManager())
-    notificationService.notifyReallocationNewPractitioner(allocationDetails, allocateCase, Tier.A1.name, reallocationDetails)
+    notificationService.notifyReallocation(allocationDetails, allocateCase, Tier.A1.name, reallocationDetails)
+
     val parameters = slot<NotificationEmail>()
     coVerify(exactly = 1) { sqsSuccessPublisher.sendNotification(capture(parameters)) }
     val emailTo = HashSet<String>(parameters.captured.emailTo ?: emptySet())
@@ -483,22 +484,33 @@ class NotificationServiceTests {
   }
 
   @Test
-  fun `must send reallocation email to previous officer only`() = runBlocking {
+  fun `must send reallocation email to new  officer and email previous officer`() = runBlocking {
     val allocationDetails = getAllocationDetails(allocateCase.crn)
     val firstEmail = "first@justice.gov.uk"
     val secondEmail = "second@justice.gov.uk"
     val allocateCase = ReallocateCase(
-      "CRN1111", listOf(firstEmail, secondEmail), true, "spo notes",
+      "CRN1111", listOf(firstEmail, secondEmail), true, true, "spo notes",
       laoCase = false, allocationReason = null, nextAppointmentDate = null, lastOasysAssessmentDate = null, failureToComply = null,
     )
     val reallocationDetails = ReallocationDetails("Laziness", "never", "tomorrow", "12", getManager())
-    notificationService.notifyReallocationPreviousPractitioner(allocationDetails, allocateCase, Tier.A1.name, reallocationDetails)
-    val parameters = slot<NotificationEmail>()
-    coVerify(exactly = 1) { sqsSuccessPublisher.sendNotification(capture(parameters)) }
-    val emailTo = HashSet<String>(parameters.captured.emailTo ?: emptySet())
+    notificationService.notifyReallocation(allocationDetails, allocateCase, Tier.A1.name, reallocationDetails)
 
-    Assertions.assertEquals(emailTo.size, 1)
-    Assertions.assertTrue(emailTo.contains("reallocatedFrom@notifications.service.gov.uk"))
+    var parameters = mutableListOf<NotificationEmail>()
+
+    coVerify(exactly = 2) { sqsSuccessPublisher.sendNotification(capture(parameters)) }
+
+    val firstNotification = parameters[0]
+    val secondNotification = parameters[1]
+
+    val emailTo = HashSet<String>(firstNotification.emailTo)
+    val emailToPrevious = HashSet<String>(secondNotification.emailTo)
+
+    Assertions.assertEquals(emailTo.size, 3)
+    Assertions.assertTrue(emailTo.contains("simulate-delivered@notifications.service.gov.uk"))
+    Assertions.assertFalse(emailTo.contains("simulate-delivered@justice.gov.uk"))
+
+    Assertions.assertEquals(emailToPrevious.size, 1)
+    Assertions.assertTrue(emailToPrevious.contains("reallocatedFrom@notifications.service.gov.uk"))
   }
 
   fun getManager() = StaffMember(

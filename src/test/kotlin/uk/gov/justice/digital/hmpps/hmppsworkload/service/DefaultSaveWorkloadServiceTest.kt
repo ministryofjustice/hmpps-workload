@@ -167,7 +167,7 @@ class DefaultSaveWorkloadServiceTest {
       val crn = "1234"
       val loggedInUser = "me"
       val allocateCase = ReallocateCase(
-        crn, emailTo = null, sensitiveNotes = false, reallocationNotes = "spo notes",
+        crn, emailTo = null, false, sensitiveNotes = false, reallocationNotes = "spo notes",
         laoCase = false, allocationReason = AllocationReason.RISK_TO_STAFF, nextAppointmentDate = null, lastOasysAssessmentDate = null, failureToComply = null,
       )
 

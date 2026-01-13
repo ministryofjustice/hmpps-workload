@@ -111,7 +111,10 @@ class NotificationService(
   @Suppress("LongParameterList", "LongMethod", "TooGenericExceptionCaught")
   suspend fun notifyReallocation(allocationDemandDetails: AllocationDemandDetails, allocateCase: ReallocateCase, tier: String?, reallocationDetail: ReallocationDetails): NotificationMessageResponse {
     val response = notifyReallocationNewPractitioner(allocationDemandDetails, allocateCase, tier, reallocationDetail)
-    notifyReallocationPreviousPractitioner(allocationDemandDetails, allocateCase, tier, reallocationDetail)
+
+    if (allocateCase.emailPreviousOfficer) {
+      notifyReallocationPreviousPractitioner(allocationDemandDetails, allocateCase, tier, reallocationDetail)
+    }
 
     return response
   }
