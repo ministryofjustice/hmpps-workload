@@ -24,6 +24,7 @@ import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.RiskSummary
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.StaffMember
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.AllocateCase
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.CaseType
+import uk.gov.justice.digital.hmpps.hmppsworkload.domain.ReallocateCase
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.Tier
 import uk.gov.justice.digital.hmpps.hmppsworkload.integration.getAllocationDetails
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.entity.CaseDetailsEntity
@@ -65,7 +66,16 @@ class NotificationServiceTests {
     workforceAllocationsToDeliusApiClient,
     meterRegistry,
   )
-  private val allocateCase = AllocateCase("CRN1111", sendEmailCopyToAllocatingOfficer = false, eventNumber = 1, allocationJustificationNotes = "Some Notes", sensitiveNotes = false, spoOversightNotes = "spo notes", sensitiveOversightNotes = null, laoCase = false)
+  private val allocateCase = AllocateCase(
+    "CRN1111",
+    sendEmailCopyToAllocatingOfficer = false,
+    eventNumber = 1,
+    allocationJustificationNotes = "Some Notes",
+    sensitiveNotes = false,
+    spoOversightNotes = "spo notes",
+    sensitiveOversightNotes = null,
+    laoCase = false,
+  )
   private val parameters = mapOf(
     "officer_name" to "Staff Member",
     "induction_statement" to "no initial appointment needed",
@@ -456,9 +466,13 @@ class NotificationServiceTests {
     val allocationDetails = getAllocationDetails(allocateCase.crn)
     val firstEmail = "first@justice.gov.uk"
     val secondEmail = "second@justice.gov.uk"
-    val allocateCase = AllocateCase("CRN1111", "instructions", listOf(firstEmail, secondEmail), true, 1, allocationJustificationNotes = "some notes", sensitiveNotes = false, spoOversightNotes = "spo notes", sensitiveOversightNotes = null, laoCase = false)
+    val allocateCase = ReallocateCase(
+      "CRN1111", listOf(firstEmail, secondEmail), false, true, "spo notes",
+      laoCase = false, allocationReason = null, nextAppointmentDate = null, lastOasysAssessmentDate = null, failureToComply = null,
+    )
     val reallocationDetails = ReallocationDetails("Laziness", "never", "tomorrow", "12", getManager())
-    notificationService.notifyReallocation(allocationDetails, allocateCase, caseDetails, reallocationDetails)
+    notificationService.notifyReallocation(allocationDetails, allocateCase, Tier.A1.name, reallocationDetails)
+
     val parameters = slot<NotificationEmail>()
     coVerify(exactly = 1) { sqsSuccessPublisher.sendNotification(capture(parameters)) }
     val emailTo = HashSet<String>(parameters.captured.emailTo ?: emptySet())
@@ -470,19 +484,33 @@ class NotificationServiceTests {
   }
 
   @Test
-  fun `must send reallocation email to previous officer only`() = runBlocking {
+  fun `must send reallocation email to new  officer and email previous officer`() = runBlocking {
     val allocationDetails = getAllocationDetails(allocateCase.crn)
     val firstEmail = "first@justice.gov.uk"
     val secondEmail = "second@justice.gov.uk"
-    val allocateCase = AllocateCase("CRN1111", "instructions", listOf(firstEmail, secondEmail), true, 1, allocationJustificationNotes = "some notes", sensitiveNotes = false, spoOversightNotes = "spo notes", sensitiveOversightNotes = null, laoCase = false)
+    val allocateCase = ReallocateCase(
+      "CRN1111", listOf(firstEmail, secondEmail), true, true, "spo notes",
+      laoCase = false, allocationReason = null, nextAppointmentDate = null, lastOasysAssessmentDate = null, failureToComply = null,
+    )
     val reallocationDetails = ReallocationDetails("Laziness", "never", "tomorrow", "12", getManager())
-    notificationService.notifyReallocationPreviousPractitioner(allocationDetails, allocateCase, caseDetails, reallocationDetails)
-    val parameters = slot<NotificationEmail>()
-    coVerify(exactly = 1) { sqsSuccessPublisher.sendNotification(capture(parameters)) }
-    val emailTo = HashSet<String>(parameters.captured.emailTo ?: emptySet())
+    notificationService.notifyReallocation(allocationDetails, allocateCase, Tier.A1.name, reallocationDetails)
 
-    Assertions.assertEquals(emailTo.size, 1)
-    Assertions.assertTrue(emailTo.contains("reallocatedFrom@notifications.service.gov.uk"))
+    var parameters = mutableListOf<NotificationEmail>()
+
+    coVerify(exactly = 2) { sqsSuccessPublisher.sendNotification(capture(parameters)) }
+
+    val firstNotification = parameters[0]
+    val secondNotification = parameters[1]
+
+    val emailTo = HashSet<String>(firstNotification.emailTo)
+    val emailToPrevious = HashSet<String>(secondNotification.emailTo)
+
+    Assertions.assertEquals(emailTo.size, 3)
+    Assertions.assertTrue(emailTo.contains("simulate-delivered@notifications.service.gov.uk"))
+    Assertions.assertFalse(emailTo.contains("simulate-delivered@justice.gov.uk"))
+
+    Assertions.assertEquals(emailToPrevious.size, 1)
+    Assertions.assertTrue(emailToPrevious.contains("reallocatedFrom@notifications.service.gov.uk"))
   }
 
   fun getManager() = StaffMember(
@@ -501,7 +529,10 @@ class NotificationServiceTests {
     val allocationDetails = getAllocationDetails(allocateCase.crn)
     val firstEmail = "first@justice.gov.uk"
     val secondEmail = "second@justice.gov.uk"
-    val allocateCase = AllocateCase("CRN1111", "instructions", listOf(firstEmail, secondEmail), false, 1, allocationJustificationNotes = "some notes", sensitiveNotes = false, spoOversightNotes = "spo notes", sensitiveOversightNotes = null, laoCase = false)
+    val allocateCase = AllocateCase(
+      "CRN1111", "instructions", listOf(firstEmail, secondEmail), false, 1, allocationJustificationNotes = "some notes", sensitiveNotes = false, spoOversightNotes = "spo notes", sensitiveOversightNotes = null,
+      laoCase = false,
+    )
     notificationService.notifyAllocation(allocationDetails, allocateCase, caseDetails)
     val parameters = slot<NotificationEmail>()
     coVerify(exactly = 1) { sqsSuccessPublisher.sendNotification(capture(parameters)) }
@@ -516,7 +547,10 @@ class NotificationServiceTests {
     val allocationDetails = getAllocationDetails(allocateCase.crn)
     val firstEmail = "first@justice.gov.uk"
     val secondEmail = "second@justice.gov.ww"
-    val allocateCase = AllocateCase("CRN1111", "instructions", listOf(firstEmail, secondEmail), false, 1, allocationJustificationNotes = "some notes", sensitiveNotes = false, spoOversightNotes = "spo notes", sensitiveOversightNotes = null, laoCase = false)
+    val allocateCase = AllocateCase(
+      "CRN1111", "instructions", listOf(firstEmail, secondEmail), false, 1, allocationJustificationNotes = "some notes", sensitiveNotes = false, spoOversightNotes = "spo notes", sensitiveOversightNotes = null,
+      laoCase = false,
+    )
     coEvery { sqsSuccessPublisher.sendNotification(any()) } throws NotificationClientException("Failed to send email")
     coEvery { meterRegistry.counter(any(), any(), any()) } returns counter
     coEvery { counter.increment() } returns Unit

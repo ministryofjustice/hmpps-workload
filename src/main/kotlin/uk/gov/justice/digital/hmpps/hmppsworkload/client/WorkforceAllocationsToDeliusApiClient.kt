@@ -15,12 +15,14 @@ import org.springframework.web.reactive.function.client.awaitBody
 import org.springframework.web.reactive.function.client.awaitExchangeOrNull
 import org.springframework.web.reactive.function.client.createExceptionAndAwait
 import reactor.core.publisher.Mono
+import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.AllocatedCaseView
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.AllocationDemandDetails
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.AllocationDetails
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.AllocationDetailsRequest
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.ChoosePractitionerResponse
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.CommunityPersonManager
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.CompleteDetails
+import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.CrnDetails
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.DeliusTeams
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.ImpactResponse
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.Name
@@ -162,6 +164,40 @@ class WorkforceAllocationsToDeliusApiClient(private val webClient: WebClient) {
         webClient
           .get()
           .uri("/staff/{staffCode}/officer-view", staffCode)
+          .retrieve()
+          .onStatus({ it.is5xxServerError }) { response ->
+            response.createException().flatMap { Mono.error(WorkloadFailedDependencyException(it.message!!)) }
+          }
+          .awaitBody()
+      }
+    } catch (e: TimeoutCancellationException) {
+      throw WorkloadWebClientTimeoutException(e.message!!)
+    }
+  }
+
+  suspend fun getCrnDetails(crn: String): CrnDetails {
+    try {
+      return withTimeout(OFFICER_VIEW_TIMEOUT_VALUE) {
+        webClient
+          .get()
+          .uri("/person/{crn}/reallocation-details", crn)
+          .retrieve()
+          .onStatus({ it.is5xxServerError }) { response ->
+            response.createException().flatMap { Mono.error(WorkloadFailedDependencyException(it.message!!)) }
+          }
+          .awaitBody()
+      }
+    } catch (e: TimeoutCancellationException) {
+      throw WorkloadWebClientTimeoutException(e.message!!)
+    }
+  }
+
+  suspend fun getAllocatedCaseView(crn: String): AllocatedCaseView {
+    try {
+      return withTimeout(OFFICER_VIEW_TIMEOUT_VALUE) {
+        webClient
+          .get()
+          .uri("/reallocation/{crn}/case-view", crn)
           .retrieve()
           .onStatus({ it.is5xxServerError }) { response ->
             response.createException().flatMap { Mono.error(WorkloadFailedDependencyException(it.message!!)) }

@@ -4,6 +4,7 @@ import jakarta.transaction.Transactional
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.StaffMember
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.AllocateCase
+import uk.gov.justice.digital.hmpps.hmppsworkload.domain.ReallocateCase
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.SaveResult
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.entity.EventManagerAuditEntity
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.entity.EventManagerEntity
@@ -46,6 +47,16 @@ class JpaBasedSaveEventManagerService(
     eventManagerRepository.save(eventManager)
     saveEventManagerEntity(allocateCase, deliusStaff, teamCode, loggedInUser, spoStaffCode, spoName)
   } ?: saveEventManagerEntity(allocateCase, deliusStaff, teamCode, loggedInUser, spoStaffCode, spoName)
+
+  override fun saveEventManager(teamCode: String, deliusStaff: StaffMember, reallocateCase: ReallocateCase, loggedInUser: String, spoStaffCode: String, spoName: String, eventNumber: Int): SaveResult<EventManagerEntity> {
+    var allocatedCase = AllocateCase(
+      reallocateCase.crn, "", null, false,
+      eventNumber, null, null, reallocateCase.reallocationNotes, reallocateCase.sensitiveNotes,
+      reallocateCase.laoCase,
+    )
+
+    return saveEventManager(teamCode, deliusStaff, allocatedCase, loggedInUser, spoStaffCode, spoName)
+  }
 
   @Suppress("LongParameterList")
   private fun saveEventManagerEntity(
