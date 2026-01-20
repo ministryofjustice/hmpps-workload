@@ -157,13 +157,11 @@ class DefaultSaveWorkloadService(
     var allocationData = workforceAllocationsToDeliusApiClient.allocationDetails(allocateCase.crn, firstEvent, allocatedStaffId.staffCode, loggedInUser)
     log.info("get allocation data  $firstEvent")
 
-
     val personManagerSaveResult = savePersonManager(allocatedStaffId, allocationData.staff, loggedInUser, allocateCase.allocationReason, allocateCase.crn, "", tier)
     log.info("Save person manager")
 
     val allUnallocatedRequirements = arrayListOf<Requirement>()
     log.info("Requirements")
-
 
     for (event in events) {
       log.info("in loop")
@@ -187,7 +185,6 @@ class DefaultSaveWorkloadService(
 
     val reallocationNotificationDetails = getAdditionalNotificationDetails(previousStaffCode, allocateCase)
     log.info("reallocationNotificationDetails")
-
 
     try {
       notificationService.notifyReallocation(allocationData, allocateCase, tier, reallocationNotificationDetails)
