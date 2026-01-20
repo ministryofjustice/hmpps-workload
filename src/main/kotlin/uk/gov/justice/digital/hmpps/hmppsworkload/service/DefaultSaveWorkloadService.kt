@@ -138,21 +138,25 @@ class DefaultSaveWorkloadService(
     // Ensure Previous practitoner has not changed
     log.info("reallocating case for crn ${allocateCase.crn} check practitioner")
 
-    val checkPractitioner = workforceAllocationsToDeliusApiClient.getCrnDetails(allocateCase.crn).manager.code
+    val crndetails = workforceAllocationsToDeliusApiClient.getCrnDetails(allocateCase.crn)
+
+    log.info("reallocating case for crn ${allocateCase.crn} crndetails, ${crndetails.manager}")
+
+    val checkPractitioner = crndetails.manager.code
 
     if (checkPractitioner != previousStaffCode) {
-      log.info("reallocating  same practtitoner  $checkPractitioner $previousStaffCode")
+      log.info("crn ${allocateCase.crn} - reallocating  same practtitoner  $checkPractitioner $previousStaffCode")
       return null
     }
-    log.info("reallocating  different practtitoner  $checkPractitioner $previousStaffCode")
+    log.info("crn ${allocateCase.crn} - reallocating  different practtitoner  $checkPractitioner $previousStaffCode")
 
     val events = caseView.activeEvents.stream().map { event -> event.number }.toList()
     val firstEvent = events[0]
-    log.info("first event  $firstEvent")
+    log.info("crn ${allocateCase.crn} - first event  $firstEvent")
 
     val eventManagerSaveResults: ArrayList<SaveResult<EventManagerEntity>> = arrayListOf<SaveResult<EventManagerEntity>>()
     val allRequirementManagerSaveResults: ArrayList<SaveResult<RequirementManagerEntity>> = arrayListOf<SaveResult<RequirementManagerEntity>>()
-    log.info("first event  $firstEvent")
+    log.info("crn ${allocateCase.crn} - first event  $firstEvent")
 
     var allocationData = workforceAllocationsToDeliusApiClient.allocationDetails(allocateCase.crn, firstEvent, allocatedStaffId.staffCode, loggedInUser)
     log.info("crn ${allocateCase.crn} - get allocation data  $firstEvent")
