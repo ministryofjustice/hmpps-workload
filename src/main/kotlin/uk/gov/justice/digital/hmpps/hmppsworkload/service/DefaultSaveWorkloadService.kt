@@ -136,36 +136,58 @@ class DefaultSaveWorkloadService(
     val tier = hmppsTierApiClient.getTierByCrn(allocateCase.crn)
 
     // Ensure Previous practitoner has not changed
+    log.info("reallocating case for crn ${allocateCase.crn} check practitioner")
+
     val checkPractitioner = workforceAllocationsToDeliusApiClient.getCrnDetails(allocateCase.crn).manager.code
 
     if (checkPractitioner != previousStaffCode) {
+      log.info("reallocating  same practtitoner  $checkPractitioner $previousStaffCode")
       return null
     }
+    log.info("reallocating  different practtitoner  $checkPractitioner $previousStaffCode")
 
     val events = caseView.activeEvents.stream().map { event -> event.number }.toList()
     val firstEvent = events[0]
+    log.info("first event  $firstEvent")
 
     val eventManagerSaveResults: ArrayList<SaveResult<EventManagerEntity>> = arrayListOf<SaveResult<EventManagerEntity>>()
     val allRequirementManagerSaveResults: ArrayList<SaveResult<RequirementManagerEntity>> = arrayListOf<SaveResult<RequirementManagerEntity>>()
+    log.info("first event  $firstEvent")
 
     var allocationData = workforceAllocationsToDeliusApiClient.allocationDetails(allocateCase.crn, firstEvent, allocatedStaffId.staffCode, loggedInUser)
+    log.info("get allocation data  $firstEvent")
+
 
     val personManagerSaveResult = savePersonManager(allocatedStaffId, allocationData.staff, loggedInUser, allocateCase.allocationReason, allocateCase.crn, "", tier)
+    log.info("Save person manager")
+
     val allUnallocatedRequirements = arrayListOf<Requirement>()
+    log.info("Requirements")
+
 
     for (event in events) {
+      log.info("in loop")
+
       allocationData = workforceAllocationsToDeliusApiClient.allocationDetails(allocateCase.crn, event, allocatedStaffId.staffCode, loggedInUser)
+      log.info("get allocation data  $event")
 
       val eventManagerSaveResult = saveEventManager(allocatedStaffId, allocationData, allocateCase, loggedInUser, "", event)
+      log.info("saveEventManager  $event")
+
       val unallocatedRequirements = allocationData.activeRequirements.filter { !it.manager.allocated || it.manager.code == previousStaffCode }
       val requirementManagerSaveResults = saveRequirementManagerService.saveRequirementManagers(allocatedStaffId.teamCode, allocationData.staff, allocateCase.crn, event, allocateCase.allocationReason!!, loggedInUser, unallocatedRequirements)
         .also { afterRequirementManagersSaved(it, "") }
+      log.info("saveRequirementManagers  $event")
+
       eventManagerSaveResults.addLast(eventManagerSaveResult)
       allRequirementManagerSaveResults.addAll(requirementManagerSaveResults)
       allUnallocatedRequirements.addAll(unallocatedRequirements)
+      log.info("end loop")
     }
 
     val reallocationNotificationDetails = getAdditionalNotificationDetails(previousStaffCode, allocateCase)
+    log.info("reallocationNotificationDetails")
+
 
     try {
       notificationService.notifyReallocation(allocationData, allocateCase, tier, reallocationNotificationDetails)
@@ -176,6 +198,8 @@ class DefaultSaveWorkloadService(
     } catch (e: Exception) {
       log.error("Failed to send notification and allocate", e)
     }
+    log.info("end ")
+
     return null
   }
 

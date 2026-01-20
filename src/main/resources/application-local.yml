@@ -1,0 +1,89 @@
+spring:
+  datasource:
+    url: "jdbc:postgresql://${database.endpoint:localhost:5432}/${database.name:postgres}"
+    username: "${database.username:root}"
+    password: "${database.password:dev}"
+    hikari:
+      maximum-pool-size: 10
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: ${oauth.endpoint.url}/.well-known/jwks.json
+      client:
+        registration:
+          hmpps-tier-api:
+            provider: hmpps-auth
+            client-id: ${oauth.client.id}
+            client-secret: ${oauth.client.secret}
+            authorization-grant-type: client_credentials
+          assess-risks-needs-api:
+            provider: hmpps-auth
+            client-id: ${oauth.client.id}
+            client-secret: ${oauth.client.secret}
+            authorization-grant-type: client_credentials
+          workforce-allocations-to-delius-api:
+            provider: hmpps-auth
+            client-id: ${oauth.client.id}
+            client-secret: ${oauth.client.secret}
+            authorization-grant-type: client_credentials
+        provider:
+          hmpps-auth:
+            token-uri: ${oauth.endpoint.url}/oauth/token
+server:
+  port: 8080
+  servlet:
+    context-path: /
+  forward-headers-strategy: native
+  tomcat:
+    remoteip:
+      remote-ip-header: x-forwarded-for
+      protocol-header: x-forwarded-proto
+      internal-proxies: 10\.\d{1,3}\.\d{1,3}\.\d{1,3}|192\.168\.\d{1,3}\.\d{1,3}|169\.254\.\d{1,3}\.\d{1,3}|127\.\d{1,3}\.\d{1,3}\.\d{1,3}|172\.1[6-9]{1}\.\d{1,3}\.\d{1,3}|172\.2[0-9]{1}\.\d{1,3}\.\d{1,3}|172\.3[0-1]{1}\.\d{1,3}\.\d{1,3}|0:0:0:0:0:0:0:1|::1|100\.6[4-9]\.\d{1,3}\.\d{1,3}|100\.[7-9][0-9]{1}\.\d{1,3}\.\d{1,3}|100\.1[0-1][0-9]{1}\.\d{1,3}\.\d{1,3}|100\.12[0-7]\.\d{1,3}\.\d{1,3}
+  shutdown: graceful
+  error:
+    include-message: always
+application:
+  notify:
+    allocation:
+      template: 5db23c80-9cb6-4b8e-a0f6-56061e50a9ef
+      laoTemplate: fc55e1ce-47d6-479c-ac80-3ac77c9fe609
+    reallocation:
+      previous:
+        template: 2310eefc-f1d2-4276-a83a-14592ab38b71
+        laoTemplate: f5f588c7-806f-4bd0-af36-34939bbbaf9e
+      new:
+        template: 624ebf00-ba51-4734-8f04-130d68d52ee9
+        laoTemplate: 5defb8bd-69ba-440c-99d1-745c346c9dcc
+person:
+  manager:
+    getByIdPath: /allocation/person/{id}
+
+event:
+  manager:
+    getByIdPath: /allocation/event/{id}
+
+requirement:
+  manager:
+    getByIdPath: /allocation/requirements/{id}
+
+management:
+  endpoints:
+    web:
+      base-path: /
+      exposure:
+        include: 'info, health'
+  endpoint:
+    health:
+      cache:
+        time-to-live: 2000ms
+      show-components: always
+      show-details: always
+      probes:
+        enabled: true
+    info:
+      cache:
+        time-to-live: 2000ms
+
+oauth:
+  endpoint.url: http://localhost:8090/auth

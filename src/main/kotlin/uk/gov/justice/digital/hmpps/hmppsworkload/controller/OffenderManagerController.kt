@@ -86,7 +86,7 @@ class OffenderManagerController(
     authentication: Authentication,
   ): CaseReallocated? {
     val username = authentication.name
-    log.info("Allocating case for crn ${allocateCase.crn} to staffCode $staffCode in teamCode $teamCode by $username")
+    log.info("reallocating case for crn ${allocateCase.crn} to staffCode $staffCode in teamCode $teamCode by $username")
     return saveWorkloadService.saveReallocatedWorkLoad(StaffIdentifier(staffCode, teamCode), previousStaffCode, allocateCase, authentication.name)
   }
 
