@@ -147,6 +147,7 @@ class NotificationService(
         OASYS_LAST_UPDATED to (reallocationDetail.oasysLastUpdated ?: ""),
         NEXT_APPOINTMENT to (reallocationDetail.nextAppointment ?: ""),
         FAILURE_TO_COMPLY_SINCE to (reallocationDetail.failureToComply ?: ""),
+        PRACTITIONER_EMAIL to allocationDemandDetails.staff.email!!,
         TIER to (tier ?: ""),
       ).plus(getRiskParameters(notifyData.riskSummary, notifyData.riskPredictors, allocationDemandDetails.ogrs))
         .plus(getConvictionParameters(allocationDemandDetails))
@@ -174,6 +175,7 @@ class NotificationService(
       parameters = mapOf(
         OFFICER_NAME to reallocationDetail.previouslyManagedBy.name.getCombinedName(),
         ALLOCATING_EMAIL to allocationDemandDetails.allocatingStaff.email!!,
+        PRACTITIONER_EMAIL to reallocationDetail.previouslyManagedBy.email!!,
       ).plus(getLoggedInUserParameters(allocationDemandDetails.allocatingStaff))
         .plus(CRN to allocationDemandDetails.crn)
     } else {
@@ -183,6 +185,7 @@ class NotificationService(
         OFFICER_GRADE to allocationDemandDetails.staff.getGrade(),
         REQUIREMENTS to mapRequirements(allocationDemandDetails.activeRequirements),
         ALLOCATING_EMAIL to allocationDemandDetails.allocatingStaff.email!!,
+        PRACTITIONER_EMAIL to reallocationDetail.previouslyManagedBy.email!!,
         OFFICER_GRADE to allocationDemandDetails.staff.getGrade(),
         PREVIOUS_PRACTITIONER to reallocationDetail.previouslyManagedBy.name.getCombinedName(),
         PREVIOUS_PRACTITIONER_GRADE to reallocationDetail.previouslyManagedBy.getGrade(),
