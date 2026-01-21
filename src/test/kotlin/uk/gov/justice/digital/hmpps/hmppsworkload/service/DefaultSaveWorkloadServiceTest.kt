@@ -14,6 +14,7 @@ import uk.gov.justice.digital.hmpps.hmppsworkload.client.WorkforceAllocationsToD
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.AllocatedActiveEvent
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.AllocatedCaseView
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.AllocatedEventRequirement
+import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.AllocatedEventSentence
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.AllocationDemandDetails
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.Court
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.CrnDetails
@@ -198,10 +199,13 @@ class DefaultSaveWorkloadServiceTest {
       val activeRequirements = listOf(AllocatedEventRequirement("Cat 1", "Cat 2", "9 miles"), AllocatedEventRequirement("Cat 2", "Cat 4", "7 days"))
       val activeRequirements2 = listOf(AllocatedEventRequirement("Cat A", "Cat B", "4 years"), AllocatedEventRequirement("Cat 2", "Cat 4", "7 brides"))
 
+      val allocatedSentence = AllocatedEventSentence("Fraud", LocalDate.now(), LocalDate.now().plusDays(1), "One Day")
+
       val activeEvents = listOf(
-        AllocatedActiveEvent(3, 4, null, null, emptyList(), activeRequirements),
-        AllocatedActiveEvent(1, 2, null, null, emptyList(), activeRequirements2),
-        AllocatedActiveEvent(2, 2, null, null, emptyList(), activeRequirements2),
+        AllocatedActiveEvent(3, 4, null, allocatedSentence, emptyList(), activeRequirements),
+        AllocatedActiveEvent(1, 2, null, allocatedSentence, emptyList(), activeRequirements2),
+        AllocatedActiveEvent(2, 2, null, allocatedSentence, emptyList(), activeRequirements2),
+        AllocatedActiveEvent(4, 2, null, null, emptyList(), activeRequirements2),
       )
 
       val allocatedCaseView = AllocatedCaseView(name, LocalDate.now(), "Male", "pnc", null, null, activeEvents)
