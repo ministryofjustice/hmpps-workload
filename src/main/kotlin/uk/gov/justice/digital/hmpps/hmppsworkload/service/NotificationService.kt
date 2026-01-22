@@ -138,7 +138,7 @@ class NotificationService(
       parameters = mapOf(
         OFFICER_NAME to allocationDemandDetails.staff.name.getCombinedName(),
         OFFICER_GRADE to allocationDemandDetails.staff.getGrade(),
-        REQUIREMENTS to mapRequirements(allocationDemandDetails.activeRequirements),
+        REQUIREMENTS to mapRequirements(reallocationDetail.requirements),
         ALLOCATING_EMAIL to allocationDemandDetails.allocatingStaff.email!!,
         OFFICER_GRADE to allocationDemandDetails.staff.getGrade(),
         PREVIOUS_PRACTITIONER to reallocationDetail.previouslyManagedBy.name.getCombinedName(),
@@ -150,7 +150,7 @@ class NotificationService(
         PRACTITIONER_EMAIL to allocationDemandDetails.staff.email!!,
         TIER to (tier ?: ""),
       ).plus(getRiskParameters(notifyData.riskSummary, notifyData.riskPredictors, allocationDemandDetails.ogrs))
-        .plus(getConvictionParameters(allocationDemandDetails))
+        .plus(getConvictionParameters(reallocationDetail))
         .plus(getPersonOnProbationParameters(allocationDemandDetails.name.getCombinedName(), allocateCase.crn, allocateCase.reallocationNotes))
         .plus(getLoggedInUserParameters(allocationDemandDetails.allocatingStaff))
         .plus(CRN to allocationDemandDetails.crn)
@@ -183,7 +183,7 @@ class NotificationService(
       parameters = mapOf(
         OFFICER_NAME to allocationDemandDetails.staff.name.getCombinedName(),
         OFFICER_GRADE to allocationDemandDetails.staff.getGrade(),
-        REQUIREMENTS to mapRequirements(allocationDemandDetails.activeRequirements),
+        REQUIREMENTS to mapRequirements(reallocationDetail.requirements),
         ALLOCATING_EMAIL to allocationDemandDetails.allocatingStaff.email!!,
         PRACTITIONER_EMAIL to reallocationDetail.previouslyManagedBy.email!!,
         OFFICER_GRADE to allocationDemandDetails.staff.getGrade(),
@@ -196,7 +196,7 @@ class NotificationService(
         TIER to allocationDemandDetails.crn,
 
       ).plus(getRiskParameters(notifyData.riskSummary, notifyData.riskPredictors, allocationDemandDetails.ogrs))
-        .plus(getConvictionParameters(allocationDemandDetails))
+        .plus(getConvictionParameters(reallocationDetail))
         .plus(getPersonOnProbationParameters(allocationDemandDetails.name.getCombinedName(), allocateCase.crn, allocateCase.reallocationNotes))
         .plus(getLoggedInUserParameters(allocationDemandDetails.allocatingStaff))
         .plus(CRN to allocationDemandDetails.crn)
@@ -265,6 +265,10 @@ class NotificationService(
       "order" to "${allocationDemandDetails.sentence.description} (${allocationDemandDetails.sentence.length})",
     )
   }
+
+  private fun getConvictionParameters(reallocationDetails: ReallocationDetails): Map<String, Any> = mapOf(
+    "offences" to mapOffences(reallocationDetails.offences),
+  )
 
   private fun getRiskParameters(riskSummary: RiskSummary?, riskPredictors: List<RiskPredictor>, assessment: RiskOGRS?): Map<String, Any> {
     val latestRiskPredictor =

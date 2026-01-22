@@ -470,7 +470,7 @@ class NotificationServiceTests {
       "CRN1111", listOf(firstEmail, secondEmail), false, true, "spo notes",
       laoCase = false, allocationReason = null, nextAppointmentDate = null, lastOasysAssessmentDate = null, failureToComply = null,
     )
-    val reallocationDetails = ReallocationDetails("Laziness", "never", "tomorrow", "12", getManager())
+    val reallocationDetails = ReallocationDetails("Laziness", "never", "tomorrow", "12", getManager(), ArrayList<Requirement>(), ArrayList<OffenceDetails>())
     notificationService.notifyReallocation(allocationDetails, allocateCase, Tier.A1.name, reallocationDetails)
 
     val parameters = slot<NotificationEmail>()
@@ -492,7 +492,7 @@ class NotificationServiceTests {
       "CRN1111", listOf(firstEmail, secondEmail), true, true, "spo notes",
       laoCase = false, allocationReason = null, nextAppointmentDate = null, lastOasysAssessmentDate = null, failureToComply = null,
     )
-    val reallocationDetails = ReallocationDetails("Laziness", "never", "tomorrow", "12", getManager())
+    val reallocationDetails = ReallocationDetails("Laziness", "never", "tomorrow", "12", getManager(), ArrayList<Requirement>(), ArrayList<OffenceDetails>())
     notificationService.notifyReallocation(allocationDetails, allocateCase, Tier.A1.name, reallocationDetails)
 
     var parameters = mutableListOf<NotificationEmail>()
