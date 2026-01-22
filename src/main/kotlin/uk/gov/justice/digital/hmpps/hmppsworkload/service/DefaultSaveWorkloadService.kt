@@ -170,7 +170,8 @@ class DefaultSaveWorkloadService(
     }
 
     val reallocationNotificationDetails = getAdditionalNotificationDetails(previousStaffCode, allocateCase, allUnallocatedRequirements, allOffences)
-
+    log.info("D002218 new {}", allUnallocatedRequirements)
+    log.info("D002218 old {}", allOffences)
     try {
       notificationService.notifyReallocation(allocationData, allocateCase, tier, reallocationNotificationDetails)
       log.info("Reallocation notified for case: ${allocateCase.crn}, to: ${allocationData.staff.code}, from: ${allocationData.allocatingStaff.code}")

@@ -135,6 +135,8 @@ class NotificationService(
         .plus(CRN to allocationDemandDetails.crn)
     } else {
       templateId = reallocationTemplateId
+      log.info("D002218 new {}", reallocationDetail.requirements)
+      log.info("D002218 old {}", allocationDemandDetails.activeRequirements)
       parameters = mapOf(
         OFFICER_NAME to allocationDemandDetails.staff.name.getCombinedName(),
         OFFICER_GRADE to allocationDemandDetails.staff.getGrade(),
@@ -180,6 +182,8 @@ class NotificationService(
         .plus(CRN to allocationDemandDetails.crn)
     } else {
       templateId = reallocationPreviousTemplateId
+      log.info("D002218 new {}", reallocationDetail.requirements)
+      log.info("D002218 old {}", allocationDemandDetails.activeRequirements)
       parameters = mapOf(
         OFFICER_NAME to allocationDemandDetails.staff.name.getCombinedName(),
         OFFICER_GRADE to allocationDemandDetails.staff.getGrade(),
@@ -268,7 +272,9 @@ class NotificationService(
 
   private fun getConvictionParameters(allocationDemandDetails: AllocationDemandDetails, reallocationDetails: ReallocationDetails): Map<String, Any> {
     val sentenceDate = allocationDemandDetails.sentence.date.withZoneSameInstant(ZoneId.systemDefault()).format(DateUtils.notifyDateFormat)
-    log.info("Sentence date: {}", sentenceDate)
+    log.info("D002218 new Offences: {}", reallocationDetails.offences)
+    log.info("D002218 old Offences: {}", allocationDemandDetails.offences)
+
     return mapOf(
       "court_name" to allocationDemandDetails.court.name,
       "sentence_date" to sentenceDate,
