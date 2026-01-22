@@ -150,7 +150,7 @@ class NotificationService(
         PRACTITIONER_EMAIL to allocationDemandDetails.staff.email!!,
         TIER to (tier ?: ""),
       ).plus(getRiskParameters(notifyData.riskSummary, notifyData.riskPredictors, allocationDemandDetails.ogrs))
-        .plus(getConvictionParameters(reallocationDetail))
+        .plus(getConvictionParameters(allocationDemandDetails, reallocationDetail))
         .plus(getPersonOnProbationParameters(allocationDemandDetails.name.getCombinedName(), allocateCase.crn, allocateCase.reallocationNotes))
         .plus(getLoggedInUserParameters(allocationDemandDetails.allocatingStaff))
         .plus(CRN to allocationDemandDetails.crn)
@@ -196,7 +196,7 @@ class NotificationService(
         TIER to allocationDemandDetails.crn,
 
       ).plus(getRiskParameters(notifyData.riskSummary, notifyData.riskPredictors, allocationDemandDetails.ogrs))
-        .plus(getConvictionParameters(reallocationDetail))
+        .plus(getConvictionParameters(allocationDemandDetails, reallocationDetail))
         .plus(getPersonOnProbationParameters(allocationDemandDetails.name.getCombinedName(), allocateCase.crn, allocateCase.reallocationNotes))
         .plus(getLoggedInUserParameters(allocationDemandDetails.allocatingStaff))
         .plus(CRN to allocationDemandDetails.crn)
@@ -266,9 +266,16 @@ class NotificationService(
     )
   }
 
-  private fun getConvictionParameters(reallocationDetails: ReallocationDetails): Map<String, Any> = mapOf(
-    "offences" to mapOffences(reallocationDetails.offences),
-  )
+  private fun getConvictionParameters(allocationDemandDetails: AllocationDemandDetails, reallocationDetails: ReallocationDetails): Map<String, Any> {
+    val sentenceDate = allocationDemandDetails.sentence.date.withZoneSameInstant(ZoneId.systemDefault()).format(DateUtils.notifyDateFormat)
+    log.info("Sentence date: {}", sentenceDate)
+    return mapOf(
+      "court_name" to allocationDemandDetails.court.name,
+      "sentence_date" to sentenceDate,
+      "offences" to mapOffences(reallocationDetails.offences),
+      "order" to "${allocationDemandDetails.sentence.description} (${allocationDemandDetails.sentence.length})",
+    )
+  }
 
   private fun getRiskParameters(riskSummary: RiskSummary?, riskPredictors: List<RiskPredictor>, assessment: RiskOGRS?): Map<String, Any> {
     val latestRiskPredictor =
