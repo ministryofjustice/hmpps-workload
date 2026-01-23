@@ -165,7 +165,7 @@ class DefaultSaveWorkloadService(
         .also { afterRequirementManagersSaved(it, "") }
       eventManagerSaveResults.addLast(eventManagerSaveResult)
       allRequirementManagerSaveResults.addAll(requirementManagerSaveResults)
-      allUnallocatedRequirements.addAll(unallocatedRequirements)
+      allUnallocatedRequirements.addAll(allocationData.activeRequirements)
       allOffences.addAll(offences)
     }
 
