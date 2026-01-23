@@ -272,9 +272,9 @@ class NotificationService(
     return mapOf(
       "court_name" to allocationDemandDetails.court.name,
       "sentence_date" to sentenceDate,
-    "offences" to mapOffences(reallocationDetails.offences),
+      "offences" to mapOffences(reallocationDetails.offences),
       "order" to "${allocationDemandDetails.sentence.description} (${allocationDemandDetails.sentence.length})",
-  )
+    )
   }
 
   private fun getRiskParameters(riskSummary: RiskSummary?, riskPredictors: List<RiskPredictor>, assessment: RiskOGRS?): Map<String, Any> {
