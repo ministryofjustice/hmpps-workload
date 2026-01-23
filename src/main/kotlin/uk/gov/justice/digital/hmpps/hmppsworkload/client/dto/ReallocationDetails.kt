@@ -6,4 +6,6 @@ data class ReallocationDetails(
   val nextAppointment: String?,
   val failureToComply: String?,
   val previouslyManagedBy: StaffMember,
+  val requirements: List<Requirement>,
+  val offences: List<OffenceDetails>,
 )

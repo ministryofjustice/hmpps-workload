@@ -255,9 +255,11 @@ class DefaultSaveWorkloadServiceTest {
         allocateCase.nextAppointmentDate,
         allocateCase.failureToComply,
         StaffMember(PREVIOUS_STAFF_CODE, name, null, "SPO"),
+        requirements,
+        offences,
       )
 
-      coEvery { notificationService.notifyReallocation(allocationDemandDetails, allocateCase, Tier.A1.name, reallocationDetails) } returns
+      coEvery { notificationService.notifyReallocation(allocationDemandDetails, allocateCase, Tier.A1.name, any()) } returns
         NotificationMessageResponse("template", "ref1", setOf("me@there.com"))
 
       val workload = defaultSaveWorkloadService.saveReallocatedWorkLoad(staffIdentifier, PREVIOUS_STAFF_CODE, allocateCase, loggedInUser)
@@ -266,7 +268,7 @@ class DefaultSaveWorkloadServiceTest {
       assertEquals(workload.requirementManagerIds, listOf(requirementManagerEntity.uuid, requirementManagerEntity.uuid, requirementManagerEntity.uuid))
       assertEquals(workload.personManagerId, personManagerEntity.uuid)
 
-      coVerify(exactly = 1) { notificationService.notifyReallocation(allocationDemandDetails, allocateCase, Tier.A1.name, reallocationDetails) }
+      coVerify(exactly = 1) { notificationService.notifyReallocation(allocationDemandDetails, allocateCase, Tier.A1.name, any()) }
 
       coVerify(exactly = 1) { sqsSuccessPublisher.updatePerson(crn, any(), any()) }
       coVerify(exactly = 3) { sqsSuccessPublisher.updateEvent(crn, any(), any()) }
