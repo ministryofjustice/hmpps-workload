@@ -104,6 +104,7 @@ class DefaultSaveWorkloadServiceTest {
       val manager = Manager("003", "001", "SPO", name, false)
       val requirements = listOf(Requirement("Cat 1", "Cat 2", "4 days", id, manager, true))
       val offences = listOf(OffenceDetails("one"))
+      var orders = listOf(SentenceDetails("Adult custody", ZonedDateTime.now(), "12"), SentenceDetails("fredom", ZonedDateTime.now(), "forever"))
       val allocationDemandDetails = AllocationDemandDetails(
         crn, name, staffMember, allocatingStaffMember,
         InitialAppointment(date = LocalDate.now()),
@@ -248,6 +249,7 @@ class DefaultSaveWorkloadServiceTest {
       coEvery { sqsSuccessPublisher.updateRequirement(crn, any(), any()) } just Runs
       coEvery { sqsSuccessPublisher.auditAllocation(crn, any(), any(), any()) } just Runs
       coEvery { workforceAllocationsToDeliusApiClient.getOfficerView(PREVIOUS_STAFF_CODE) } returns OfficerView(PREVIOUS_STAFF_CODE, name, "SPO", null, BigInteger.ONE, BigInteger.ONE, BigInteger.ONE)
+      var orders = listOf(SentenceDetails("Adult custody", ZonedDateTime.now(), "12"), SentenceDetails("fredom", ZonedDateTime.now(), "forever"))
 
       val reallocationDetails = ReallocationDetails(
         toText(allocateCase.allocationReason!!),
@@ -257,6 +259,7 @@ class DefaultSaveWorkloadServiceTest {
         StaffMember(PREVIOUS_STAFF_CODE, name, null, "SPO"),
         requirements,
         offences,
+        orders,
       )
 
       coEvery { notificationService.notifyReallocation(allocationDemandDetails, allocateCase, Tier.A1.name, any()) } returns
