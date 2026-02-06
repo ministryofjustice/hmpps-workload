@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.Requirement
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.RiskOGRS
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.RiskPredictor
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.RiskSummary
+import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.SentenceDetails
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.StaffMember
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.AllocateCase
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.CaseType
@@ -273,7 +274,7 @@ class NotificationService(
       "court_name" to allocationDemandDetails.court.name,
       "sentence_date" to sentenceDate,
       "offences" to mapOffences(reallocationDetails.offences),
-      "order" to "${allocationDemandDetails.sentence.description} (${allocationDemandDetails.sentence.length})",
+      "order" to mapOrders(reallocationDetails.sentences),
     )
   }
 
@@ -313,6 +314,9 @@ class NotificationService(
 
   private fun mapOffences(offences: List<OffenceDetails>): List<String> = offences
     .map { offence -> offence.mainCategory }
+
+  private fun mapOrders(orders: List<SentenceDetails>): List<String> = orders
+    .map { order -> order.description + order.length }
 
   private fun mapRequirements(requirements: List<Requirement>): List<String> = requirements
     .map { requirement -> "${requirement.mainCategory}: ${requirement.subCategory ?: requirement.mainCategory} ${requirement.length}".trimEnd() }

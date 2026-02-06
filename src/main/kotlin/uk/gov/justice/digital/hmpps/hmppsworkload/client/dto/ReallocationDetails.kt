@@ -8,4 +8,5 @@ data class ReallocationDetails(
   val previouslyManagedBy: StaffMember,
   val requirements: List<Requirement>,
   val offences: List<OffenceDetails>,
+  val sentences: List<SentenceDetails>,
 )

@@ -21,6 +21,7 @@ import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.Requirement
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.RiskOGRS
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.RiskPredictor
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.RiskSummary
+import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.SentenceDetails
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.StaffMember
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.AllocateCase
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.CaseType
@@ -470,7 +471,7 @@ class NotificationServiceTests {
       "CRN1111", listOf(firstEmail, secondEmail), false, true, "spo notes",
       laoCase = false, allocationReason = null, nextAppointmentDate = null, lastOasysAssessmentDate = null, failureToComply = null,
     )
-    val reallocationDetails = ReallocationDetails("Laziness", "never", "tomorrow", "12", getManager(), ArrayList<Requirement>(), ArrayList<OffenceDetails>())
+    val reallocationDetails = ReallocationDetails("Laziness", "never", "tomorrow", "12", getManager(), ArrayList<Requirement>(), ArrayList<OffenceDetails>(), ArrayList<SentenceDetails>())
     notificationService.notifyReallocation(allocationDetails, allocateCase, Tier.A1.name, reallocationDetails)
 
     val parameters = slot<NotificationEmail>()
@@ -492,7 +493,7 @@ class NotificationServiceTests {
       "CRN1111", listOf(firstEmail, secondEmail), true, true, "spo notes",
       laoCase = false, allocationReason = null, nextAppointmentDate = null, lastOasysAssessmentDate = null, failureToComply = null,
     )
-    val reallocationDetails = ReallocationDetails("Laziness", "never", "tomorrow", "12", getManager(), ArrayList<Requirement>(), ArrayList<OffenceDetails>())
+    val reallocationDetails = ReallocationDetails("Laziness", "never", "tomorrow", "12", getManager(), ArrayList<Requirement>(), ArrayList<OffenceDetails>(), ArrayList<SentenceDetails>())
     notificationService.notifyReallocation(allocationDetails, allocateCase, Tier.A1.name, reallocationDetails)
 
     var parameters = mutableListOf<NotificationEmail>()
