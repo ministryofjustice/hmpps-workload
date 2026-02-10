@@ -81,7 +81,7 @@ class AllocateCaseToOffenderManager : IntegrationTestBase() {
     workforceAllocationsToDelius.allocationResponse(crn, eventNumber, staffCode, allocatingOfficerUsername)
     hmppsTier.tierCalculationResponse(crn)
     assessRisksNeedsApi.riskSummaryErrorResponse(crn)
-    assessRisksNeedsApi.riskPredictorResponse(crn)
+    assessRisksNeedsApi.riskPredictorV1Response(crn)
     casesDbService.insertCaseDetails("Jane", "Doe", Tier.A0, CaseType.CUSTODY, crn)
     every { notificationClient.sendEmail(any(), any(), any(), any()) } returns
       SendEmailResponse(emailResponse())

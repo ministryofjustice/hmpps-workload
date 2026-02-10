@@ -281,12 +281,13 @@ class NotificationService(
     val latestRiskPredictor =
       riskPredictors.filter { riskPredictor ->
         (riskPredictor.getRSRScoreLevel() != null && riskPredictor.getRSRPercentageScore() != null) ||
-          (riskPredictor.getOGRSScoreLevel() != null && riskPredictor.getOGRSPercentageScore() != null) }
+          (riskPredictor.getOGRSScoreLevel() != null && riskPredictor.getOGRSPercentageScore() != null)
+      }
         .maxByOrNull { riskPredictor -> riskPredictor.completedDate ?: LocalDateTime.MIN }
     val rsrLevel = latestRiskPredictor?.getRSRScoreLevel()?.capitalize() ?: SCORE_UNAVAILABLE
     val rsrPercentage = latestRiskPredictor?.getRSRPercentageScore()?.toString() ?: NOT_APPLICABLE
     val rosh = riskSummary?.overallRiskLevel?.capitalize() ?: SCORE_UNAVAILABLE
-    val ogrsLevel = latestRiskPredictor?.getOGRSScoreLevel() ?: SCORE_UNAVAILABLE
+    val ogrsLevel = latestRiskPredictor?.getOGRSScoreLevel()?.capitalize() ?: SCORE_UNAVAILABLE
     val ogrsPercentage = latestRiskPredictor?.getOGRSPercentageScore()?.toString() ?: NOT_APPLICABLE
     return mapOf(
       "rosh" to rosh,

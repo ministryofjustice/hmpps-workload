@@ -41,7 +41,7 @@ class SendEmail : IntegrationTestBase() {
     val caseDetailsEntity = CaseDetailsEntity(crn, B3, COMMUNITY, "Jane", "Doe")
 
     assessRisksNeedsApi.riskSummaryErrorResponse(crn)
-    assessRisksNeedsApi.riskPredictorResponse(crn)
+    assessRisksNeedsApi.riskPredictorV1Response(crn)
     workforceAllocationsToDelius.getDeliusAllowedTeamsResponse(allocationDetails.allocatingStaff.code)
     workforceAllocationsToDelius.getDeliusAllowedTeamsResponse(allocationDetails.staff.code)
     coEvery { sqsSuccessPublisher.sendNotification(any()) } returns Unit
@@ -64,7 +64,7 @@ class SendEmail : IntegrationTestBase() {
     val caseDetailsEntity = CaseDetailsEntity(crn, B3, COMMUNITY, "Jane", "Doe")
 
     assessRisksNeedsApi.riskSummaryErrorResponse(crn)
-    assessRisksNeedsApi.riskPredictorResponse(crn)
+    assessRisksNeedsApi.riskPredictorV1Response(crn)
     workforceAllocationsToDelius.getDeliusAllowedTeamsResponse(allocationDetails.allocatingStaff.code)
     workforceAllocationsToDelius.getDeliusAllowedTeamsResponse(allocationDetails.staff.code)
     caseDetailsRepository.save(caseDetailsEntity)
