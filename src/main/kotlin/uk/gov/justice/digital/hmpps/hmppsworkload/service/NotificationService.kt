@@ -13,9 +13,9 @@ import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.InitialAppointment
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.OffenceDetails
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.ReallocationDetails
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.Requirement
-import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.RiskOGRS
-import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.RiskPredictor
+import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.RiskPredictorNew
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.RiskSummary
+import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.SentenceDetails
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.StaffMember
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.AllocateCase
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.CaseType
@@ -92,7 +92,7 @@ class NotificationService(
         REQUIREMENTS to mapRequirements(allocationDemandDetails.activeRequirements),
         ALLOCATING_EMAIL to allocationDemandDetails.allocatingStaff.email!!,
         PRACTITIONER_EMAIL to allocationDemandDetails.staff.email!!,
-      ).plus(getRiskParameters(notifyData.riskSummary, notifyData.riskPredictors, allocationDemandDetails.ogrs))
+      ).plus(getRiskParameters(notifyData.riskSummary, notifyData.riskPredictors))
         .plus(getConvictionParameters(allocationDemandDetails))
         .plus(getPersonOnProbationParameters(allocationDemandDetails.name.getCombinedName(), allocateCase.crn, allocateCase.allocationJustificationNotes))
         .plus(getLoggedInUserParameters(allocationDemandDetails.allocatingStaff))
@@ -149,7 +149,7 @@ class NotificationService(
         FAILURE_TO_COMPLY_SINCE to (reallocationDetail.failureToComply ?: ""),
         PRACTITIONER_EMAIL to allocationDemandDetails.staff.email!!,
         TIER to (tier ?: ""),
-      ).plus(getRiskParameters(notifyData.riskSummary, notifyData.riskPredictors, allocationDemandDetails.ogrs))
+      ).plus(getRiskParameters(notifyData.riskSummary, notifyData.riskPredictors))
         .plus(getConvictionParameters(allocationDemandDetails, reallocationDetail))
         .plus(getPersonOnProbationParameters(allocationDemandDetails.name.getCombinedName(), allocateCase.crn, allocateCase.reallocationNotes))
         .plus(getLoggedInUserParameters(allocationDemandDetails.allocatingStaff))
@@ -195,7 +195,7 @@ class NotificationService(
         FAILURE_TO_COMPLY_SINCE to (reallocationDetail.failureToComply ?: ""),
         TIER to allocationDemandDetails.crn,
 
-      ).plus(getRiskParameters(notifyData.riskSummary, notifyData.riskPredictors, allocationDemandDetails.ogrs))
+      ).plus(getRiskParameters(notifyData.riskSummary, notifyData.riskPredictors))
         .plus(getConvictionParameters(allocationDemandDetails, reallocationDetail))
         .plus(getPersonOnProbationParameters(allocationDemandDetails.name.getCombinedName(), allocateCase.crn, allocateCase.reallocationNotes))
         .plus(getLoggedInUserParameters(allocationDemandDetails.allocatingStaff))
@@ -273,19 +273,22 @@ class NotificationService(
       "court_name" to allocationDemandDetails.court.name,
       "sentence_date" to sentenceDate,
       "offences" to mapOffences(reallocationDetails.offences),
-      "order" to "${allocationDemandDetails.sentence.description} (${allocationDemandDetails.sentence.length})",
+      "order" to mapOrders(reallocationDetails.sentences),
     )
   }
 
-  private fun getRiskParameters(riskSummary: RiskSummary?, riskPredictors: List<RiskPredictor>, assessment: RiskOGRS?): Map<String, Any> {
+  private fun getRiskParameters(riskSummary: RiskSummary?, riskPredictors: List<RiskPredictorNew<Any>>): Map<String, Any> {
     val latestRiskPredictor =
-      riskPredictors.filter { riskPredictor -> riskPredictor.rsrScoreLevel != null && riskPredictor.rsrPercentageScore != null }
+      riskPredictors.filter { riskPredictor ->
+        (riskPredictor.getRSRScoreLevel() != null && riskPredictor.getRSRPercentageScore() != null) ||
+          (riskPredictor.getOGRSScoreLevel() != null && riskPredictor.getOGRSPercentageScore() != null)
+      }
         .maxByOrNull { riskPredictor -> riskPredictor.completedDate ?: LocalDateTime.MIN }
-    val rsrLevel = latestRiskPredictor?.rsrScoreLevel?.capitalize() ?: SCORE_UNAVAILABLE
-    val rsrPercentage = latestRiskPredictor?.rsrPercentageScore?.toString() ?: NOT_APPLICABLE
+    val rsrLevel = latestRiskPredictor?.getRSRScoreLevel()?.capitalize() ?: SCORE_UNAVAILABLE
+    val rsrPercentage = latestRiskPredictor?.getRSRPercentageScore()?.toString() ?: NOT_APPLICABLE
     val rosh = riskSummary?.overallRiskLevel?.capitalize() ?: SCORE_UNAVAILABLE
-    val ogrsLevel = assessment?.getOgrsLevel() ?: SCORE_UNAVAILABLE
-    val ogrsPercentage = assessment?.score?.toString() ?: NOT_APPLICABLE
+    val ogrsLevel = latestRiskPredictor?.getOGRSScoreLevel()?.capitalize() ?: SCORE_UNAVAILABLE
+    val ogrsPercentage = latestRiskPredictor?.getOGRSPercentageScore()?.toString() ?: NOT_APPLICABLE
     return mapOf(
       "rosh" to rosh,
       "rsrLevel" to rsrLevel,
@@ -314,6 +317,9 @@ class NotificationService(
   private fun mapOffences(offences: List<OffenceDetails>): List<String> = offences
     .map { offence -> offence.mainCategory }
 
+  private fun mapOrders(orders: List<SentenceDetails>): List<String> = orders
+    .map { order -> order.description + order.length }
+
   private fun mapRequirements(requirements: List<Requirement>): List<String> = requirements
     .map { requirement -> "${requirement.mainCategory}: ${requirement.subCategory ?: requirement.mainCategory} ${requirement.length}".trimEnd() }
 
@@ -332,7 +338,7 @@ data class NotificationMessageResponse(
 
 data class NotifyData(
   val riskSummary: RiskSummary?,
-  val riskPredictors: List<RiskPredictor>,
+  val riskPredictors: List<RiskPredictorNew<Any>>,
 )
 
 data class NotificationEmail(

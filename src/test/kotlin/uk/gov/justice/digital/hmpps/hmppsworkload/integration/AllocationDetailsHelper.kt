@@ -6,7 +6,6 @@ import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.InitialAppointment
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.Name
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.OffenceDetails
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.Requirement
-import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.RiskOGRS
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.SentenceDetails
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.StaffMember
 import java.time.LocalDate
@@ -19,7 +18,6 @@ fun getAllocationDetails(
   initialAppointment: LocalDate? = null,
   offenceDetails: List<OffenceDetails> = emptyList(),
   activeRequirements: List<Requirement> = emptyList(),
-  ogrs: RiskOGRS? = null,
 ) = AllocationDemandDetails(
   crn,
   Name(
@@ -48,7 +46,6 @@ fun getAllocationDetails(
     "SPO",
   ),
   initialAppointment?.let { InitialAppointment(initialAppointment) },
-  ogrs,
   SentenceDetails(
     "CUSTODY",
     ZonedDateTime.of(LocalDate.of(2022, 10, 7), LocalTime.MIDNIGHT, ZoneId.systemDefault()),

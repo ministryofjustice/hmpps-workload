@@ -12,15 +12,22 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.AssessRisksNeedsApiClient
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.WorkforceAllocationsToDeliusApiClient
+import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.AllReoffendingPredictor
+import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.CombinedSeriousReoffendingPredictor
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.DeliusTeams
+import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.GroupReconvictionScore
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.Manager
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.Name
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.OffenceDetails
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.ReallocationDetails
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.Requirement
-import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.RiskOGRS
-import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.RiskPredictor
+import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.RiskOfSeriousRecidivismScore
+import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.RiskPredictorOutputV1
+import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.RiskPredictorOutputV2
+import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.RiskPredictorV1
+import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.RiskPredictorV2
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.RiskSummary
+import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.SentenceDetails
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.StaffMember
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.AllocateCase
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.CaseType
@@ -325,82 +332,58 @@ class NotificationServiceTests {
   }
 
   @Test
-  fun `must add RSR level capitalized when it exists`() = runBlocking {
+  fun `must add RSR and OGRS details correctly capitalized when they exists with V1 Risk Predictor Response`() = runBlocking {
     val allocationDetails = getAllocationDetails(allocateCase.crn)
-    val riskPredictor = RiskPredictor(BigDecimal.TEN, "MEDIUM", LocalDateTime.now())
+    val riskPredictor = RiskPredictorV1(
+      LocalDateTime.now(),
+      null,
+      null,
+      "1",
+      RiskPredictorOutputV1(
+        GroupReconvictionScore(null, BigDecimal.TEN, "LOW"),
+        null,
+        null,
+        RiskOfSeriousRecidivismScore(BigDecimal.TEN, null, null, null, "MEDIUM"),
+        null,
+      ),
+    )
     coEvery { assessRisksNeedsApiClient.getRiskPredictors(allocateCase.crn) } returns listOf(riskPredictor)
 
     notificationService.notifyAllocation(allocationDetails, allocateCase, caseDetails)
     val parameters = slot<NotificationEmail>()
     coVerify(exactly = 1) { sqsSuccessPublisher.sendNotification(capture(parameters)) }
     Assertions.assertEquals("Medium", parameters.captured.emailParameters["rsrLevel"])
+    Assertions.assertEquals(riskPredictor.getRSRPercentageScore().toString(), parameters.captured.emailParameters["rsrPercentage"])
+    Assertions.assertEquals("Low", parameters.captured.emailParameters["ogrsLevel"])
+    Assertions.assertEquals(riskPredictor.getOGRSPercentageScore().toString(), parameters.captured.emailParameters["ogrsPercentage"])
   }
 
   @Test
-  fun `must add RSR percentage when it exists`() = runBlocking {
+  fun `must add RSR and OGRS details correctly capitalized when they exists with V2 Risk Predictor Response`() = runBlocking {
     val allocationDetails = getAllocationDetails(allocateCase.crn)
-    val riskPredictor = RiskPredictor(BigDecimal.TEN, "MEDIUM", LocalDateTime.now())
+    val riskPredictor = RiskPredictorV2(
+      LocalDateTime.now(),
+      null,
+      null,
+      "1",
+      RiskPredictorOutputV2(
+        AllReoffendingPredictor(null, BigDecimal.TEN, "LOW"),
+        null,
+        null,
+        null,
+        null,
+        CombinedSeriousReoffendingPredictor(null, null, BigDecimal.TEN, "MEDIUM"),
+      ),
+    )
     coEvery { assessRisksNeedsApiClient.getRiskPredictors(allocateCase.crn) } returns listOf(riskPredictor)
 
     notificationService.notifyAllocation(allocationDetails, allocateCase, caseDetails)
     val parameters = slot<NotificationEmail>()
     coVerify(exactly = 1) { sqsSuccessPublisher.sendNotification(capture(parameters)) }
-    Assertions.assertEquals(riskPredictor.rsrPercentageScore.toString(), parameters.captured.emailParameters["rsrPercentage"])
-  }
-
-  @Test
-  fun `must add ogrs percentage when it exists`() = runBlocking {
-    val ogrs = RiskOGRS(LocalDate.now(), 10)
-    val allocationDetails = getAllocationDetails(allocateCase.crn, ogrs = ogrs)
-
-    notificationService.notifyAllocation(allocationDetails, allocateCase, caseDetails)
-    val parameters = slot<NotificationEmail>()
-    coVerify(exactly = 1) { sqsSuccessPublisher.sendNotification(capture(parameters)) }
-    Assertions.assertEquals(ogrs.score.toString(), parameters.captured.emailParameters["ogrsPercentage"])
-  }
-
-  @Test
-  fun `must add ogrs level low when its below 49`() = runBlocking {
-    val ogrs = RiskOGRS(LocalDate.now(), 10)
-    val allocationDetails = getAllocationDetails(allocateCase.crn, ogrs = ogrs)
-
-    notificationService.notifyAllocation(allocationDetails, allocateCase, caseDetails)
-    val parameters = slot<NotificationEmail>()
-    coVerify(exactly = 1) { sqsSuccessPublisher.sendNotification(capture(parameters)) }
+    Assertions.assertEquals("Medium", parameters.captured.emailParameters["rsrLevel"])
+    Assertions.assertEquals(riskPredictor.getRSRPercentageScore().toString(), parameters.captured.emailParameters["rsrPercentage"])
     Assertions.assertEquals("Low", parameters.captured.emailParameters["ogrsLevel"])
-  }
-
-  @Test
-  fun `must add ogrs level medium when its between 50 and 74`() = runBlocking {
-    val ogrs = RiskOGRS(LocalDate.now(), 55)
-    val allocationDetails = getAllocationDetails(allocateCase.crn, ogrs = ogrs)
-
-    notificationService.notifyAllocation(allocationDetails, allocateCase, caseDetails)
-    val parameters = slot<NotificationEmail>()
-    coVerify(exactly = 1) { sqsSuccessPublisher.sendNotification(capture(parameters)) }
-    Assertions.assertEquals("Medium", parameters.captured.emailParameters["ogrsLevel"])
-  }
-
-  @Test
-  fun `must add ogrs level high when its between 75 and 89`() = runBlocking {
-    val ogrs = RiskOGRS(LocalDate.now(), 80)
-    val allocationDetails = getAllocationDetails(allocateCase.crn, ogrs = ogrs)
-
-    notificationService.notifyAllocation(allocationDetails, allocateCase, caseDetails)
-    val parameters = slot<NotificationEmail>()
-    coVerify(exactly = 1) { sqsSuccessPublisher.sendNotification(capture(parameters)) }
-    Assertions.assertEquals("High", parameters.captured.emailParameters["ogrsLevel"])
-  }
-
-  @Test
-  fun `must add ogrs level very high when its 90 or more`() = runBlocking {
-    val ogrs = RiskOGRS(LocalDate.now(), 95)
-    val allocationDetails = getAllocationDetails(allocateCase.crn, ogrs = ogrs)
-
-    notificationService.notifyAllocation(allocationDetails, allocateCase, caseDetails)
-    val parameters = slot<NotificationEmail>()
-    coVerify(exactly = 1) { sqsSuccessPublisher.sendNotification(capture(parameters)) }
-    Assertions.assertEquals("Very High", parameters.captured.emailParameters["ogrsLevel"])
+    Assertions.assertEquals(riskPredictor.getOGRSPercentageScore().toString(), parameters.captured.emailParameters["ogrsPercentage"])
   }
 
   @Test
@@ -470,7 +453,7 @@ class NotificationServiceTests {
       "CRN1111", listOf(firstEmail, secondEmail), false, true, "spo notes",
       laoCase = false, allocationReason = null, nextAppointmentDate = null, lastOasysAssessmentDate = null, failureToComply = null,
     )
-    val reallocationDetails = ReallocationDetails("Laziness", "never", "tomorrow", "12", getManager(), ArrayList<Requirement>(), ArrayList<OffenceDetails>())
+    val reallocationDetails = ReallocationDetails("Laziness", "never", "tomorrow", "12", getManager(), ArrayList<Requirement>(), ArrayList<OffenceDetails>(), ArrayList<SentenceDetails>())
     notificationService.notifyReallocation(allocationDetails, allocateCase, Tier.A1.name, reallocationDetails)
 
     val parameters = slot<NotificationEmail>()
@@ -492,7 +475,7 @@ class NotificationServiceTests {
       "CRN1111", listOf(firstEmail, secondEmail), true, true, "spo notes",
       laoCase = false, allocationReason = null, nextAppointmentDate = null, lastOasysAssessmentDate = null, failureToComply = null,
     )
-    val reallocationDetails = ReallocationDetails("Laziness", "never", "tomorrow", "12", getManager(), ArrayList<Requirement>(), ArrayList<OffenceDetails>())
+    val reallocationDetails = ReallocationDetails("Laziness", "never", "tomorrow", "12", getManager(), ArrayList<Requirement>(), ArrayList<OffenceDetails>(), ArrayList<SentenceDetails>())
     notificationService.notifyReallocation(allocationDetails, allocateCase, Tier.A1.name, reallocationDetails)
 
     var parameters = mutableListOf<NotificationEmail>()

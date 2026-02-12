@@ -10,6 +10,7 @@ import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.AllocationDemandDet
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.OffenceDetails
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.ReallocationDetails
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.Requirement
+import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.SentenceDetails
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.StaffMember
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.AllocateCase
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.AllocationReason
@@ -154,6 +155,7 @@ class DefaultSaveWorkloadService(
     val personManagerSaveResult = savePersonManager(allocatedStaffId, allocationData.staff, loggedInUser, allocateCase.allocationReason, allocateCase.crn, "", tier)
     val allUnallocatedRequirements = arrayListOf<Requirement>()
     val allOffences = arrayListOf<OffenceDetails>()
+    val allOrders = arrayListOf<SentenceDetails>()
 
     for (event in events) {
       allocationData = workforceAllocationsToDeliusApiClient.allocationDetails(allocateCase.crn, event, allocatedStaffId.staffCode, loggedInUser)
@@ -166,10 +168,11 @@ class DefaultSaveWorkloadService(
       eventManagerSaveResults.addLast(eventManagerSaveResult)
       allRequirementManagerSaveResults.addAll(requirementManagerSaveResults)
       allUnallocatedRequirements.addAll(allocationData.activeRequirements)
+      allOrders.add(allocationData.sentence)
       allOffences.addAll(offences)
     }
 
-    val reallocationNotificationDetails = getAdditionalNotificationDetails(previousStaffCode, allocateCase, allUnallocatedRequirements, allOffences)
+    val reallocationNotificationDetails = getAdditionalNotificationDetails(previousStaffCode, allocateCase, allUnallocatedRequirements, allOffences, allOrders)
 
     try {
       notificationService.notifyReallocation(allocationData, allocateCase, tier, reallocationNotificationDetails)
@@ -183,7 +186,7 @@ class DefaultSaveWorkloadService(
     return null
   }
 
-  private suspend fun getAdditionalNotificationDetails(previousStaffCode: String, allocateCase: ReallocateCase, requirements: List<Requirement>, offences: List<OffenceDetails>): ReallocationDetails {
+  private suspend fun getAdditionalNotificationDetails(previousStaffCode: String, allocateCase: ReallocateCase, requirements: List<Requirement>, offences: List<OffenceDetails>, orders: List<SentenceDetails>): ReallocationDetails {
     val previousStaff = workforceAllocationsToDeliusApiClient.getOfficerView(previousStaffCode)
     val reallocationDetails = ReallocationDetails(
       toText(allocateCase.allocationReason!!),
@@ -193,6 +196,7 @@ class DefaultSaveWorkloadService(
       StaffMember(previousStaff.code, previousStaff.name, previousStaff.email, previousStaff.getGrade()),
       requirements,
       offences,
+      orders,
     )
     return reallocationDetails
   }
