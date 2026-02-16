@@ -485,7 +485,7 @@ class NotificationServiceTests {
   }
 
   @Test
-  fun `must send reallocation email to new officer and email previous officer`() = runBlocking {
+  fun `must send reallocation emails to new officer and email previous officer`() = runBlocking {
     val allocationDetails = getAllocationDetails(allocateCase.crn)
     val firstEmail = "first@justice.gov.uk"
     val secondEmail = "second@justice.gov.uk"
@@ -518,7 +518,7 @@ class NotificationServiceTests {
   }
 
   @Test
-  fun `must send reallocation email to new officer and email previous officer for lao case`() = runBlocking {
+  fun `must send LAO reallocation emails to new officer and email previous officer for lao case`() = runBlocking {
     val allocationDetails = getAllocationDetails(allocateCase.crn)
     val firstEmail = "first@justice.gov.uk"
     val secondEmail = "second@justice.gov.uk"
