@@ -296,21 +296,23 @@ class NotificationService(
       "ogrsLevel" to ogrsLevel,
       "ogrsPercentage" to ogrsPercentage,
     )
-    return if (latestRiskPredictor?.outputVersion == "2")
-      riskParameters.plus(mapOf(
-        "roshLabel" to "Risk of serious harm",
-        "rsrLabel" to "Combined Serious Reoffending Predictor",
-        "ogrsLabel" to "All Reoffending Predictor",
-        )
+    return if (latestRiskPredictor?.outputVersion == "2") {
+      riskParameters.plus(
+        mapOf(
+          "roshLabel" to "Risk of serious harm",
+          "rsrLabel" to "Combined Serious Reoffending Predictor",
+          "ogrsLabel" to "All Reoffending Predictor",
+        ),
       )
-    else
-      riskParameters.plus(mapOf(
-        "roshLabel" to "ROSH",
-        "rsrLabel" to "RSR",
-        "ogrsLabel" to "OGRS",
-        )
+    } else {
+      riskParameters.plus(
+        mapOf(
+          "roshLabel" to "ROSH",
+          "rsrLabel" to "RSR",
+          "ogrsLabel" to "OGRS",
+        ),
       )
-
+    }
   }
 
   private fun mapInductionAppointment(initialAppointment: InitialAppointment?, caseType: CaseType): String {
