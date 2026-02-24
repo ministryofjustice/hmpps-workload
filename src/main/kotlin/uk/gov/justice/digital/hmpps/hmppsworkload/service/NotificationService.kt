@@ -289,13 +289,30 @@ class NotificationService(
     val rosh = riskSummary?.overallRiskLevel?.capitalize() ?: SCORE_UNAVAILABLE
     val ogrsLevel = latestRiskPredictor?.getOGRSScoreLevel()?.capitalize() ?: SCORE_UNAVAILABLE
     val ogrsPercentage = latestRiskPredictor?.getOGRSPercentageScore()?.toString() ?: NOT_APPLICABLE
-    return mapOf(
+    val riskParameters = mapOf(
       "rosh" to rosh,
       "rsrLevel" to rsrLevel,
       "rsrPercentage" to rsrPercentage,
       "ogrsLevel" to ogrsLevel,
       "ogrsPercentage" to ogrsPercentage,
     )
+    return if (latestRiskPredictor?.outputVersion == "2") {
+      riskParameters.plus(
+        mapOf(
+          "roshLabel" to "Risk of serious harm",
+          "rsrLabel" to "Combined Serious Reoffending Predictor",
+          "ogrsLabel" to "All Reoffending Predictor",
+        ),
+      )
+    } else {
+      riskParameters.plus(
+        mapOf(
+          "roshLabel" to "ROSH",
+          "rsrLabel" to "RSR",
+          "ogrsLabel" to "OGRS",
+        ),
+      )
+    }
   }
 
   private fun mapInductionAppointment(initialAppointment: InitialAppointment?, caseType: CaseType): String {

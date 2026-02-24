@@ -332,7 +332,7 @@ class NotificationServiceTests {
   }
 
   @Test
-  fun `must add RSR and OGRS details correctly capitalized when they exists with V1 Risk Predictor Response`() = runBlocking {
+  fun `must add Risk details and labels correctly capitalized when they exists with V1 Risk Predictor Response`() = runBlocking {
     val allocationDetails = getAllocationDetails(allocateCase.crn)
     val riskPredictor = RiskPredictorV1(
       LocalDateTime.now(),
@@ -356,16 +356,19 @@ class NotificationServiceTests {
     Assertions.assertEquals(riskPredictor.getRSRPercentageScore().toString(), parameters.captured.emailParameters["rsrPercentage"])
     Assertions.assertEquals("Low", parameters.captured.emailParameters["ogrsLevel"])
     Assertions.assertEquals(riskPredictor.getOGRSPercentageScore().toString(), parameters.captured.emailParameters["ogrsPercentage"])
+    Assertions.assertEquals("ROSH", parameters.captured.emailParameters["roshLabel"])
+    Assertions.assertEquals("RSR", parameters.captured.emailParameters["rsrLabel"])
+    Assertions.assertEquals("OGRS", parameters.captured.emailParameters["ogrsLabel"])
   }
 
   @Test
-  fun `must add RSR and OGRS details correctly capitalized when they exists with V2 Risk Predictor Response`() = runBlocking {
+  fun `must add Risk details and labels correctly capitalized when they exists with V2 Risk Predictor Response`() = runBlocking {
     val allocationDetails = getAllocationDetails(allocateCase.crn)
     val riskPredictor = RiskPredictorV2(
       LocalDateTime.now(),
       null,
       null,
-      "1",
+      "2",
       RiskPredictorOutputV2(
         AllReoffendingPredictor(null, BigDecimal.TEN, "LOW"),
         null,
@@ -384,6 +387,9 @@ class NotificationServiceTests {
     Assertions.assertEquals(riskPredictor.getRSRPercentageScore().toString(), parameters.captured.emailParameters["rsrPercentage"])
     Assertions.assertEquals("Low", parameters.captured.emailParameters["ogrsLevel"])
     Assertions.assertEquals(riskPredictor.getOGRSPercentageScore().toString(), parameters.captured.emailParameters["ogrsPercentage"])
+    Assertions.assertEquals("Risk of serious harm", parameters.captured.emailParameters["roshLabel"])
+    Assertions.assertEquals("Combined Serious Reoffending Predictor", parameters.captured.emailParameters["rsrLabel"])
+    Assertions.assertEquals("All Reoffending Predictor", parameters.captured.emailParameters["ogrsLabel"])
   }
 
   @Test
