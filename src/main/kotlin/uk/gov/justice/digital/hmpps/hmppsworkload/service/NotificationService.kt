@@ -173,7 +173,7 @@ class NotificationService(
     if (allocateCase.laoCase) {
       templateId = reallocationPreviousTemplateLAOId
       parameters = mapOf(
-        OFFICER_NAME to reallocationDetail.previouslyManagedBy.name.getCombinedName(),
+        PREVIOUS_PRACTITIONER to reallocationDetail.previouslyManagedBy.name.getCombinedName(),
         ALLOCATING_EMAIL to allocationDemandDetails.allocatingStaff.email!!,
         PRACTITIONER_EMAIL to reallocationDetail.previouslyManagedBy.email!!,
       ).plus(getLoggedInUserParameters(allocationDemandDetails.allocatingStaff))

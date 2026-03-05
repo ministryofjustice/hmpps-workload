@@ -451,7 +451,7 @@ class NotificationServiceTests {
   }
 
   @Test
-  fun `must send reallocation email to new  officer and not allocating officer or previous officer`() = runBlocking {
+  fun `must send reallocation email to new officer and not allocating officer or previous officer`() = runBlocking {
     val allocationDetails = getAllocationDetails(allocateCase.crn)
     val firstEmail = "first@justice.gov.uk"
     val secondEmail = "second@justice.gov.uk"
@@ -473,7 +473,7 @@ class NotificationServiceTests {
   }
 
   @Test
-  fun `must send reallocation email to new  officer and email previous officer`() = runBlocking {
+  fun `must send reallocation emails to new officer and email previous officer`() = runBlocking {
     val allocationDetails = getAllocationDetails(allocateCase.crn)
     val firstEmail = "first@justice.gov.uk"
     val secondEmail = "second@justice.gov.uk"
@@ -493,6 +493,42 @@ class NotificationServiceTests {
 
     val emailTo = HashSet<String>(firstNotification.emailTo)
     val emailToPrevious = HashSet<String>(secondNotification.emailTo)
+
+    Assertions.assertEquals(firstNotification.emailTemplate, reallocationTemplateId)
+    Assertions.assertEquals(secondNotification.emailTemplate, reallocationPreviousTemplateId)
+
+    Assertions.assertEquals(emailTo.size, 3)
+    Assertions.assertTrue(emailTo.contains("simulate-delivered@notifications.service.gov.uk"))
+    Assertions.assertFalse(emailTo.contains("simulate-delivered@justice.gov.uk"))
+
+    Assertions.assertEquals(emailToPrevious.size, 1)
+    Assertions.assertTrue(emailToPrevious.contains("reallocatedFrom@notifications.service.gov.uk"))
+  }
+
+  @Test
+  fun `must send LAO reallocation emails to new officer and email previous officer for lao case`() = runBlocking {
+    val allocationDetails = getAllocationDetails(allocateCase.crn)
+    val firstEmail = "first@justice.gov.uk"
+    val secondEmail = "second@justice.gov.uk"
+    val allocateCase = ReallocateCase(
+      "CRN1111", listOf(firstEmail, secondEmail), true, true, "spo notes",
+      laoCase = true, allocationReason = null, nextAppointmentDate = null, lastOasysAssessmentDate = null, failureToComply = null,
+    )
+    val reallocationDetails = ReallocationDetails("Laziness", "never", "tomorrow", "12", getManager(), ArrayList<Requirement>(), ArrayList<OffenceDetails>(), ArrayList<SentenceDetails>())
+    notificationService.notifyReallocation(allocationDetails, allocateCase, Tier.A1.name, reallocationDetails)
+
+    var parameters = mutableListOf<NotificationEmail>()
+
+    coVerify(exactly = 2) { sqsSuccessPublisher.sendNotification(capture(parameters)) }
+
+    val firstNotification = parameters[0]
+    val secondNotification = parameters[1]
+
+    val emailTo = HashSet<String>(firstNotification.emailTo)
+    val emailToPrevious = HashSet<String>(secondNotification.emailTo)
+
+    Assertions.assertEquals(firstNotification.emailTemplate, reallocationTemplateLAOId)
+    Assertions.assertEquals(secondNotification.emailTemplate, reallocationPreviousTemplateLAOId)
 
     Assertions.assertEquals(emailTo.size, 3)
     Assertions.assertTrue(emailTo.contains("simulate-delivered@notifications.service.gov.uk"))
