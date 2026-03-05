@@ -25,7 +25,6 @@ import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.OffenceDetails
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.OfficerView
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.ReallocationDetails
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.Requirement
-import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.RiskOGRS
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.SentenceDetails
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.StaffMember
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.AllocateCase
@@ -108,7 +107,6 @@ class DefaultSaveWorkloadServiceTest {
       val allocationDemandDetails = AllocationDemandDetails(
         crn, name, staffMember, allocatingStaffMember,
         InitialAppointment(date = LocalDate.now()),
-        RiskOGRS(LocalDate.now(), 10),
         sentence, court, offences, requirements,
       )
       coEvery { workforceAllocationsToDeliusApiClient.allocationDetails(crn, eventNumber, STAFF_CODE, loggedInUser) } returns
@@ -193,7 +191,6 @@ class DefaultSaveWorkloadServiceTest {
       val allocationDemandDetails = AllocationDemandDetails(
         crn, name, staffMember, allocatingStaffMember,
         InitialAppointment(date = LocalDate.now()),
-        RiskOGRS(LocalDate.now(), 10),
         sentence, court, offences, requirements,
       )
 

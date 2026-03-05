@@ -9,7 +9,7 @@ import org.springframework.core.ParameterizedTypeReference
 import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.client.WebClient
 import reactor.core.publisher.Mono
-import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.RiskPredictor
+import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.RiskPredictorNew
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.RiskSummary
 
 const val TIMEOUT_VALUE = 3000L
@@ -37,13 +37,13 @@ class AssessRisksNeedsApiClient(@Qualifier("assessRisksNeedsClientUserEnhancedAp
     }
   }
 
-  suspend fun getRiskPredictors(crn: String): List<RiskPredictor> {
-    val responseType = object : ParameterizedTypeReference<List<RiskPredictor>>() {}
+  suspend fun getRiskPredictors(crn: String): List<RiskPredictorNew<Any>> {
+    val responseType = object : ParameterizedTypeReference<List<RiskPredictorNew<Any>>>() {}
     try {
       return withTimeout(TIMEOUT_VALUE) {
         webClient
           .get()
-          .uri("/risks/crn/{crn}/predictors/rsr/history", crn)
+          .uri("/risks/predictors/all/crn/{crn}", crn)
           .retrieve()
           .bodyToMono(responseType)
           .retry(1)
