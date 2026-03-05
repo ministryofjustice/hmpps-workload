@@ -387,7 +387,7 @@ class NotificationServiceTests {
     Assertions.assertEquals(riskPredictor.getRSRPercentageScore().toString(), parameters.captured.emailParameters["rsrPercentage"])
     Assertions.assertEquals("Low", parameters.captured.emailParameters["ogrsLevel"])
     Assertions.assertEquals(riskPredictor.getOGRSPercentageScore().toString(), parameters.captured.emailParameters["ogrsPercentage"])
-    Assertions.assertEquals("Risk of serious harm", parameters.captured.emailParameters["roshLabel"])
+    Assertions.assertEquals("Risk of Serious Harm", parameters.captured.emailParameters["roshLabel"])
     Assertions.assertEquals("Combined Serious Reoffending Predictor", parameters.captured.emailParameters["rsrLabel"])
     Assertions.assertEquals("All Reoffending Predictor", parameters.captured.emailParameters["ogrsLabel"])
   }
