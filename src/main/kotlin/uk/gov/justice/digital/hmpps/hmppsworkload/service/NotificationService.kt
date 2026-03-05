@@ -299,7 +299,7 @@ class NotificationService(
     return if (latestRiskPredictor?.outputVersion == "2") {
       riskParameters.plus(
         mapOf(
-          "roshLabel" to "Risk of serious harm",
+          "roshLabel" to "Risk of Serious Harm",
           "rsrLabel" to "Combined Serious Reoffending Predictor",
           "ogrsLabel" to "All Reoffending Predictor",
         ),
