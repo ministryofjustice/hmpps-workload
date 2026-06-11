@@ -44,20 +44,22 @@ data class PractitionerWithRawWorkloadPoints(
   val email: String?,
   val grade: String,
   val workload: BigDecimal,
-  val casesPastWeek: Int,
+  val allocatedCasesPastWeek: Int,
+  val reallocatedCasesPastWeek: Int,
   val communityCases: Int,
   val custodyCases: Int,
   val availablePoints: BigInteger,
   val totalPoints: BigInteger,
 ) {
   companion object {
-    fun from(staffMember: StaffMember, practitionerWorkload: TeamOverview, caseCount: Int): PractitionerWithRawWorkloadPoints = PractitionerWithRawWorkloadPoints(
+    fun from(staffMember: StaffMember, practitionerWorkload: TeamOverview, allocatedCaseCount: Int, reallocatedCaseCount: Int): PractitionerWithRawWorkloadPoints = PractitionerWithRawWorkloadPoints(
       staffMember.code,
       staffMember.name,
       staffMember.email.takeUnless { email -> email.isNullOrBlank() },
       staffMember.getGrade(),
       calculateCapacity(practitionerWorkload.totalPoints, practitionerWorkload.availablePoints),
-      caseCount,
+      allocatedCaseCount,
+      reallocatedCaseCount,
       practitionerWorkload.totalCommunityCases,
       practitionerWorkload.totalCustodyCases,
       practitionerWorkload.availablePoints,
@@ -72,18 +74,20 @@ data class Practitioner constructor(
   val email: String?,
   val grade: String,
   val workload: BigDecimal,
-  val casesPastWeek: Int,
+  val allocatedCasesPastWeek: Int,
+  val reallocatedCasesPastWeek: Int,
   val communityCases: Int,
   val custodyCases: Int,
 ) {
   companion object {
-    fun from(staffMember: StaffMember, practitionerWorkload: TeamOverview, caseCount: Int): Practitioner = Practitioner(
+    fun from(staffMember: StaffMember, practitionerWorkload: TeamOverview, allocatedCaseCount: Int, reallocatedCaseCount: Int): Practitioner = Practitioner(
       staffMember.code,
       staffMember.name,
       staffMember.email.takeUnless { email -> email.isNullOrBlank() },
       staffMember.getGrade(),
       calculateCapacity(practitionerWorkload.totalPoints, practitionerWorkload.availablePoints),
-      caseCount,
+      allocatedCaseCount,
+      reallocatedCaseCount,
       practitionerWorkload.totalCommunityCases,
       practitionerWorkload.totalCustodyCases,
     )

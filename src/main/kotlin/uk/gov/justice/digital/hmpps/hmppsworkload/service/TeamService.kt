@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.WorkforceAllocationsToDeliusApiClient
+import uk.gov.justice.digital.hmpps.hmppsworkload.domain.AllocationReason
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.Practitioner
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.PractitionerWithRawWorkloadPoints
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.PractitionerWorkload
@@ -38,7 +39,13 @@ class TeamService(
     return workforceAllocationsToDeliusApiClient.choosePractitioners(crn, teamCodes)?.let { choosePractitionerResponse ->
       val practitionerWorkloads = teamRepository.findAllByTeamCodes(teamCodes).associateBy { teamStaffId(it.teamCode, it.staffCode) }
       val caseCountAfter = LocalDate.now().atStartOfDay(ZoneId.systemDefault()).minusDays(CASE_COUNT_PERIOD_DAYS)
-      val practitionerCaseCounts = personManagerRepository.findByTeamCodeInAndCreatedDateGreaterThanEqualAndIsActiveIsTrue(teamCodes, caseCountAfter)
+      val practitionerAllocationCaseCounts = personManagerRepository.findByTeamCodeInAndCreatedDateGreaterThanEqualAndIsActiveIsTrue(teamCodes, caseCountAfter)
+        .filter { it.allocationReason == AllocationReason.INITIAL_ALLOCATION }
+        .groupBy { teamStaffId(it.teamCode, it.staffCode) }
+        .mapValues { countEntry -> countEntry.value.size }
+
+      val practitionerReallocationCaseCounts = personManagerRepository.findByTeamCodeInAndCreatedDateGreaterThanEqualAndIsActiveIsTrue(teamCodes, caseCountAfter)
+        .filter { it.allocationReason != AllocationReason.INITIAL_ALLOCATION }
         .groupBy { teamStaffId(it.teamCode, it.staffCode) }
         .mapValues { countEntry -> countEntry.value.size }
 
@@ -49,7 +56,12 @@ class TeamService(
             val teamStaffId = teamStaffId(team.key, it.code)
             val practitionerWorkload = practitionerWorkloads[teamStaffId]
               ?: getTeamOverviewForOffenderManagerWithoutWorkload(it.code, it.getGrade(), team.key)
-            Practitioner.from(it, practitionerWorkload, practitionerCaseCounts.getOrDefault(teamStaffId, 0))
+            Practitioner.from(
+              it,
+              practitionerWorkload,
+              practitionerAllocationCaseCounts.getOrDefault(teamStaffId, 0),
+              practitionerReallocationCaseCounts.getOrDefault(teamStaffId, 0),
+            )
           }
       }
 
@@ -91,11 +103,19 @@ class TeamService(
     return workforceAllocationsToDeliusApiClient.choosePractitioners(teamCodes)?.let { choosePractitionerResponse ->
       val practitionerWorkloads = teamRepository.findAllByTeamCodes(teamCodes).associateBy { it.staffCode }
       val caseCountAfter = LocalDate.now().atStartOfDay(ZoneId.systemDefault()).minusDays(CASE_COUNT_PERIOD_DAYS)
-      val practitionerCaseCounts = personManagerRepository.findByTeamCodeInAndCreatedDateGreaterThanEqualAndIsActiveIsTrue(teamCodes, caseCountAfter)
+      val practitionerAllocationCaseCounts = personManagerRepository.findByTeamCodeInAndCreatedDateGreaterThanEqualAndIsActiveIsTrue(teamCodes, caseCountAfter)
+        .filter { it.allocationReason == AllocationReason.INITIAL_ALLOCATION }
         .groupBy { it.staffCode }
         .mapValues { countEntry -> countEntry.value.size }
+
+      val practitionerReallocationCaseCounts = personManagerRepository.findByTeamCodeInAndCreatedDateGreaterThanEqualAndIsActiveIsTrue(teamCodes, caseCountAfter)
+        .filter { it.allocationReason != AllocationReason.INITIAL_ALLOCATION }
+        .groupBy { it.staffCode }
+        .mapValues { countEntry -> countEntry.value.size }
+
       log.info("Practitioner Workloads: $practitionerWorkloads")
-      log.info("Practitioner Case Counts: $practitionerCaseCounts")
+      log.info("Practitioner Allocation Case Counts: $practitionerAllocationCaseCounts")
+      log.info("Practitioner Reallocation Case Counts: $practitionerReallocationCaseCounts")
 
       return choosePractitionerResponse.teams.mapValues { team ->
         team.value.map {
@@ -104,7 +124,12 @@ class TeamService(
           log.info("Practitioner Workload: ${practitionerWorkloads[teamStaffId]}")
           val practitionerWorkload = practitionerWorkloads[teamStaffId]
             ?: getTeamOverviewForOffenderManagerWithoutWorkload(it.code, it.retrieveGrade(), team.key)
-          PractitionerWithRawWorkloadPoints.from(it, practitionerWorkload, practitionerCaseCounts.getOrDefault(teamStaffId, 0))
+          PractitionerWithRawWorkloadPoints.from(
+            it,
+            practitionerWorkload,
+            practitionerAllocationCaseCounts.getOrDefault(teamStaffId, 0),
+            practitionerReallocationCaseCounts.getOrDefault(teamStaffId, 0),
+          )
         }
       }
     }
