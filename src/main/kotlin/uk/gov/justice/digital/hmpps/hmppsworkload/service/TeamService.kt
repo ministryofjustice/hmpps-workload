@@ -98,8 +98,8 @@ class TeamService(
     return workforceAllocationsToDeliusApiClient.choosePractitioners(teamCodes)?.let { choosePractitionerResponse ->
       val practitionerWorkloads = teamRepository.findAllByTeamCodes(teamCodes).associateBy { it.staffCode }
       val caseCountAfter = LocalDate.now().atStartOfDay(ZoneId.systemDefault()).minusDays(CASE_COUNT_PERIOD_DAYS)
-      val practitionerAllocationCaseCounts = getPractitionerAllocationCaseCounts(teamCodes, caseCountAfter)
-      val practitionerReallocationCaseCounts = getPractitionerReallocationCaseCounts(teamCodes, caseCountAfter)
+      val practitionerAllocationCaseCounts = getPractitionerAllocationCaseCountsTeamCodeOnly(teamCodes, caseCountAfter)
+      val practitionerReallocationCaseCounts = getPractitionerReallocationCaseCountsTeamCodeOnly(teamCodes, caseCountAfter)
 
       log.info("Practitioner Workloads: $practitionerWorkloads")
       log.info("Practitioner Allocation Case Counts: $practitionerAllocationCaseCounts")
@@ -125,10 +125,20 @@ class TeamService(
 
   suspend fun getPractitionerAllocationCaseCounts(teamCodes: List<String>, caseCountAfter: ZonedDateTime): Map<String, Int> = personManagerRepository.findByTeamCodeInAndCreatedDateGreaterThanEqualAndIsActiveIsTrue(teamCodes, caseCountAfter)
     .filter { it.allocationReason == AllocationReason.INITIAL_ALLOCATION }
-    .groupBy { it.staffCode }
+    .groupBy { teamStaffId(it.teamCode, it.staffCode) }
     .mapValues { countEntry -> countEntry.value.size }
 
   suspend fun getPractitionerReallocationCaseCounts(teamCodes: List<String>, caseCountAfter: ZonedDateTime): Map<String, Int> = personManagerRepository.findByTeamCodeInAndCreatedDateGreaterThanEqualAndIsActiveIsTrue(teamCodes, caseCountAfter)
+    .filter { it.allocationReason != AllocationReason.INITIAL_ALLOCATION }
+    .groupBy { teamStaffId(it.teamCode, it.staffCode) }
+    .mapValues { countEntry -> countEntry.value.size }
+
+  suspend fun getPractitionerAllocationCaseCountsTeamCodeOnly(teamCodes: List<String>, caseCountAfter: ZonedDateTime): Map<String, Int> = personManagerRepository.findByTeamCodeInAndCreatedDateGreaterThanEqualAndIsActiveIsTrue(teamCodes, caseCountAfter)
+    .filter { it.allocationReason == AllocationReason.INITIAL_ALLOCATION }
+    .groupBy { it.staffCode }
+    .mapValues { countEntry -> countEntry.value.size }
+
+  suspend fun getPractitionerReallocationCaseCountsTeamCodeOnly(teamCodes: List<String>, caseCountAfter: ZonedDateTime): Map<String, Int> = personManagerRepository.findByTeamCodeInAndCreatedDateGreaterThanEqualAndIsActiveIsTrue(teamCodes, caseCountAfter)
     .filter { it.allocationReason != AllocationReason.INITIAL_ALLOCATION }
     .groupBy { it.staffCode }
     .mapValues { countEntry -> countEntry.value.size }
