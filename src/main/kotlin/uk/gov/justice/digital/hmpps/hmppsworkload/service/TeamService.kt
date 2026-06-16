@@ -19,6 +19,7 @@ import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.WorkloadPointsR
 import java.math.BigInteger
 import java.time.LocalDate
 import java.time.ZoneId
+import java.time.ZonedDateTime
 
 private const val CASE_COUNT_PERIOD_DAYS = 7L
 
@@ -39,15 +40,8 @@ class TeamService(
     return workforceAllocationsToDeliusApiClient.choosePractitioners(crn, teamCodes)?.let { choosePractitionerResponse ->
       val practitionerWorkloads = teamRepository.findAllByTeamCodes(teamCodes).associateBy { teamStaffId(it.teamCode, it.staffCode) }
       val caseCountAfter = LocalDate.now().atStartOfDay(ZoneId.systemDefault()).minusDays(CASE_COUNT_PERIOD_DAYS)
-      val practitionerAllocationCaseCounts = personManagerRepository.findByTeamCodeInAndCreatedDateGreaterThanEqualAndIsActiveIsTrue(teamCodes, caseCountAfter)
-        .filter { it.allocationReason == AllocationReason.INITIAL_ALLOCATION }
-        .groupBy { teamStaffId(it.teamCode, it.staffCode) }
-        .mapValues { countEntry -> countEntry.value.size }
-
-      val practitionerReallocationCaseCounts = personManagerRepository.findByTeamCodeInAndCreatedDateGreaterThanEqualAndIsActiveIsTrue(teamCodes, caseCountAfter)
-        .filter { it.allocationReason != AllocationReason.INITIAL_ALLOCATION }
-        .groupBy { teamStaffId(it.teamCode, it.staffCode) }
-        .mapValues { countEntry -> countEntry.value.size }
+      val practitionerAllocationCaseCounts = getPractitionerAllocationCaseCounts(teamCodes, caseCountAfter)
+      val practitionerReallocationCaseCounts = getPractitionerReallocationCaseCounts(teamCodes, caseCountAfter)
 
       val enrichedTeams = choosePractitionerResponse.teams.mapValues { team ->
         team.value
@@ -88,6 +82,7 @@ class TeamService(
   ): TeamOverview = TeamOverview(
     0,
     0,
+    0,
     defaultAvailablePointsForGrade(grade ?: "PO"),
     BigInteger.ZERO,
     staffCode,
@@ -103,15 +98,8 @@ class TeamService(
     return workforceAllocationsToDeliusApiClient.choosePractitioners(teamCodes)?.let { choosePractitionerResponse ->
       val practitionerWorkloads = teamRepository.findAllByTeamCodes(teamCodes).associateBy { it.staffCode }
       val caseCountAfter = LocalDate.now().atStartOfDay(ZoneId.systemDefault()).minusDays(CASE_COUNT_PERIOD_DAYS)
-      val practitionerAllocationCaseCounts = personManagerRepository.findByTeamCodeInAndCreatedDateGreaterThanEqualAndIsActiveIsTrue(teamCodes, caseCountAfter)
-        .filter { it.allocationReason == AllocationReason.INITIAL_ALLOCATION }
-        .groupBy { it.staffCode }
-        .mapValues { countEntry -> countEntry.value.size }
-
-      val practitionerReallocationCaseCounts = personManagerRepository.findByTeamCodeInAndCreatedDateGreaterThanEqualAndIsActiveIsTrue(teamCodes, caseCountAfter)
-        .filter { it.allocationReason != AllocationReason.INITIAL_ALLOCATION }
-        .groupBy { it.staffCode }
-        .mapValues { countEntry -> countEntry.value.size }
+      val practitionerAllocationCaseCounts = getPractitionerAllocationCaseCounts(teamCodes, caseCountAfter)
+      val practitionerReallocationCaseCounts = getPractitionerReallocationCaseCounts(teamCodes, caseCountAfter)
 
       log.info("Practitioner Workloads: $practitionerWorkloads")
       log.info("Practitioner Allocation Case Counts: $practitionerAllocationCaseCounts")
@@ -134,4 +122,14 @@ class TeamService(
       }
     }
   }
+
+  suspend fun getPractitionerAllocationCaseCounts(teamCodes: List<String>, caseCountAfter: ZonedDateTime): Map<String, Int> = personManagerRepository.findByTeamCodeInAndCreatedDateGreaterThanEqualAndIsActiveIsTrue(teamCodes, caseCountAfter)
+    .filter { it.allocationReason == AllocationReason.INITIAL_ALLOCATION }
+    .groupBy { it.staffCode }
+    .mapValues { countEntry -> countEntry.value.size }
+
+  suspend fun getPractitionerReallocationCaseCounts(teamCodes: List<String>, caseCountAfter: ZonedDateTime): Map<String, Int> = personManagerRepository.findByTeamCodeInAndCreatedDateGreaterThanEqualAndIsActiveIsTrue(teamCodes, caseCountAfter)
+    .filter { it.allocationReason != AllocationReason.INITIAL_ALLOCATION }
+    .groupBy { it.staffCode }
+    .mapValues { countEntry -> countEntry.value.size }
 }

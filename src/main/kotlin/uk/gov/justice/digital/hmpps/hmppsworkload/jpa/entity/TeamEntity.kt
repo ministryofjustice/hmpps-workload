@@ -23,6 +23,7 @@ import java.math.BigInteger
       targetClass = TeamOverview::class,
       columns = [
         ColumnResult(name = "totalCommunityCases", type = Int::class),
+        ColumnResult(name = "totalLicenseCases", type = Int::class),
         ColumnResult(name = "totalCustodyCases", type = Int::class),
         ColumnResult(name = "availablePoints", type = BigInteger::class),
         ColumnResult(name = "totalPoints", type = BigInteger::class),
@@ -36,7 +37,7 @@ import java.math.BigInteger
   name = "TeamEntity.findAllByTeamCodes",
   resultSetMapping = "TeamOverviewResult",
   query = """SELECT
-    (w.total_filtered_community_cases + w.total_filtered_license_cases) as totalCommunityCases, w.total_filtered_custody_cases as totalCustodyCases , wpc.available_points AS availablePoints, wpc.total_points AS totalPoints, om."key" as staffCode, t.code as teamCode
+    w.total_filtered_community_cases as totalCommunityCases, w.total_filtered_license_cases as totalLicenseCases, w.total_filtered_custody_cases as totalCustodyCases , wpc.available_points AS availablePoints, wpc.total_points AS totalPoints, om."key" as staffCode, t.code as teamCode
     FROM app.workload_owner AS wo
     JOIN app.team AS t
         ON wo.team_id = t.id

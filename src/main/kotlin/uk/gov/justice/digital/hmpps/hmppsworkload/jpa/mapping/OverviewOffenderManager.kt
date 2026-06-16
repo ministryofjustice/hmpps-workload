@@ -9,6 +9,7 @@ import java.time.ZonedDateTime
 
 data class OverviewOffenderManager(
   val totalCommunityCases: Long,
+  val totalLicenseCases: Long,
   val totalCustodyCases: Long,
   val availablePoints: BigInteger,
   val totalPoints: BigInteger,

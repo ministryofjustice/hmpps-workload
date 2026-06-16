@@ -22,6 +22,7 @@ import java.time.LocalDateTime
       targetClass = OverviewOffenderManager::class,
       columns = [
         ColumnResult(name = "totalCommunityCases", type = Long::class),
+        ColumnResult(name = "totalLicenseCases", type = Long::class),
         ColumnResult(name = "totalCustodyCases", type = Long::class),
         ColumnResult(name = "availablePoints", type = BigInteger::class),
         ColumnResult(name = "totalPoints", type = BigInteger::class),
@@ -81,7 +82,7 @@ import java.time.LocalDateTime
   name = "OffenderManagerEntity.findByOverview",
   resultSetMapping = "OffenderManagerOverviewResult",
   query = """SELECT
-    (w.total_filtered_community_cases + w.total_filtered_license_cases) as totalCommunityCases, w.total_filtered_custody_cases as totalCustodyCases , wpc.available_points AS availablePoints, wpc.total_points AS totalPoints, om."key" as code, wpc.last_updated_on as lastUpdatedOn, wo.id as workloadOwnerId, w.paroms_due_next_30_days as paroleReportsDue
+    w.total_filtered_community_cases  as totalCommunityCases,  w.total_filtered_license_cases as totalLicenseCases, w.total_filtered_custody_cases as totalCustodyCases , wpc.available_points AS availablePoints, wpc.total_points AS totalPoints, om."key" as code, wpc.last_updated_on as lastUpdatedOn, wo.id as workloadOwnerId, w.paroms_due_next_30_days as paroleReportsDue
     FROM app.workload_owner AS wo
     JOIN app.team AS t
         ON wo.team_id = t.id

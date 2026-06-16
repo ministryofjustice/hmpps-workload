@@ -60,7 +60,7 @@ class GetOffenderManagerService(
     val availablePoints = workloadPoints.getDefaultPointsAvailable(grade)
     val defaultContractedHours = workloadPoints.getDefaultContractedHours(grade)
 
-    val overview = OverviewOffenderManager(0, 0, availablePoints.toBigInteger(), BigInteger.ZERO, staffCode, LocalDateTime.now(), -1, BigInteger.ZERO)
+    val overview = OverviewOffenderManager(0, 0, 0, availablePoints.toBigInteger(), BigInteger.ZERO, staffCode, LocalDateTime.now(), -1, BigInteger.ZERO)
     overview.capacity = calculateCapacity(overview.totalPoints, overview.availablePoints)
     overview.contractedHours = defaultContractedHours
     return overview

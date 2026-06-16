@@ -47,6 +47,7 @@ data class PractitionerWithRawWorkloadPoints(
   val allocatedCasesPastWeek: Int,
   val reallocatedCasesPastWeek: Int,
   val communityCases: Int,
+  val licenseCases: Int,
   val custodyCases: Int,
   val availablePoints: BigInteger,
   val totalPoints: BigInteger,
@@ -61,6 +62,7 @@ data class PractitionerWithRawWorkloadPoints(
       allocatedCaseCount,
       reallocatedCaseCount,
       practitionerWorkload.totalCommunityCases,
+      practitionerWorkload.totalLicenseCases,
       practitionerWorkload.totalCustodyCases,
       practitionerWorkload.availablePoints,
       practitionerWorkload.totalPoints,
@@ -77,6 +79,7 @@ data class Practitioner constructor(
   val allocatedCasesPastWeek: Int,
   val reallocatedCasesPastWeek: Int,
   val communityCases: Int,
+  val licenseCases: Int,
   val custodyCases: Int,
 ) {
   companion object {
@@ -89,6 +92,7 @@ data class Practitioner constructor(
       allocatedCaseCount,
       reallocatedCaseCount,
       practitionerWorkload.totalCommunityCases,
+      practitionerWorkload.totalLicenseCases,
       practitionerWorkload.totalCustodyCases,
     )
   }

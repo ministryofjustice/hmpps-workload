@@ -4,6 +4,7 @@ import java.math.BigInteger
 
 data class TeamOverview(
   val totalCommunityCases: Int,
+  val totalLicenseCases: Int,
   val totalCustodyCases: Int,
   val availablePoints: BigInteger,
   val totalPoints: BigInteger,
