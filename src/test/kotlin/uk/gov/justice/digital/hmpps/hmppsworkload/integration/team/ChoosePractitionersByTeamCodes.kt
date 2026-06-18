@@ -89,6 +89,8 @@ class ChoosePractitionersByTeamCodes : IntegrationTestBase() {
       .isEqualTo(5)
       .jsonPath("$.teams.$teamCode[?(@.code == '$firstOm')].custodyCases")
       .isEqualTo(20)
+      .jsonPath("$.teams.$teamCode[?(@.code == '$firstOm')].tierCaseTotals.a")
+      .isEqualTo(0)
       .jsonPath("$.teams.$teamCode[?(@.code == '$noWorkloadStaffCode')].name.forename")
       .isEqualTo("No")
       .jsonPath("$.teams.$teamCode[?(@.code == '$noWorkloadStaffCode')].name.surname")
@@ -193,6 +195,8 @@ class ChoosePractitionersByTeamCodes : IntegrationTestBase() {
       .isEqualTo(5)
       .jsonPath("$.teams.$teamCode[?(@.code == '$firstOm')].custodyCases")
       .isEqualTo(20)
+      .jsonPath("$.teams.$teamCode[?(@.code == '$firstOm')].tierCaseTotals.a")
+      .isEqualTo(0)
       .jsonPath("$.teams.$teamCode[?(@.code == '$noWorkloadStaffCode')].name.forename")
       .isEqualTo("No")
       .jsonPath("$.teams.$teamCode[?(@.code == '$noWorkloadStaffCode')].name.surname")
@@ -261,6 +265,8 @@ class ChoosePractitionersByTeamCodes : IntegrationTestBase() {
       .isEqualTo(5)
       .jsonPath("$.$teamCode.teams[?(@.code == '$firstOm')].custodyCases")
       .isEqualTo(20)
+      .jsonPath("$.$teamCode.teams[?(@.code == '$firstOm')].tierCaseTotals.a")
+      .isEqualTo(0)
   }
 
   @Test

@@ -118,11 +118,13 @@ class TeamService(
           log.info("Practitioner Workload: ${practitionerWorkloads[teamStaffId]}")
           val practitionerWorkload = practitionerWorkloads[teamStaffId]
             ?: getTeamOverviewForOffenderManagerWithoutWorkload(it.code, it.retrieveGrade(), team.key)
+          val tierCaseTotals = getCaseTierTotals(it.code, team.key)
           PractitionerWithRawWorkloadPoints.from(
             it,
             practitionerWorkload,
             practitionerAllocationCaseCounts.getOrDefault(teamStaffId, 0),
             practitionerReallocationCaseCounts.getOrDefault(teamStaffId, 0),
+            tierCaseTotals,
           )
         }
       }
