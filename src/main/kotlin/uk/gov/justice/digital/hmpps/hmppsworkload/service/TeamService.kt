@@ -10,12 +10,15 @@ import uk.gov.justice.digital.hmpps.hmppsworkload.domain.AllocationReason
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.Practitioner
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.PractitionerWithRawWorkloadPoints
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.PractitionerWorkload
+import uk.gov.justice.digital.hmpps.hmppsworkload.domain.TierCaseTotals
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.WorkloadCase
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.mapping.TeamOverview
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.CaseDetailsRepository
+import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.OffenderManagerRepository
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.PersonManagerRepository
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.TeamRepository
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.WorkloadPointsRepository
+import java.math.BigDecimal
 import java.math.BigInteger
 import java.time.LocalDate
 import java.time.ZoneId
@@ -29,6 +32,7 @@ class TeamService(
   private val workloadPointsRepository: WorkloadPointsRepository,
   private val personManagerRepository: PersonManagerRepository,
   private val caseDetailsRepository: CaseDetailsRepository,
+  private val offenderManagerRepository: OffenderManagerRepository,
   private val workforceAllocationsToDeliusApiClient: WorkforceAllocationsToDeliusApiClient,
 ) {
 
@@ -50,11 +54,13 @@ class TeamService(
             val teamStaffId = teamStaffId(team.key, it.code)
             val practitionerWorkload = practitionerWorkloads[teamStaffId]
               ?: getTeamOverviewForOffenderManagerWithoutWorkload(it.code, it.getGrade(), team.key)
+            val tierCaseTotals = getCaseTierTotals(it.code, team.key)
             Practitioner.from(
               it,
               practitionerWorkload,
               practitionerAllocationCaseCounts.getOrDefault(teamStaffId, 0),
               practitionerReallocationCaseCounts.getOrDefault(teamStaffId, 0),
+              tierCaseTotals,
             )
           }
       }
@@ -142,4 +148,19 @@ class TeamService(
     .filter { it.allocationReason != AllocationReason.INITIAL_ALLOCATION }
     .groupBy { it.staffCode }
     .mapValues { countEntry -> countEntry.value.size }
+
+  suspend fun getCaseTierTotals(staffCode: String, teamCode: String): TierCaseTotals? {
+    val overview = offenderManagerRepository.findByOverview(teamCode, staffCode)
+    if (overview?.hasWorkload ?: false) {
+      offenderManagerRepository.findByCaseloadTotals(overview.workloadOwnerId).let { totals ->
+        overview.tierCaseTotals = totals.map { total ->
+          TierCaseTotals(total.getATotal(), total.getBTotal(), total.getCTotal(), total.getDTotal(), total.getASTotal(), total.getBSTotal(), total.getCSTotal(), total.getDSTotal(), total.untiered)
+        }
+          .fold(TierCaseTotals(BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO)) { first, second -> TierCaseTotals(first.A.add(second.A), first.B.add(second.B), first.C.add(second.C), first.D.add(second.D), first.AS.add(second.AS), first.BS.add(second.BS), first.CS.add(second.CS), first.DS.add(second.DS), first.untiered.add(second.untiered)) }
+      }
+      return overview.tierCaseTotals
+    } else {
+      return TierCaseTotals(BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO)
+    }
+  }
 }
