@@ -81,9 +81,10 @@ data class Practitioner constructor(
   val communityCases: Int,
   val licenseCases: Int,
   val custodyCases: Int,
+  val tierCaseTotals: TierCaseTotals?,
 ) {
   companion object {
-    fun from(staffMember: StaffMember, practitionerWorkload: TeamOverview, allocatedCaseCount: Int, reallocatedCaseCount: Int): Practitioner = Practitioner(
+    fun from(staffMember: StaffMember, practitionerWorkload: TeamOverview, allocatedCaseCount: Int, reallocatedCaseCount: Int, tierCaseTotals: TierCaseTotals?): Practitioner = Practitioner(
       staffMember.code,
       staffMember.name,
       staffMember.email.takeUnless { email -> email.isNullOrBlank() },
@@ -94,6 +95,7 @@ data class Practitioner constructor(
       practitionerWorkload.totalCommunityCases,
       practitionerWorkload.totalLicenseCases,
       practitionerWorkload.totalCustodyCases,
+      tierCaseTotals,
     )
   }
 }
