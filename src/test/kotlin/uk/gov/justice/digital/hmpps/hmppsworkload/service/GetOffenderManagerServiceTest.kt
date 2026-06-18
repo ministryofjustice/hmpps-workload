@@ -68,6 +68,7 @@ class GetOffenderManagerServiceTest {
     val staffIdentifier = StaffIdentifier(STAFF_CODE, STAFF_TEAM_CODE)
     val staffMember = StaffMember(OFFICER_CODE, name, OFFICER_EMAIL, OFFICER_GRADE)
     val communityCases = 1L
+    val licenseCases = 0L
     val custodyCases = 2L
     val availablePoints = 102L
     val totalPoints = BigInteger.valueOf(15)
@@ -76,6 +77,7 @@ class GetOffenderManagerServiceTest {
     coEvery { caseDetailsRepository.findByIdOrNull(crn) } returns CaseDetailsEntity(crn, Tier.A1, CaseType.CUSTODY, "John", "Smith")
     coEvery { offenderManagerRepository.findByOverview(STAFF_TEAM_CODE, STAFF_CODE) } returns OverviewOffenderManager(
       communityCases,
+      licenseCases,
       custodyCases,
       BigInteger.valueOf(availablePoints),
       totalPoints,
@@ -105,6 +107,7 @@ class GetOffenderManagerServiceTest {
     val workWeekHours = BigDecimal.valueOf(40)
     val totalPoints = BigInteger.valueOf(15)
     val communityCases = 1L
+    val licenseCases = 0L
     val custodyCases = 2L
     val availablePoints = 102L
     val caseLoadTotals = listOf(
@@ -144,6 +147,7 @@ class GetOffenderManagerServiceTest {
     coEvery { caseDetailsRepository.findByIdOrNull(crn) } returns CaseDetailsEntity(crn, Tier.A1, CaseType.CUSTODY, "John", "Smith")
     coEvery { offenderManagerRepository.findByOverview(STAFF_TEAM_CODE, STAFF_CODE) } returns OverviewOffenderManager(
       communityCases,
+      licenseCases,
       custodyCases,
       BigInteger.valueOf(availablePoints),
       totalPoints,

@@ -55,7 +55,7 @@ data class OffenderManagerOverview @JsonCreator constructor(
       overviewOffenderManager.capacity,
       overviewOffenderManager.code,
       officerView.email,
-      overviewOffenderManager.totalCommunityCases.plus(overviewOffenderManager.totalCustodyCases),
+      overviewOffenderManager.totalCommunityCases.plus(overviewOffenderManager.totalLicenseCases).plus(overviewOffenderManager.totalCustodyCases),
       overviewOffenderManager.contractedHours,
       overviewOffenderManager.reductionHours,
       overviewOffenderManager.availablePoints,

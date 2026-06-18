@@ -45,23 +45,31 @@ data class PractitionerWithRawWorkloadPoints(
   val grade: String,
   val workload: BigDecimal,
   val casesPastWeek: Int,
+  val allocatedCasesPastWeek: Int,
+  val reallocatedCasesPastWeek: Int,
   val communityCases: Int,
+  val licenseCases: Int,
   val custodyCases: Int,
   val availablePoints: BigInteger,
   val totalPoints: BigInteger,
+  val tierCaseTotals: TierCaseTotals?,
 ) {
   companion object {
-    fun from(staffMember: StaffMember, practitionerWorkload: TeamOverview, caseCount: Int): PractitionerWithRawWorkloadPoints = PractitionerWithRawWorkloadPoints(
+    fun from(staffMember: StaffMember, practitionerWorkload: TeamOverview, allocatedCaseCount: Int, reallocatedCaseCount: Int, tierCaseTotals: TierCaseTotals?): PractitionerWithRawWorkloadPoints = PractitionerWithRawWorkloadPoints(
       staffMember.code,
       staffMember.name,
       staffMember.email.takeUnless { email -> email.isNullOrBlank() },
       staffMember.getGrade(),
       calculateCapacity(practitionerWorkload.totalPoints, practitionerWorkload.availablePoints),
-      caseCount,
+      allocatedCaseCount + reallocatedCaseCount,
+      allocatedCaseCount,
+      reallocatedCaseCount,
       practitionerWorkload.totalCommunityCases,
+      practitionerWorkload.totalLicenseCases,
       practitionerWorkload.totalCustodyCases,
       practitionerWorkload.availablePoints,
       practitionerWorkload.totalPoints,
+      tierCaseTotals,
     )
   }
 }
@@ -73,19 +81,27 @@ data class Practitioner constructor(
   val grade: String,
   val workload: BigDecimal,
   val casesPastWeek: Int,
+  val allocatedCasesPastWeek: Int,
+  val reallocatedCasesPastWeek: Int,
   val communityCases: Int,
+  val licenseCases: Int,
   val custodyCases: Int,
+  val tierCaseTotals: TierCaseTotals?,
 ) {
   companion object {
-    fun from(staffMember: StaffMember, practitionerWorkload: TeamOverview, caseCount: Int): Practitioner = Practitioner(
+    fun from(staffMember: StaffMember, practitionerWorkload: TeamOverview, allocatedCaseCount: Int, reallocatedCaseCount: Int, tierCaseTotals: TierCaseTotals?): Practitioner = Practitioner(
       staffMember.code,
       staffMember.name,
       staffMember.email.takeUnless { email -> email.isNullOrBlank() },
       staffMember.getGrade(),
       calculateCapacity(practitionerWorkload.totalPoints, practitionerWorkload.availablePoints),
-      caseCount,
+      allocatedCaseCount + reallocatedCaseCount,
+      allocatedCaseCount,
+      reallocatedCaseCount,
       practitionerWorkload.totalCommunityCases,
+      practitionerWorkload.totalLicenseCases,
       practitionerWorkload.totalCustodyCases,
+      tierCaseTotals,
     )
   }
 }
