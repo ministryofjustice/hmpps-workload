@@ -11,7 +11,7 @@ import jakarta.validation.constraints.NotNull
 import java.sql.Date
 
 @Entity
-@Table(name = "hdc_rotc_reports")
+@Table(name = "hdc_rotl_reports")
 data class HDCROTLReportEntity @JsonCreator constructor(
 
   @Id

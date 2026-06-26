@@ -13,9 +13,9 @@ CREATE TABLE initial_sentence_plan_reports(
     probation_practitioner VARCHAR NOT NULL
 );
 
-drop table if exists hdc_rotc_reports;
+drop table if exists hdc_rotl_reports;
 
-CREATE TABLE hdc_rotc_reports(
+CREATE TABLE hdc_rotl_reports(
     id SERIAL PRIMARY KEY,
     crn VARCHAR NOT NULL,
     person_on_probation VARCHAR NOT NULL,
