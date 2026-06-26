@@ -10,7 +10,7 @@ CREATE TABLE initial_sentence_plan_reports(
     rosh VARCHAR NOT NULL,
     pdu VARCHAR NOT NULL,
     team VARCHAR NOT NULL,
-    probation_practitioner VARCHAR NOT NULL,
+    probation_practitioner VARCHAR NOT NULL
 );
 
 drop table if exists hdc_rotc_reports;
@@ -24,7 +24,7 @@ CREATE TABLE hdc_rotc_reports(
     actions VARCHAR NOT NULL,
     pdu VARCHAR NOT NULL,
     team VARCHAR NOT NULL,
-    probation_practitioner VARCHAR NOT NULL,
+    probation_practitioner VARCHAR NOT NULL
 );
 
 drop table if exists part_b_reports;
@@ -40,7 +40,7 @@ CREATE TABLE part_b_reports(
     rarr_type VARCHAR,
     pdu VARCHAR NOT NULL,
     team VARCHAR NOT NULL,
-    probation_practitioner VARCHAR NOT NULL,
+    probation_practitioner VARCHAR NOT NULL
 );
 
 drop table if exists part_c_reports;
@@ -53,7 +53,7 @@ CREATE TABLE part_c_reports(
     notes VARCHAR NOT NULL,
     pdu VARCHAR NOT NULL,
     team VARCHAR NOT NULL,
-    probation_practitioner VARCHAR NOT NULL,
+    probation_practitioner VARCHAR NOT NULL
 );
 
 drop table if exists parole_reports;
@@ -66,7 +66,7 @@ CREATE TABLE parole_reports(
     notes VARCHAR NOT NULL,
     pdu VARCHAR NOT NULL,
     team VARCHAR NOT NULL,
-    probation_practitioner VARCHAR NOT NULL,
+    probation_practitioner VARCHAR NOT NULL
 );
 
 drop table if exists reset_reports;
@@ -81,5 +81,5 @@ CREATE TABLE reset_reports(
     order_category VARCHAR,
     pdu VARCHAR NOT NULL,
     team VARCHAR NOT NULL,
-    probation_practitioner VARCHAR NOT NULL,
+    probation_practitioner VARCHAR NOT NULL
 );
