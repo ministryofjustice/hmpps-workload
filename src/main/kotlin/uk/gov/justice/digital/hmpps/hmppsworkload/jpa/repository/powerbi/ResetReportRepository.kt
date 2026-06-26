@@ -1,0 +1,8 @@
+package uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.powerbi
+
+import org.springframework.data.repository.CrudRepository
+import org.springframework.stereotype.Repository
+import uk.gov.justice.digital.hmpps.hmppsworkload.domain.powerbi.ResetReportEntity
+
+@Repository
+interface ResetReportRepository : CrudRepository<ResetReportEntity, Long>
