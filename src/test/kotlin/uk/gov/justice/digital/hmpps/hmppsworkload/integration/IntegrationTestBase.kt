@@ -61,6 +61,7 @@ import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.WMTCourtReports
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.WMTWorkloadOwnerRepository
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.WorkloadCalculationRepository
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.WorkloadPointsRepository
+import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.powerbi.InitialSentencePlanReportRepository
 import uk.gov.justice.digital.hmpps.hmppsworkload.listener.HmppsOffenderEvent
 import uk.gov.justice.digital.hmpps.hmppsworkload.service.AuditMessage
 import uk.gov.justice.digital.hmpps.hmppsworkload.service.SaveCasesDbService
@@ -256,6 +257,9 @@ abstract class IntegrationTestBase {
   @Autowired
   protected lateinit var eventManagerAuditRepository: EventManagerAuditRepository
 
+  @Autowired
+  protected lateinit var initialSentencePlanReportRepository: InitialSentencePlanReportRepository
+
   @BeforeEach
   fun setupDependentServices() {
     personManagerRepository.deleteAll()
@@ -301,6 +305,7 @@ abstract class IntegrationTestBase {
     reductionsRepository.deleteAll()
     adjustmentReasonRepository.deleteAll()
     workloadCalculationRepository.deleteAll()
+    initialSentencePlanReportRepository.deleteAll()
   }
 
   fun clearWMT() {
@@ -319,6 +324,7 @@ abstract class IntegrationTestBase {
     teamRepository.deleteAll()
     pduRepository.deleteAll()
     regionRepository.deleteAll()
+    initialSentencePlanReportRepository.deleteAll()
   }
 
   protected fun setupCurrentWmtStaff(staffCode: String, teamCode: String, totalFilteredCustodyCases: Int = 20): WMTStaff {
