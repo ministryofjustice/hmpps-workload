@@ -21,7 +21,11 @@ import uk.gov.justice.digital.hmpps.hmppsworkload.domain.CaseType
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.Tier
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.event.HmppsAllocationMessage
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.event.HmppsMessage
+import uk.gov.justice.digital.hmpps.hmppsworkload.domain.powerbi.HDCROTLReportEntity
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.powerbi.InitialSentencePlanReportEntity
+import uk.gov.justice.digital.hmpps.hmppsworkload.domain.powerbi.ParoleReportEntity
+import uk.gov.justice.digital.hmpps.hmppsworkload.domain.powerbi.PartBReportEntity
+import uk.gov.justice.digital.hmpps.hmppsworkload.domain.powerbi.PartCReportEntity
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.powerbi.ResetReportEntity
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.powerbi.UpcomingReleasesReportEntity
 import uk.gov.justice.digital.hmpps.hmppsworkload.integration.domain.WMTPointsWeightings
@@ -64,7 +68,11 @@ import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.WMTCourtReports
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.WMTWorkloadOwnerRepository
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.WorkloadCalculationRepository
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.WorkloadPointsRepository
+import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.powerbi.HDCROTLReportRepository
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.powerbi.InitialSentencePlanReportRepository
+import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.powerbi.ParoleReportRepository
+import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.powerbi.PartBReportRepository
+import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.powerbi.PartCReportRepository
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.powerbi.ResetReportRepository
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.powerbi.UpcomingReleasesReportRepository
 import uk.gov.justice.digital.hmpps.hmppsworkload.listener.HmppsOffenderEvent
@@ -273,6 +281,18 @@ abstract class IntegrationTestBase {
   @Autowired
   protected lateinit var upcomingReleasesReportRepository: UpcomingReleasesReportRepository
 
+  @Autowired
+  protected lateinit var paroleReportRepository: ParoleReportRepository
+
+  @Autowired
+  protected lateinit var hdcrotlReportRepository: HDCROTLReportRepository
+
+  @Autowired
+  protected lateinit var partBReportRepository: PartBReportRepository
+
+  @Autowired
+  protected lateinit var partCReportRepository: PartCReportRepository
+
   @BeforeEach
   fun setupDependentServices() {
     personManagerRepository.deleteAll()
@@ -321,6 +341,10 @@ abstract class IntegrationTestBase {
     initialSentencePlanReportRepository.deleteAll()
     resetReportRepository.deleteAll()
     upcomingReleasesReportRepository.deleteAll()
+    paroleReportRepository.deleteAll()
+    hdcrotlReportRepository.deleteAll()
+    partBReportRepository.deleteAll()
+    partCReportRepository.deleteAll()
   }
 
   fun clearWMT() {
@@ -342,6 +366,10 @@ abstract class IntegrationTestBase {
     initialSentencePlanReportRepository.deleteAll()
     resetReportRepository.deleteAll()
     upcomingReleasesReportRepository.deleteAll()
+    paroleReportRepository.deleteAll()
+    hdcrotlReportRepository.deleteAll()
+    partBReportRepository.deleteAll()
+    partCReportRepository.deleteAll()
   }
 
   protected fun setupCurrentWmtStaff(staffCode: String, teamCode: String, totalFilteredCustodyCases: Int = 20): WMTStaff {
@@ -427,20 +455,41 @@ abstract class IntegrationTestBase {
     ?: caseCategoryRepository.save(CaseCategoryEntity(categoryName = "Untiered", categoryId = 0))
 
   protected fun setupReportData() {
-    val ispReportAtThreshold = InitialSentencePlanReportEntity(crn = "CRN5", personOnProbation = "Smith, John", inductionDate = Date.valueOf(LocalDate.now()), targetDate = Date.valueOf(LocalDate.now().plusDays(14)), actions = "TODO", rosh = "Medium", pdu = "Local Delivery Unit (Actually a Probation Delivery Unit)", team = "Team 1", probationPractitioner = "Doe, Jane")
-    initialSentencePlanReportRepository.save(ispReportAtThreshold)
+    val crn = "CRN5"
+    val pop = "Smith, John"
+    val placeholder = "Placeholder"
+    val rosh = "Medium"
+    val pdu = "Local Delivery Unit (Actually a Probation Delivery Unit)"
+    val team = "Team 1"
+    val practitioner = "Doe, Jane"
+    val prison = "Lincoln (HMP)"
 
-    val ispReportAfterThreshold = InitialSentencePlanReportEntity(crn = "CRN5", personOnProbation = "Smith, John", inductionDate = Date.valueOf(LocalDate.now()), targetDate = Date.valueOf(LocalDate.now().plusDays(15)), actions = "TODO", rosh = "Medium", pdu = "Local Delivery Unit (Actually a Probation Delivery Unit)", team = "Team 1", probationPractitioner = "Doe, Jane")
-    initialSentencePlanReportRepository.save(ispReportAfterThreshold)
+    val ispReportAtThreshold = InitialSentencePlanReportEntity(crn = crn, personOnProbation = pop, inductionDate = Date.valueOf(LocalDate.now()), targetDate = Date.valueOf(LocalDate.now().plusDays(14)), actions = placeholder, rosh = rosh, pdu = pdu, team = team, probationPractitioner = practitioner)
+    val ispReportAfterThreshold = ispReportAtThreshold.copy(targetDate = Date.valueOf(LocalDate.now().plusDays(15)))
+    initialSentencePlanReportRepository.saveAll(listOf(ispReportAtThreshold, ispReportAfterThreshold))
 
-    val resetReport = ResetReportEntity(crn = "CRN5", personOnProbation = "Smith, John", actions = "TODO", notes = "TODO", orderCategory = "TODO", activeRequirements = "TODO", pdu = "Local Delivery Unit (Actually a Probation Delivery Unit)", team = "Team 1", probationPractitioner = "Doe, Jane")
+    val resetReport = ResetReportEntity(crn = crn, personOnProbation = pop, actions = placeholder, notes = placeholder, orderCategory = placeholder, activeRequirements = placeholder, pdu = pdu, team = team, probationPractitioner = practitioner)
     resetReportRepository.save(resetReport)
 
-    val custodyReleaseAtThreshold = UpcomingReleasesReportEntity(crn = "CRN5", personOnProbation = "Smith, John", expectedReleaseDate = Date.valueOf(LocalDate.now().plusDays(7)), prison = "Lincoln (HMP)", pdu = "Local Delivery Unit (Actually a Probation Delivery Unit)", team = "Team 1", probationPractitioner = "Doe, Jane")
-    upcomingReleasesReportRepository.save(custodyReleaseAtThreshold)
+    val custodyReleaseAtThreshold = UpcomingReleasesReportEntity(crn = crn, personOnProbation = pop, expectedReleaseDate = Date.valueOf(LocalDate.now().plusDays(7)), prison = prison, pdu = pdu, team = team, probationPractitioner = practitioner)
+    val custodyReleaseAfterThreshold = custodyReleaseAtThreshold.copy(expectedReleaseDate = Date.valueOf(LocalDate.now().plusDays(8)))
+    upcomingReleasesReportRepository.saveAll(listOf(custodyReleaseAtThreshold, custodyReleaseAfterThreshold))
 
-    val custodyReleaseAfterThreshold = UpcomingReleasesReportEntity(crn = "CRN5", personOnProbation = "Smith, John", expectedReleaseDate = Date.valueOf(LocalDate.now().plusDays(8)), prison = "Lincoln (HMP)", pdu = "Local Delivery Unit (Actually a Probation Delivery Unit)", team = "Team 1", probationPractitioner = "Doe, Jane")
-    upcomingReleasesReportRepository.save(custodyReleaseAfterThreshold)
+    val paroleReportAtThreshold = ParoleReportEntity(crn = crn, personOnProbation = pop, targetDate = Date.valueOf(LocalDate.now().plusDays(28)), notes = placeholder, pdu = pdu, team = team, probationPractitioner = practitioner)
+    val paroleReportAfterThreshold = paroleReportAtThreshold.copy(targetDate = Date.valueOf(LocalDate.now().plusDays(29)))
+    paroleReportRepository.saveAll(listOf(paroleReportAtThreshold, paroleReportAfterThreshold))
+
+    val hdcrotlReportAtThreshold = HDCROTLReportEntity(crn = crn, personOnProbation = pop, targetDate = Date.valueOf(LocalDate.now().plusDays(14)), institutionalReportType = "HDC", actions = placeholder, pdu = pdu, team = team, probationPractitioner = practitioner)
+    val hdcrotlReportAfterThreshold = hdcrotlReportAtThreshold.copy(targetDate = Date.valueOf(LocalDate.now().plusDays(15)))
+    hdcrotlReportRepository.saveAll(listOf(hdcrotlReportAtThreshold, hdcrotlReportAfterThreshold))
+
+    val partBReportAtThreshold = PartBReportEntity(crn = crn, personOnProbation = pop, returnToCustodyDate = Date.valueOf(LocalDate.now()), targetDate = Date.valueOf(LocalDate.now().plusDays(14)), tasks = placeholder, actions = placeholder, rarrType = placeholder, pdu = pdu, team = team, probationPractitioner = practitioner)
+    val partBReportAfterThreshold = partBReportAtThreshold.copy(targetDate = Date.valueOf(LocalDate.now().plusDays(15)))
+    partBReportRepository.saveAll(listOf(partBReportAtThreshold, partBReportAfterThreshold))
+
+    val partCReportAtThreshold = PartCReportEntity(crn = crn, personOnProbation = pop, targetDate = Date.valueOf(LocalDate.now().plusDays(14)), notes = placeholder, pdu = pdu, team = team, probationPractitioner = practitioner)
+    val partCReportAfterThreshold = partCReportAtThreshold.copy(targetDate = Date.valueOf(LocalDate.now().plusDays(15)))
+    partCReportRepository.saveAll(listOf(partCReportAtThreshold, partCReportAfterThreshold))
   }
 
   protected fun getWmtWorkloadWeightings(): WMTPointsWeightings = WMTPointsWeightings(

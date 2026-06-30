@@ -7,6 +7,5 @@ import java.time.LocalDate
 
 @Repository
 interface InitialSentencePlanReportRepository : CrudRepository<InitialSentencePlanReportEntity, Long> {
-  // TODO: Is including overdue ISPs expected?
   fun findAllByTeamInAndTargetDateLessThanEqual(teams: List<String>, targetDate: LocalDate): List<InitialSentencePlanReportEntity>
 }

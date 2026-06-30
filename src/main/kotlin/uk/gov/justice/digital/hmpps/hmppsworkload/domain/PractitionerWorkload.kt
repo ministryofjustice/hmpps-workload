@@ -56,6 +56,8 @@ data class PractitionerWithRawWorkloadPoints(
   val activeCases: Int,
   val contactSuspendedCases: Int,
   val custodyReleasesInNext7Days: Int,
+  val paroleReportsInNext28Days: Int,
+  val otherReportsInNext14Days: Int,
   val tierCaseTotals: TierCaseTotals?,
 ) {
   companion object {
@@ -77,6 +79,8 @@ data class PractitionerWithRawWorkloadPoints(
       practitionerWorkload.totalCommunityCases + practitionerWorkload.totalLicenseCases + practitionerWorkload.totalCustodyCases - practitionerStats.contactSuspendedCases,
       practitionerStats.contactSuspendedCases,
       practitionerStats.custodyReleasesInNext7Days,
+      practitionerStats.paroleReportsInNext28Days,
+      practitionerStats.hdcrotlReportsInNext14Days + practitionerStats.partBReportsInNext14Days + practitionerStats.partCReportsInNext14Days,
       practitionerStats.tierCaseTotals,
     )
   }
@@ -98,6 +102,8 @@ data class Practitioner constructor(
   val activeCases: Int,
   val contactSuspendedCases: Int,
   val custodyReleasesInNext7Days: Int,
+  val paroleReportsInNext28Days: Int,
+  val otherReportsInNext14Days: Int,
   val tierCaseTotals: TierCaseTotals?,
 ) {
   companion object {
@@ -117,6 +123,8 @@ data class Practitioner constructor(
       practitionerWorkload.totalCommunityCases + practitionerWorkload.totalLicenseCases + practitionerWorkload.totalCustodyCases - practitionerStats.contactSuspendedCases,
       practitionerStats.contactSuspendedCases,
       practitionerStats.custodyReleasesInNext7Days,
+      practitionerStats.paroleReportsInNext28Days,
+      practitionerStats.hdcrotlReportsInNext14Days + practitionerStats.partBReportsInNext14Days + practitionerStats.partCReportsInNext14Days,
       practitionerStats.tierCaseTotals,
     )
   }
