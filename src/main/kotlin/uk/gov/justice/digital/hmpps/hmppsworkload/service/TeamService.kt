@@ -14,6 +14,7 @@ import uk.gov.justice.digital.hmpps.hmppsworkload.domain.PractitionerWithRawWork
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.PractitionerWorkload
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.TierCaseTotals
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.WorkloadCase
+import uk.gov.justice.digital.hmpps.hmppsworkload.domain.powerbi.ReportPractitionerData
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.powerbi.ReportPractitionerId
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.mapping.TeamOverview
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.CaseDetailsRepository
@@ -53,8 +54,7 @@ class TeamService(
       val practitionerReallocationCaseCounts = getPractitionerReallocationCaseCounts(teamCodes, caseCountAfter)
 
       val teamNames = teamRepository.findAllByCodeIn(teamCodes).associate { it.code to it.description }
-
-      val ispsDueInNext14Days = reportDataService.getIspsDueInNext14Days(teamNames.values.toList())
+      val reportPractitionerData = reportDataService.getPractitionerData(teamNames.values.toList())
 
       val enrichedTeams = choosePractitionerResponse.teams.mapValues { team ->
         team.value
@@ -64,12 +64,8 @@ class TeamService(
             val practitionerWorkload = practitionerWorkloads[teamStaffId]
               ?: getTeamOverviewForOffenderManagerWithoutWorkload(it.code, it.getGrade(), team.key)
 
-            val practitionerStats = PractitionerStats(
-              practitionerAllocationCaseCounts.getOrDefault(teamStaffId, 0),
-              practitionerReallocationCaseCounts.getOrDefault(teamStaffId, 0),
-              ispsDueInNext14Days.getOrDefault(getReportPractitionerId(teamNames, team.key, it), 0),
-              getCaseTierTotals(it.code, team.key),
-            )
+            val reportPractitionerId = getReportPractitionerId(teamNames, team.key, it)
+            val practitionerStats = getPractitionerStats(practitionerAllocationCaseCounts, practitionerReallocationCaseCounts, reportPractitionerData, teamStaffId, reportPractitionerId, getCaseTierTotals(it.code, team.key))
 
             Practitioner.from(it, practitionerWorkload, practitionerStats)
           }
@@ -118,8 +114,7 @@ class TeamService(
       val practitionerReallocationCaseCounts = getPractitionerReallocationCaseCountsTeamCodeOnly(teamCodes, caseCountAfter)
 
       val teamNames = teamRepository.findAllByCodeIn(teamCodes).associate { it.code to it.description }
-
-      val ispsDueInNext14Days = reportDataService.getIspsDueInNext14Days(teamNames.values.toList())
+      val reportPractitionerData = reportDataService.getPractitionerData(teamNames.values.toList())
 
       log.info("Practitioner Workloads: $practitionerWorkloads")
       log.info("Practitioner Allocation Case Counts: $practitionerAllocationCaseCounts")
@@ -134,12 +129,8 @@ class TeamService(
           val practitionerWorkload = practitionerWorkloads[teamStaffId]
             ?: getTeamOverviewForOffenderManagerWithoutWorkload(it.code, it.retrieveGrade(), team.key)
 
-          val practitionerStats = PractitionerStats(
-            practitionerAllocationCaseCounts.getOrDefault(teamStaffId, 0),
-            practitionerReallocationCaseCounts.getOrDefault(teamStaffId, 0),
-            ispsDueInNext14Days.getOrDefault(getReportPractitionerId(teamNames, team.key, it), 0),
-            getCaseTierTotals(it.code, team.key),
-          )
+          val reportPractitionerId = getReportPractitionerId(teamNames, team.key, it)
+          val practitionerStats = getPractitionerStats(practitionerAllocationCaseCounts, practitionerReallocationCaseCounts, reportPractitionerData, teamStaffId, reportPractitionerId, getCaseTierTotals(it.code, team.key))
 
           PractitionerWithRawWorkloadPoints.from(it, practitionerWorkload, practitionerStats)
         }
@@ -157,6 +148,21 @@ class TeamService(
     val reportPractitionerId = ReportPractitionerId(teamName.orEmpty(), practitionerName)
     return reportPractitionerId
   }
+
+  private suspend fun getPractitionerStats(
+    practitionerAllocationCaseCounts: Map<String, Int>,
+    practitionerReallocationCaseCounts: Map<String, Int>,
+    reportPractitionerData: ReportPractitionerData,
+    teamStaffId: String,
+    reportPractitionerId: ReportPractitionerId,
+    tierCaseTotals: TierCaseTotals?,
+  ): PractitionerStats = PractitionerStats(
+    practitionerAllocationCaseCounts.getOrDefault(teamStaffId, 0),
+    practitionerReallocationCaseCounts.getOrDefault(teamStaffId, 0),
+    reportPractitionerData.ispsDueInNext14Days.getOrDefault(reportPractitionerId, 0),
+    reportPractitionerData.contactSuspendedCases.getOrDefault(reportPractitionerId, 0),
+    tierCaseTotals,
+  )
 
   suspend fun getPractitionerAllocationCaseCounts(teamCodes: List<String>, caseCountAfter: ZonedDateTime): Map<String, Int> = personManagerRepository.findByTeamCodeInAndCreatedDateGreaterThanEqualAndIsActiveIsTrue(teamCodes, caseCountAfter)
     .filter { it.allocationReason == AllocationReason.INITIAL_ALLOCATION }

@@ -53,6 +53,8 @@ data class PractitionerWithRawWorkloadPoints(
   val availablePoints: BigInteger,
   val totalPoints: BigInteger,
   val ispsDueInNext14Days: Int,
+  val activeCases: Int,
+  val contactSuspendedCases: Int,
   val tierCaseTotals: TierCaseTotals?,
 ) {
   companion object {
@@ -71,6 +73,8 @@ data class PractitionerWithRawWorkloadPoints(
       practitionerWorkload.availablePoints,
       practitionerWorkload.totalPoints,
       practitionerStats.ispsDueInNext14Days,
+      practitionerWorkload.totalCommunityCases + practitionerWorkload.totalLicenseCases + practitionerWorkload.totalCustodyCases - practitionerStats.contactSuspendedCases,
+      practitionerStats.contactSuspendedCases,
       practitionerStats.tierCaseTotals,
     )
   }
@@ -89,6 +93,8 @@ data class Practitioner constructor(
   val licenseCases: Int,
   val custodyCases: Int,
   val ispsDueInNext14Days: Int,
+  val activeCases: Int,
+  val contactSuspendedCases: Int,
   val tierCaseTotals: TierCaseTotals?,
 ) {
   companion object {
@@ -105,6 +111,8 @@ data class Practitioner constructor(
       practitionerWorkload.totalLicenseCases,
       practitionerWorkload.totalCustodyCases,
       practitionerStats.ispsDueInNext14Days,
+      practitionerWorkload.totalCommunityCases + practitionerWorkload.totalLicenseCases + practitionerWorkload.totalCustodyCases - practitionerStats.contactSuspendedCases,
+      practitionerStats.contactSuspendedCases,
       practitionerStats.tierCaseTotals,
     )
   }

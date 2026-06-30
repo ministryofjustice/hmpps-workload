@@ -5,4 +5,6 @@ import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.powerbi.ResetReportEntity
 
 @Repository
-interface ResetReportRepository : CrudRepository<ResetReportEntity, Long>
+interface ResetReportRepository : CrudRepository<ResetReportEntity, Long> {
+  fun findAllByTeamIn(teams: List<String>): List<ResetReportEntity>
+}

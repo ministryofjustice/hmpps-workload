@@ -5,6 +5,7 @@ import uk.gov.justice.digital.hmpps.hmppsworkload.domain.AllocationReason
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.CaseType
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.Tier
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.powerbi.InitialSentencePlanReportEntity
+import uk.gov.justice.digital.hmpps.hmppsworkload.domain.powerbi.ResetReportEntity
 import uk.gov.justice.digital.hmpps.hmppsworkload.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.hmppsworkload.integration.mockserver.WorkforceAllocationsToDeliusExtension.Companion.workforceAllocationsToDelius
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.entity.PersonManagerEntity
@@ -157,6 +158,9 @@ class ChoosePractitionersByTeamCodes : IntegrationTestBase() {
     val ispReport2 = InitialSentencePlanReportEntity(crn = "CRN5", personOnProbation = "Smith, John", inductionDate = Date.valueOf(LocalDate.now()), targetDate = Date.valueOf(LocalDate.now().plusDays(15)), actions = "TODO", rosh = "Medium", pdu = "Local Delivery Unit (Actually a Probation Delivery Unit)", team = "Team 1", probationPractitioner = "Doe, Jane")
     initialSentencePlanReportRepository.save(ispReport2)
 
+    val resetReport = ResetReportEntity(crn = "CRN5", personOnProbation = "Smith, John", actions = "TODO", notes = "TODO", orderCategory = "TODO", activeRequirements = "TODO", pdu = "Local Delivery Unit (Actually a Probation Delivery Unit)", team = "Team 1", probationPractitioner = "Doe, Jane")
+    resetReportRepository.save(resetReport)
+
     webTestClient.get()
       .uri("/team/choose-practitioner?&teamCodes=$teamCode,$teamCode2&crn=$crn")
       .headers { it.authToken(roles = listOf("ROLE_WORKLOAD_MEASUREMENT")) }
@@ -212,6 +216,10 @@ class ChoosePractitionersByTeamCodes : IntegrationTestBase() {
       .isEqualTo(20)
       .jsonPath("$.teams.$teamCode[?(@.code == '$firstOm')].ispsDueInNext14Days")
       .isEqualTo(1)
+      .jsonPath("$.teams.$teamCode[?(@.code == '$firstOm')].activeCases")
+      .isEqualTo(34)
+      .jsonPath("$.teams.$teamCode[?(@.code == '$firstOm')].contactSuspendedCases")
+      .isEqualTo(1)
       .jsonPath("$.teams.$teamCode[?(@.code == '$firstOm')].tierCaseTotals.a")
       .isEqualTo(0)
       .jsonPath("$.teams.$teamCode[?(@.code == '$noWorkloadStaffCode')].name.forename")
@@ -233,6 +241,10 @@ class ChoosePractitionersByTeamCodes : IntegrationTestBase() {
       .jsonPath("$.teams.$teamCode[?(@.code == '$noWorkloadStaffCode')].custodyCases")
       .isEqualTo(0)
       .jsonPath("$.teams.$teamCode[?(@.code == '$noWorkloadStaffCode')].ispsDueInNext14Days")
+      .isEqualTo(0)
+      .jsonPath("$.teams.$teamCode[?(@.code == '$noWorkloadStaffCode')].activeCases")
+      .isEqualTo(0)
+      .jsonPath("$.teams.$teamCode[?(@.code == '$noWorkloadStaffCode')].contactSuspendedCases")
       .isEqualTo(0)
       .jsonPath("$.teams.$teamCode2[?(@.code == '$secondOm')].name.forename")
       .isEqualTo("Mark")
@@ -265,6 +277,9 @@ class ChoosePractitionersByTeamCodes : IntegrationTestBase() {
     val ispReport2 = InitialSentencePlanReportEntity(crn = "CRN5", personOnProbation = "Smith, John", inductionDate = Date.valueOf(LocalDate.now()), targetDate = Date.valueOf(LocalDate.now().plusDays(15)), actions = "TODO", rosh = "Medium", pdu = "Local Delivery Unit (Actually a Probation Delivery Unit)", team = "Team 1", probationPractitioner = "Doe, Jane")
     initialSentencePlanReportRepository.save(ispReport2)
 
+    val resetReport = ResetReportEntity(crn = "CRN5", personOnProbation = "Smith, John", actions = "TODO", notes = "TODO", orderCategory = "TODO", activeRequirements = "TODO", pdu = "Local Delivery Unit (Actually a Probation Delivery Unit)", team = "Team 1", probationPractitioner = "Doe, Jane")
+    resetReportRepository.save(resetReport)
+
     webTestClient.get()
       .uri("/team/practitioner-workloadcases?teamCode=$teamCode")
       .headers { it.authToken(roles = listOf("ROLE_WORKLOAD_MEASUREMENT")) }
@@ -295,6 +310,10 @@ class ChoosePractitionersByTeamCodes : IntegrationTestBase() {
       .jsonPath("$.$teamCode.teams[?(@.code == '$firstOm')].custodyCases")
       .isEqualTo(20)
       .jsonPath("$.$teamCode.teams[?(@.code == '$firstOm')].ispsDueInNext14Days")
+      .isEqualTo(1)
+      .jsonPath("$.$teamCode.teams[?(@.code == '$firstOm')].activeCases")
+      .isEqualTo(34)
+      .jsonPath("$.$teamCode.teams[?(@.code == '$firstOm')].contactSuspendedCases")
       .isEqualTo(1)
       .jsonPath("$.$teamCode.teams[?(@.code == '$firstOm')].tierCaseTotals.a")
       .isEqualTo(0)
