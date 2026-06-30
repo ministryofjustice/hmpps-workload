@@ -21,6 +21,9 @@ import uk.gov.justice.digital.hmpps.hmppsworkload.domain.CaseType
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.Tier
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.event.HmppsAllocationMessage
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.event.HmppsMessage
+import uk.gov.justice.digital.hmpps.hmppsworkload.domain.powerbi.InitialSentencePlanReportEntity
+import uk.gov.justice.digital.hmpps.hmppsworkload.domain.powerbi.ResetReportEntity
+import uk.gov.justice.digital.hmpps.hmppsworkload.domain.powerbi.UpcomingReleasesReportEntity
 import uk.gov.justice.digital.hmpps.hmppsworkload.integration.domain.WMTPointsWeightings
 import uk.gov.justice.digital.hmpps.hmppsworkload.integration.domain.WMTStaff
 import uk.gov.justice.digital.hmpps.hmppsworkload.integration.jpa.entity.CaseCategoryEntity
@@ -63,12 +66,15 @@ import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.WorkloadCalcula
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.WorkloadPointsRepository
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.powerbi.InitialSentencePlanReportRepository
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.powerbi.ResetReportRepository
+import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.powerbi.UpcomingReleasesReportRepository
 import uk.gov.justice.digital.hmpps.hmppsworkload.listener.HmppsOffenderEvent
 import uk.gov.justice.digital.hmpps.hmppsworkload.service.AuditMessage
 import uk.gov.justice.digital.hmpps.hmppsworkload.service.SaveCasesDbService
 import uk.gov.justice.hmpps.sqs.HmppsQueueService
 import uk.gov.justice.hmpps.sqs.MissingQueueException
 import java.math.BigDecimal
+import java.sql.Date
+import java.time.LocalDate
 
 @ExtendWith(
   AssessRisksNeedsApiExtension::class,
@@ -264,6 +270,9 @@ abstract class IntegrationTestBase {
   @Autowired
   protected lateinit var resetReportRepository: ResetReportRepository
 
+  @Autowired
+  protected lateinit var upcomingReleasesReportRepository: UpcomingReleasesReportRepository
+
   @BeforeEach
   fun setupDependentServices() {
     personManagerRepository.deleteAll()
@@ -311,6 +320,7 @@ abstract class IntegrationTestBase {
     workloadCalculationRepository.deleteAll()
     initialSentencePlanReportRepository.deleteAll()
     resetReportRepository.deleteAll()
+    upcomingReleasesReportRepository.deleteAll()
   }
 
   fun clearWMT() {
@@ -331,6 +341,7 @@ abstract class IntegrationTestBase {
     regionRepository.deleteAll()
     initialSentencePlanReportRepository.deleteAll()
     resetReportRepository.deleteAll()
+    upcomingReleasesReportRepository.deleteAll()
   }
 
   protected fun setupCurrentWmtStaff(staffCode: String, teamCode: String, totalFilteredCustodyCases: Int = 20): WMTStaff {
@@ -414,6 +425,23 @@ abstract class IntegrationTestBase {
 
   protected fun setupWmtUntiered(): CaseCategoryEntity = caseCategoryRepository.findByCategoryName("Untiered")
     ?: caseCategoryRepository.save(CaseCategoryEntity(categoryName = "Untiered", categoryId = 0))
+
+  protected fun setupReportData() {
+    val ispReportAtThreshold = InitialSentencePlanReportEntity(crn = "CRN5", personOnProbation = "Smith, John", inductionDate = Date.valueOf(LocalDate.now()), targetDate = Date.valueOf(LocalDate.now().plusDays(14)), actions = "TODO", rosh = "Medium", pdu = "Local Delivery Unit (Actually a Probation Delivery Unit)", team = "Team 1", probationPractitioner = "Doe, Jane")
+    initialSentencePlanReportRepository.save(ispReportAtThreshold)
+
+    val ispReportAfterThreshold = InitialSentencePlanReportEntity(crn = "CRN5", personOnProbation = "Smith, John", inductionDate = Date.valueOf(LocalDate.now()), targetDate = Date.valueOf(LocalDate.now().plusDays(15)), actions = "TODO", rosh = "Medium", pdu = "Local Delivery Unit (Actually a Probation Delivery Unit)", team = "Team 1", probationPractitioner = "Doe, Jane")
+    initialSentencePlanReportRepository.save(ispReportAfterThreshold)
+
+    val resetReport = ResetReportEntity(crn = "CRN5", personOnProbation = "Smith, John", actions = "TODO", notes = "TODO", orderCategory = "TODO", activeRequirements = "TODO", pdu = "Local Delivery Unit (Actually a Probation Delivery Unit)", team = "Team 1", probationPractitioner = "Doe, Jane")
+    resetReportRepository.save(resetReport)
+
+    val custodyReleaseAtThreshold = UpcomingReleasesReportEntity(crn = "CRN5", personOnProbation = "Smith, John", expectedReleaseDate = Date.valueOf(LocalDate.now().plusDays(7)), prison = "Lincoln (HMP)", pdu = "Local Delivery Unit (Actually a Probation Delivery Unit)", team = "Team 1", probationPractitioner = "Doe, Jane")
+    upcomingReleasesReportRepository.save(custodyReleaseAtThreshold)
+
+    val custodyReleaseAfterThreshold = UpcomingReleasesReportEntity(crn = "CRN5", personOnProbation = "Smith, John", expectedReleaseDate = Date.valueOf(LocalDate.now().plusDays(8)), prison = "Lincoln (HMP)", pdu = "Local Delivery Unit (Actually a Probation Delivery Unit)", team = "Team 1", probationPractitioner = "Doe, Jane")
+    upcomingReleasesReportRepository.save(custodyReleaseAfterThreshold)
+  }
 
   protected fun getWmtWorkloadWeightings(): WMTPointsWeightings = WMTPointsWeightings(
     workloadPointsRepository.findFirstByIsT2AAndEffectiveToIsNullOrderByEffectiveFromDesc(true),

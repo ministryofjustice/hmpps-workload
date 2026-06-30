@@ -5,16 +5,19 @@ import uk.gov.justice.digital.hmpps.hmppsworkload.domain.powerbi.ReportPractitio
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.powerbi.ReportPractitionerId
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.powerbi.InitialSentencePlanReportRepository
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.powerbi.ResetReportRepository
+import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.powerbi.UpcomingReleasesReportRepository
 import java.time.LocalDate
 
 @Service
 class ReportDataService(
   private val initialSentencePlanReportRepository: InitialSentencePlanReportRepository,
   private val resetReportRepository: ResetReportRepository,
+  private val upcomingReleasesReportRepository: UpcomingReleasesReportRepository,
 ) {
   fun getPractitionerData(teamNames: List<String>): ReportPractitionerData = ReportPractitionerData(
     getIspsDueInNext14Days(teamNames),
     getContactSuspendedCases(teamNames),
+    getCustodyReleasesInNext7Days(teamNames),
   )
 
   private fun getIspsDueInNext14Days(teamNames: List<String>): Map<ReportPractitionerId, Int> = initialSentencePlanReportRepository.findAllByTeamInAndTargetDateLessThanEqual(teamNames, LocalDate.now().plusDays(14))
@@ -22,6 +25,10 @@ class ReportDataService(
     .mapValues { entry -> entry.value.size }
 
   private fun getContactSuspendedCases(teamNames: List<String>): Map<ReportPractitionerId, Int> = resetReportRepository.findAllByTeamIn(teamNames)
+    .groupBy { ReportPractitionerId(it.team, it.probationPractitioner) }
+    .mapValues { entry -> entry.value.size }
+
+  private fun getCustodyReleasesInNext7Days(teamNames: List<String>): Map<ReportPractitionerId, Int> = upcomingReleasesReportRepository.findAllByTeamInAndExpectedReleaseDateLessThanEqual(teamNames, LocalDate.now().plusDays(7))
     .groupBy { ReportPractitionerId(it.team, it.probationPractitioner) }
     .mapValues { entry -> entry.value.size }
 }

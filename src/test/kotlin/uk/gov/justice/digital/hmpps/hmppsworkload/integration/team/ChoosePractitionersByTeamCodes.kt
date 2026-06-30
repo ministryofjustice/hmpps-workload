@@ -4,13 +4,9 @@ import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.AllocationReason
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.CaseType
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.Tier
-import uk.gov.justice.digital.hmpps.hmppsworkload.domain.powerbi.InitialSentencePlanReportEntity
-import uk.gov.justice.digital.hmpps.hmppsworkload.domain.powerbi.ResetReportEntity
 import uk.gov.justice.digital.hmpps.hmppsworkload.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.hmppsworkload.integration.mockserver.WorkforceAllocationsToDeliusExtension.Companion.workforceAllocationsToDelius
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.entity.PersonManagerEntity
-import java.sql.Date
-import java.time.LocalDate
 import java.time.ZonedDateTime
 
 class ChoosePractitionersByTeamCodes : IntegrationTestBase() {
@@ -152,14 +148,7 @@ class ChoosePractitionersByTeamCodes : IntegrationTestBase() {
     val personManagerWithNoWorkload = PersonManagerEntity(crn = "CRN4", staffCode = noWorkloadStaffCode, teamCode = "T1", createdBy = "USER2", createdDate = ZonedDateTime.now().minusDays(2L), isActive = true, allocationReason = AllocationReason.INITIAL_ALLOCATION)
     personManagerRepository.save(personManagerWithNoWorkload)
 
-    val ispReport1 = InitialSentencePlanReportEntity(crn = "CRN5", personOnProbation = "Smith, John", inductionDate = Date.valueOf(LocalDate.now()), targetDate = Date.valueOf(LocalDate.now().plusDays(14)), actions = "TODO", rosh = "Medium", pdu = "Local Delivery Unit (Actually a Probation Delivery Unit)", team = "Team 1", probationPractitioner = "Doe, Jane")
-    initialSentencePlanReportRepository.save(ispReport1)
-
-    val ispReport2 = InitialSentencePlanReportEntity(crn = "CRN5", personOnProbation = "Smith, John", inductionDate = Date.valueOf(LocalDate.now()), targetDate = Date.valueOf(LocalDate.now().plusDays(15)), actions = "TODO", rosh = "Medium", pdu = "Local Delivery Unit (Actually a Probation Delivery Unit)", team = "Team 1", probationPractitioner = "Doe, Jane")
-    initialSentencePlanReportRepository.save(ispReport2)
-
-    val resetReport = ResetReportEntity(crn = "CRN5", personOnProbation = "Smith, John", actions = "TODO", notes = "TODO", orderCategory = "TODO", activeRequirements = "TODO", pdu = "Local Delivery Unit (Actually a Probation Delivery Unit)", team = "Team 1", probationPractitioner = "Doe, Jane")
-    resetReportRepository.save(resetReport)
+    setupReportData()
 
     webTestClient.get()
       .uri("/team/choose-practitioner?&teamCodes=$teamCode,$teamCode2&crn=$crn")
@@ -220,6 +209,8 @@ class ChoosePractitionersByTeamCodes : IntegrationTestBase() {
       .isEqualTo(34)
       .jsonPath("$.teams.$teamCode[?(@.code == '$firstOm')].contactSuspendedCases")
       .isEqualTo(1)
+      .jsonPath("$.teams.$teamCode[?(@.code == '$firstOm')].custodyReleasesInNext7Days")
+      .isEqualTo(1)
       .jsonPath("$.teams.$teamCode[?(@.code == '$firstOm')].tierCaseTotals.a")
       .isEqualTo(0)
       .jsonPath("$.teams.$teamCode[?(@.code == '$noWorkloadStaffCode')].name.forename")
@@ -246,6 +237,8 @@ class ChoosePractitionersByTeamCodes : IntegrationTestBase() {
       .isEqualTo(0)
       .jsonPath("$.teams.$teamCode[?(@.code == '$noWorkloadStaffCode')].contactSuspendedCases")
       .isEqualTo(0)
+      .jsonPath("$.teams.$teamCode[?(@.code == '$noWorkloadStaffCode')].custodyReleasesInNext7Days")
+      .isEqualTo(0)
       .jsonPath("$.teams.$teamCode2[?(@.code == '$secondOm')].name.forename")
       .isEqualTo("Mark")
       .jsonPath("$.teams.$teamCode2[?(@.code == '$secondOm')].name.surname")
@@ -271,14 +264,7 @@ class ChoosePractitionersByTeamCodes : IntegrationTestBase() {
     val movedPersonManager = PersonManagerEntity(crn = "CRN3", staffCode = firstOm, teamCode = teamCode, createdBy = "USER1", createdDate = ZonedDateTime.now().minusDays(5L), isActive = false, allocationReason = AllocationReason.INITIAL_ALLOCATION)
     personManagerRepository.save(movedPersonManager)
 
-    val ispReport1 = InitialSentencePlanReportEntity(crn = "CRN5", personOnProbation = "Smith, John", inductionDate = Date.valueOf(LocalDate.now()), targetDate = Date.valueOf(LocalDate.now().plusDays(14)), actions = "TODO", rosh = "Medium", pdu = "Local Delivery Unit (Actually a Probation Delivery Unit)", team = "Team 1", probationPractitioner = "Doe, Jane")
-    initialSentencePlanReportRepository.save(ispReport1)
-
-    val ispReport2 = InitialSentencePlanReportEntity(crn = "CRN5", personOnProbation = "Smith, John", inductionDate = Date.valueOf(LocalDate.now()), targetDate = Date.valueOf(LocalDate.now().plusDays(15)), actions = "TODO", rosh = "Medium", pdu = "Local Delivery Unit (Actually a Probation Delivery Unit)", team = "Team 1", probationPractitioner = "Doe, Jane")
-    initialSentencePlanReportRepository.save(ispReport2)
-
-    val resetReport = ResetReportEntity(crn = "CRN5", personOnProbation = "Smith, John", actions = "TODO", notes = "TODO", orderCategory = "TODO", activeRequirements = "TODO", pdu = "Local Delivery Unit (Actually a Probation Delivery Unit)", team = "Team 1", probationPractitioner = "Doe, Jane")
-    resetReportRepository.save(resetReport)
+    setupReportData()
 
     webTestClient.get()
       .uri("/team/practitioner-workloadcases?teamCode=$teamCode")
@@ -314,6 +300,8 @@ class ChoosePractitionersByTeamCodes : IntegrationTestBase() {
       .jsonPath("$.$teamCode.teams[?(@.code == '$firstOm')].activeCases")
       .isEqualTo(34)
       .jsonPath("$.$teamCode.teams[?(@.code == '$firstOm')].contactSuspendedCases")
+      .isEqualTo(1)
+      .jsonPath("$.$teamCode.teams[?(@.code == '$firstOm')].custodyReleasesInNext7Days")
       .isEqualTo(1)
       .jsonPath("$.$teamCode.teams[?(@.code == '$firstOm')].tierCaseTotals.a")
       .isEqualTo(0)

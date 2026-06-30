@@ -161,6 +161,7 @@ class TeamService(
     practitionerReallocationCaseCounts.getOrDefault(teamStaffId, 0),
     reportPractitionerData.ispsDueInNext14Days.getOrDefault(reportPractitionerId, 0),
     reportPractitionerData.contactSuspendedCases.getOrDefault(reportPractitionerId, 0),
+    reportPractitionerData.custodyReleasesInNext7Days.getOrDefault(reportPractitionerId, 0),
     tierCaseTotals,
   )
 

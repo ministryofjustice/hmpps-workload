@@ -5,5 +5,6 @@ data class PractitionerStats(
   val reallocatedCaseCount: Int,
   val ispsDueInNext14Days: Int,
   val contactSuspendedCases: Int,
+  val custodyReleasesInNext7Days: Int,
   val tierCaseTotals: TierCaseTotals?,
 )

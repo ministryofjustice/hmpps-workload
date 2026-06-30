@@ -11,13 +11,13 @@ import jakarta.validation.constraints.NotNull
 import java.sql.Date
 
 @Entity
-@Table(name = "reset_reports")
+@Table(name = "upcoming_releases_reports")
 data class UpcomingReleasesReportEntity @JsonCreator constructor(
 
   @Id
   @Column
   @GeneratedValue(strategy = GenerationType.IDENTITY)
-  val id: Long,
+  val id: Long? = null,
 
   @Column
   @NotNull
