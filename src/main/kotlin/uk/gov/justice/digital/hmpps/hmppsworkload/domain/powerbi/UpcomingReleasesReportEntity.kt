@@ -11,8 +11,8 @@ import jakarta.validation.constraints.NotNull
 import java.sql.Date
 
 @Entity
-@Table(name = "part_b_reports")
-data class PartBReportEntity @JsonCreator constructor(
+@Table(name = "upcoming_releases_reports")
+data class UpcomingReleasesReportEntity @JsonCreator constructor(
 
   @Id
   @Column
@@ -29,22 +29,11 @@ data class PartBReportEntity @JsonCreator constructor(
 
   @Column
   @NotNull
-  val returnToCustodyDate: Date,
+  val expectedReleaseDate: Date,
 
   @Column
   @NotNull
-  val targetDate: Date,
-
-  @Column
-  @NotNull
-  val tasks: String,
-
-  @Column
-  @NotNull
-  val actions: String,
-
-  @Column
-  val rarrType: String,
+  val prison: String,
 
   @Column
   @NotNull

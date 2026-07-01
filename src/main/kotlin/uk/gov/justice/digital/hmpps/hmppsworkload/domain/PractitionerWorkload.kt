@@ -52,24 +52,36 @@ data class PractitionerWithRawWorkloadPoints(
   val custodyCases: Int,
   val availablePoints: BigInteger,
   val totalPoints: BigInteger,
+  val ispsDueInNext14Days: Int,
+  val activeCases: Int,
+  val contactSuspendedCases: Int,
+  val custodyReleasesInNext7Days: Int,
+  val paroleReportsInNext28Days: Int,
+  val otherReportsInNext14Days: Int,
   val tierCaseTotals: TierCaseTotals?,
 ) {
   companion object {
-    fun from(staffMember: StaffMember, practitionerWorkload: TeamOverview, allocatedCaseCount: Int, reallocatedCaseCount: Int, tierCaseTotals: TierCaseTotals?): PractitionerWithRawWorkloadPoints = PractitionerWithRawWorkloadPoints(
+    fun from(staffMember: StaffMember, practitionerWorkload: TeamOverview, practitionerStats: PractitionerStats): PractitionerWithRawWorkloadPoints = PractitionerWithRawWorkloadPoints(
       staffMember.code,
       staffMember.name,
       staffMember.email.takeUnless { email -> email.isNullOrBlank() },
       staffMember.getGrade(),
       calculateCapacity(practitionerWorkload.totalPoints, practitionerWorkload.availablePoints),
-      allocatedCaseCount + reallocatedCaseCount,
-      allocatedCaseCount,
-      reallocatedCaseCount,
+      practitionerStats.allocatedCaseCount + practitionerStats.reallocatedCaseCount,
+      practitionerStats.allocatedCaseCount,
+      practitionerStats.reallocatedCaseCount,
       practitionerWorkload.totalCommunityCases,
       practitionerWorkload.totalLicenseCases,
       practitionerWorkload.totalCustodyCases,
       practitionerWorkload.availablePoints,
       practitionerWorkload.totalPoints,
-      tierCaseTotals,
+      practitionerStats.ispsDueInNext14Days,
+      practitionerWorkload.totalCommunityCases + practitionerWorkload.totalLicenseCases + practitionerWorkload.totalCustodyCases - practitionerStats.contactSuspendedCases,
+      practitionerStats.contactSuspendedCases,
+      practitionerStats.custodyReleasesInNext7Days,
+      practitionerStats.paroleReportsInNext28Days,
+      practitionerStats.hdcrotlReportsInNext14Days + practitionerStats.partBReportsInNext14Days + practitionerStats.partCReportsInNext14Days,
+      practitionerStats.tierCaseTotals,
     )
   }
 }
@@ -86,22 +98,34 @@ data class Practitioner constructor(
   val communityCases: Int,
   val licenseCases: Int,
   val custodyCases: Int,
+  val ispsDueInNext14Days: Int,
+  val activeCases: Int,
+  val contactSuspendedCases: Int,
+  val custodyReleasesInNext7Days: Int,
+  val paroleReportsInNext28Days: Int,
+  val otherReportsInNext14Days: Int,
   val tierCaseTotals: TierCaseTotals?,
 ) {
   companion object {
-    fun from(staffMember: StaffMember, practitionerWorkload: TeamOverview, allocatedCaseCount: Int, reallocatedCaseCount: Int, tierCaseTotals: TierCaseTotals?): Practitioner = Practitioner(
+    fun from(staffMember: StaffMember, practitionerWorkload: TeamOverview, practitionerStats: PractitionerStats): Practitioner = Practitioner(
       staffMember.code,
       staffMember.name,
       staffMember.email.takeUnless { email -> email.isNullOrBlank() },
       staffMember.getGrade(),
       calculateCapacity(practitionerWorkload.totalPoints, practitionerWorkload.availablePoints),
-      allocatedCaseCount + reallocatedCaseCount,
-      allocatedCaseCount,
-      reallocatedCaseCount,
+      practitionerStats.allocatedCaseCount + practitionerStats.reallocatedCaseCount,
+      practitionerStats.allocatedCaseCount,
+      practitionerStats.reallocatedCaseCount,
       practitionerWorkload.totalCommunityCases,
       practitionerWorkload.totalLicenseCases,
       practitionerWorkload.totalCustodyCases,
-      tierCaseTotals,
+      practitionerStats.ispsDueInNext14Days,
+      practitionerWorkload.totalCommunityCases + practitionerWorkload.totalLicenseCases + practitionerWorkload.totalCustodyCases - practitionerStats.contactSuspendedCases,
+      practitionerStats.contactSuspendedCases,
+      practitionerStats.custodyReleasesInNext7Days,
+      practitionerStats.paroleReportsInNext28Days,
+      practitionerStats.hdcrotlReportsInNext14Days + practitionerStats.partBReportsInNext14Days + practitionerStats.partCReportsInNext14Days,
+      practitionerStats.tierCaseTotals,
     )
   }
 }

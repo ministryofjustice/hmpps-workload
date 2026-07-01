@@ -59,6 +59,6 @@ class TeamController(
   suspend fun getPractitionerWorkloadAndCaseCount(@RequestParam(required = true) teamCode: String): Map<String, Map<String, List<PractitionerWithRawWorkloadPoints>>> {
     val practitioners = teamService.getPractitioners(listOf(teamCode))
       ?: throw EntityNotFoundException("Choose practitioner not found for $teamCode")
-    return mapOf(teamCode to practitioners)
+    return mapOf(practitioners.keys.first() to mapOf("teams" to practitioners.values.first()))
   }
 }

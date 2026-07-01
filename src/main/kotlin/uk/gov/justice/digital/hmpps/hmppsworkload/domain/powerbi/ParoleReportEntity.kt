@@ -17,7 +17,7 @@ data class ParoleReportEntity @JsonCreator constructor(
   @Id
   @Column
   @GeneratedValue(strategy = GenerationType.IDENTITY)
-  val id: Long,
+  val id: Long? = null,
 
   @Column
   @NotNull

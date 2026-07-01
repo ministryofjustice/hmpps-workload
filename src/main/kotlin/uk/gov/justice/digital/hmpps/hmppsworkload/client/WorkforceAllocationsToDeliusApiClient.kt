@@ -79,7 +79,7 @@ class WorkforceAllocationsToDeliusApiClient(private val webClient: WebClient) {
       )
     val teamDetail = teamDetails["teams"]?.values?.flatten() ?: emptyList()
     return createPractitionersResponse(
-      teamDetails.keys.first(),
+      teamDetails["teams"]?.keys?.first() ?: "",
       teamDetail.map { StaffMember(it.code, it.name, it.email, it.retrieveGrade()) },
     )
   }
