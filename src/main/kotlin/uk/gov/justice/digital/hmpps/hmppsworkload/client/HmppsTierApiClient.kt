@@ -67,10 +67,10 @@ class HmppsTierApiClient(private val webClient: WebClient) {
           }
       }
     } catch (e: TimeoutCancellationException) {
-      throw WorkloadWebClientTimeoutException(e.message!!)
+      throw WorkloadWebClientTimeoutException(e.message ?: "Tier service request timed out")
     } catch (e: WorkloadFailedDependencyException) {
       log.warn("Tier client failed due to Failed Dependency", e)
-      throw WorkloadFailedDependencyException(e.message!!)
+      throw WorkloadFailedDependencyException(e.message ?: "Tier service failed")
     }
   }
 }
