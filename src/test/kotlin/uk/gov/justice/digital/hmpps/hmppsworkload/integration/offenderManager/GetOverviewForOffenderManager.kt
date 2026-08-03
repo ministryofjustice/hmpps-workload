@@ -59,16 +59,28 @@ class GetOverviewForOffenderManager : IntegrationTestBase() {
       ),
     )
 
-    personManagerRepository.save(
-      PersonManagerEntity(
-        crn = "X111111",
-        staffCode = offenderManagerCode,
-        teamCode = teamCode,
-        createdBy = offenderManagerCode,
-        isActive = true,
-        allocationReason = AllocationReason.INITIAL_ALLOCATION,
-      ),
-    )
+    listOf(
+      "X111111",
+      "X111112",
+      "X111113",
+      "X111114",
+      "X111115",
+      "X111116",
+      "X111117",
+      "X111118",
+      "X111119",
+    ).forEach { crn ->
+      personManagerRepository.save(
+        PersonManagerEntity(
+          crn = crn,
+          staffCode = offenderManagerCode,
+          teamCode = teamCode,
+          createdBy = offenderManagerCode,
+          isActive = true,
+          allocationReason = AllocationReason.INITIAL_ALLOCATION,
+        ),
+      )
+    }
 
     hmppsTier.bulkTierCalculationResponse(
       mapOf(
