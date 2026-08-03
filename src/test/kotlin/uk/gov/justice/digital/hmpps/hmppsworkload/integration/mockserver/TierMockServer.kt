@@ -8,8 +8,10 @@ import org.mockserver.integration.ClientAndServer
 import org.mockserver.matchers.Times
 import org.mockserver.model.HttpRequest
 import org.mockserver.model.HttpResponse
+import org.mockserver.model.JsonBody
 import org.mockserver.model.MediaType
 import org.mockserver.verify.VerificationTimes
+import uk.gov.justice.digital.hmpps.hmppsworkload.client.TierDto
 import uk.gov.justice.digital.hmpps.hmppsworkload.integration.mockserver.TierApiExtension.Companion.hmppsTier
 import uk.gov.justice.digital.hmpps.hmppsworkload.integration.responses.notFoundTierResponse
 
@@ -49,6 +51,14 @@ class TierMockServer : ClientAndServer(MOCKSERVER_PORT) {
     val request = HttpRequest.request().withPath("/crn/$crn/tier")
     hmppsTier.`when`(request, Times.exactly(1)).respond(
       HttpResponse.notFoundResponse().withContentType(MediaType.APPLICATION_JSON).withBody(notFoundTierResponse()),
+    )
+  }
+
+  fun bulkTierCalculationResponse(crnTiers: Map<String, String>) {
+    val response = crnTiers.mapValues { TierDto(it.value) }
+    val request = HttpRequest.request().withMethod("POST").withPath("/v3/crns/tier")
+    hmppsTier.`when`(request).respond(
+      HttpResponse.response().withContentType(MediaType.APPLICATION_JSON).withBody(JsonBody.json(response)),
     )
   }
 

@@ -8,7 +8,6 @@ import uk.gov.justice.digital.hmpps.hmppsworkload.domain.OffenderManagerCases
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.OffenderManagerOverview
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.OffenderManagerPotentialWorkload
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.StaffIdentifier
-import uk.gov.justice.digital.hmpps.hmppsworkload.domain.TierCaseTotals
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.entity.CaseDetailsEntity
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.mapping.OverviewOffenderManager
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.CaseDetailsRepository
@@ -18,7 +17,6 @@ import uk.gov.justice.digital.hmpps.hmppsworkload.service.CaseCalculator
 import uk.gov.justice.digital.hmpps.hmppsworkload.service.GetWeeklyHours
 import uk.gov.justice.digital.hmpps.hmppsworkload.service.calculateCapacity
 import uk.gov.justice.digital.hmpps.hmppsworkload.service.reduction.GetReductionService
-import java.math.BigDecimal
 import java.math.BigInteger
 import java.time.LocalDateTime
 
@@ -32,6 +30,7 @@ class GetOffenderManagerService(
   private val getWeeklyHours: GetWeeklyHours,
   private val getEventManager: JpaBasedGetEventManager,
   private val workforceAllocationsToDeliusApiClient: WorkforceAllocationsToDeliusApiClient,
+  private val caseTotalsService: CaseTotalsService,
 ) {
 
   suspend fun getPotentialWorkload(staffIdentifier: StaffIdentifier, crn: String): OffenderManagerPotentialWorkload? {
@@ -75,12 +74,7 @@ class GetOffenderManagerService(
       overview.nextReductionChange = getReductionService.findNextReductionChange(staffIdentifier)
       overview.reductionHours = getReductionService.findReductionHours(staffIdentifier)
       overview.contractedHours = getWeeklyHours.findWeeklyHours(staffIdentifier, officerView.getGrade())
-      offenderManagerRepository.findByCaseloadTotals(overview.workloadOwnerId).let { totals ->
-        overview.tierCaseTotals = totals.map { total ->
-          TierCaseTotals(total.getATotal(), total.getBTotal(), total.getCTotal(), total.getDTotal(), total.getASTotal(), total.getBSTotal(), total.getCSTotal(), total.getDSTotal(), total.untiered)
-        }
-          .fold(TierCaseTotals(BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO)) { first, second -> TierCaseTotals(first.A.add(second.A), first.B.add(second.B), first.C.add(second.C), first.D.add(second.D), first.AS.add(second.AS), first.BS.add(second.BS), first.CS.add(second.CS), first.DS.add(second.DS), first.untiered.add(second.untiered)) }
-      }
+      overview.tierCaseTotals = caseTotalsService.getTotalsByTier(staffIdentifier.staffCode, staffIdentifier.teamCode)
     }
     return OffenderManagerOverview.from(overview, officerView)
   }
