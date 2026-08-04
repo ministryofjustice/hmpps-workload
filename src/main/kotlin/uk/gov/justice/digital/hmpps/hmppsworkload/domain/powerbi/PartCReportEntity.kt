@@ -21,23 +21,7 @@ data class PartCReportEntity @JsonCreator constructor(
 
   @Column
   @NotNull
-  val crn: String,
-
-  @Column
-  @NotNull
-  val personOnProbation: String,
-
-  @Column
-  @NotNull
   val targetDate: Date,
-
-  @Column
-  @NotNull
-  val notes: String,
-
-  @Column
-  @NotNull
-  val pdu: String,
 
   @Column
   @NotNull

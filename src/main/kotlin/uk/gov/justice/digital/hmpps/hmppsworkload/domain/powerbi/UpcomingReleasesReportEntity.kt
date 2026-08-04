@@ -21,23 +21,7 @@ data class UpcomingReleasesReportEntity @JsonCreator constructor(
 
   @Column
   @NotNull
-  val crn: String,
-
-  @Column
-  @NotNull
-  val personOnProbation: String,
-
-  @Column
-  @NotNull
   val expectedReleaseDate: Date,
-
-  @Column
-  @NotNull
-  val prison: String,
-
-  @Column
-  @NotNull
-  val pdu: String,
 
   @Column
   @NotNull

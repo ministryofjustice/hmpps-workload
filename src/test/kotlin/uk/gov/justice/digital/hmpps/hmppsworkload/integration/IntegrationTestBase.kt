@@ -464,30 +464,30 @@ abstract class IntegrationTestBase {
     val practitioner = "Doe, Jane"
     val prison = "Lincoln (HMP)"
 
-    val ispReportAtThreshold = InitialSentencePlanReportEntity(crn = crn, personOnProbation = pop, inductionDate = Date.valueOf(LocalDate.now()), targetDate = Date.valueOf(LocalDate.now().plusDays(14)), actions = placeholder, rosh = rosh, pdu = pdu, team = team, probationPractitioner = practitioner)
+    val ispReportAtThreshold = InitialSentencePlanReportEntity(targetDate = Date.valueOf(LocalDate.now().plusDays(14)), team = team, probationPractitioner = practitioner)
     val ispReportAfterThreshold = ispReportAtThreshold.copy(targetDate = Date.valueOf(LocalDate.now().plusDays(15)))
     initialSentencePlanReportRepository.saveAll(listOf(ispReportAtThreshold, ispReportAfterThreshold))
 
-    val resetReport = ResetReportEntity(crn = crn, personOnProbation = pop, actions = placeholder, notes = placeholder, orderCategory = placeholder, activeRequirements = placeholder, pdu = pdu, team = team, probationPractitioner = practitioner)
+    val resetReport = ResetReportEntity(team = team, probationPractitioner = practitioner)
     resetReportRepository.save(resetReport)
 
-    val custodyReleaseAtThreshold = UpcomingReleasesReportEntity(crn = crn, personOnProbation = pop, expectedReleaseDate = Date.valueOf(LocalDate.now().plusDays(7)), prison = prison, pdu = pdu, team = team, probationPractitioner = practitioner)
+    val custodyReleaseAtThreshold = UpcomingReleasesReportEntity(expectedReleaseDate = Date.valueOf(LocalDate.now().plusDays(7)), team = team, probationPractitioner = practitioner)
     val custodyReleaseAfterThreshold = custodyReleaseAtThreshold.copy(expectedReleaseDate = Date.valueOf(LocalDate.now().plusDays(8)))
     upcomingReleasesReportRepository.saveAll(listOf(custodyReleaseAtThreshold, custodyReleaseAfterThreshold))
 
-    val paroleReportAtThreshold = ParoleReportEntity(crn = crn, personOnProbation = pop, targetDate = Date.valueOf(LocalDate.now().plusDays(28)), notes = placeholder, pdu = pdu, team = team, probationPractitioner = practitioner)
+    val paroleReportAtThreshold = ParoleReportEntity(targetDate = Date.valueOf(LocalDate.now().plusDays(28)), team = team, probationPractitioner = practitioner)
     val paroleReportAfterThreshold = paroleReportAtThreshold.copy(targetDate = Date.valueOf(LocalDate.now().plusDays(29)))
     paroleReportRepository.saveAll(listOf(paroleReportAtThreshold, paroleReportAfterThreshold))
 
-    val hdcrotlReportAtThreshold = HDCROTLReportEntity(crn = crn, personOnProbation = pop, targetDate = Date.valueOf(LocalDate.now().plusDays(14)), institutionalReportType = "HDC", actions = placeholder, pdu = pdu, team = team, probationPractitioner = practitioner)
+    val hdcrotlReportAtThreshold = HDCROTLReportEntity(targetDate = Date.valueOf(LocalDate.now().plusDays(14)), team = team, probationPractitioner = practitioner)
     val hdcrotlReportAfterThreshold = hdcrotlReportAtThreshold.copy(targetDate = Date.valueOf(LocalDate.now().plusDays(15)))
     hdcrotlReportRepository.saveAll(listOf(hdcrotlReportAtThreshold, hdcrotlReportAfterThreshold))
 
-    val partBReportAtThreshold = PartBReportEntity(crn = crn, personOnProbation = pop, returnToCustodyDate = Date.valueOf(LocalDate.now()), targetDate = Date.valueOf(LocalDate.now().plusDays(14)), tasks = placeholder, actions = placeholder, rarrType = placeholder, pdu = pdu, team = team, probationPractitioner = practitioner)
+    val partBReportAtThreshold = PartBReportEntity(targetDate = Date.valueOf(LocalDate.now().plusDays(14)), team = team, probationPractitioner = practitioner)
     val partBReportAfterThreshold = partBReportAtThreshold.copy(targetDate = Date.valueOf(LocalDate.now().plusDays(15)))
     partBReportRepository.saveAll(listOf(partBReportAtThreshold, partBReportAfterThreshold))
 
-    val partCReportAtThreshold = PartCReportEntity(crn = crn, personOnProbation = pop, targetDate = Date.valueOf(LocalDate.now().plusDays(14)), notes = placeholder, pdu = pdu, team = team, probationPractitioner = practitioner)
+    val partCReportAtThreshold = PartCReportEntity(targetDate = Date.valueOf(LocalDate.now().plusDays(14)), team = team, probationPractitioner = practitioner)
     val partCReportAfterThreshold = partCReportAtThreshold.copy(targetDate = Date.valueOf(LocalDate.now().plusDays(15)))
     partCReportRepository.saveAll(listOf(partCReportAtThreshold, partCReportAfterThreshold))
   }

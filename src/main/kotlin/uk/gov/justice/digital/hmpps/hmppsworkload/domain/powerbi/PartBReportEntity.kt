@@ -21,34 +21,7 @@ data class PartBReportEntity @JsonCreator constructor(
 
   @Column
   @NotNull
-  val crn: String,
-
-  @Column
-  @NotNull
-  val personOnProbation: String,
-
-  @Column
-  @NotNull
-  val returnToCustodyDate: Date,
-
-  @Column
-  @NotNull
   val targetDate: Date,
-
-  @Column
-  @NotNull
-  val tasks: String,
-
-  @Column
-  @NotNull
-  val actions: String,
-
-  @Column
-  val rarrType: String,
-
-  @Column
-  @NotNull
-  val pdu: String,
 
   @Column
   @NotNull
