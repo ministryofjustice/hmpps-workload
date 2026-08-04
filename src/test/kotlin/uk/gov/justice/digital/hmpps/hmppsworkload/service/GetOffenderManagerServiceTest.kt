@@ -167,7 +167,7 @@ class GetOffenderManagerServiceTest {
     coEvery { getReductionService.findReductionHours(staffIdentifier) } returns reductionHours
     coEvery { getWeeklyHours.findWeeklyHours(staffIdentifier, OFFICER_GRADE) } returns workWeekHours
     coEvery { offenderManagerRepository.findByCaseloadTotals(13) } returns caseLoadTotals
-    coEvery { caseTotalsService.getTotalsByTier(staffIdentifier.staffCode, staffIdentifier.teamCode) } returns TierCaseTotals(BigDecimal.valueOf(120), BigDecimal.valueOf(122), BigDecimal.valueOf(124), BigDecimal.valueOf(126), BigDecimal.valueOf(128), BigDecimal.valueOf(130), BigDecimal.valueOf(132), BigDecimal.valueOf(134), BigDecimal.valueOf(25))
+    coEvery { caseTotalsService.getPractitionerTotalsByTier(staffIdentifier.staffCode, staffIdentifier.teamCode) } returns TierCaseTotals(BigDecimal.valueOf(120), BigDecimal.valueOf(122), BigDecimal.valueOf(124), BigDecimal.valueOf(126), BigDecimal.valueOf(128), BigDecimal.valueOf(130), BigDecimal.valueOf(132), BigDecimal.valueOf(134), BigDecimal.valueOf(25))
 
     val overview = offenderManagerService.getOverview(staffIdentifier)
 

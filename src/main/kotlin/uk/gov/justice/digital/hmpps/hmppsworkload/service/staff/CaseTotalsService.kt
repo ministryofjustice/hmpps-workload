@@ -4,6 +4,7 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.HmppsTierApiClient
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.AllocationReason
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.TierCaseTotals
+import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.entity.PersonManagerEntity
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.PersonManagerRepository
 import java.math.BigDecimal
 import java.time.ZonedDateTime
@@ -33,10 +34,36 @@ class CaseTotalsService(
     .groupBy { it.staffCode }
     .mapValues { countEntry -> countEntry.value.size }
 
-  suspend fun getTotalsByTier(staffCode: String, teamCode: String): TierCaseTotals {
-    val crns = personManagerRepository.findByStaffCodeAndTeamCodeAndIsActiveIsTrue(staffCode, teamCode)
-      .map { it.crn }
+  suspend fun getTeamTotalsByTier(teamCodes: List<String>): Map<String, TierCaseTotals> {
+    val cases = personManagerRepository.findByTeamCodeInAndIsActiveIsTrue(teamCodes)
+    val tiers = getTiers(cases.map { it.crn })
+    val totals = cases
+      .groupBy { teamStaffId(it.teamCode, it.staffCode) }
+      .mapValues { teamStaffEntry -> calculateTotals(teamStaffEntry.value, tiers) }
 
+    return totals
+  }
+
+  suspend fun getPractitionerTotalsByTier(staffCode: String, teamCode: String): TierCaseTotals {
+    val cases = personManagerRepository.findByStaffCodeAndTeamCodeAndIsActiveIsTrue(staffCode, teamCode)
+    val tiers = getTiers(cases.map { it.crn })
+    val totals = calculateTotals(cases, tiers)
+
+    return totals
+  }
+
+  private suspend fun getTiers(crns: List<String>): Map<String, String> {
+    val tiers = mutableMapOf<String, String>()
+
+    // Tiering API only accepts 20 CRNs at a time, so we have to batch the calls
+    for (chunk in crns.chunked(20)) {
+      tiers += tierApiClient.getTierByCrns(chunk)
+    }
+
+    return tiers
+  }
+
+  private fun calculateTotals(cases: List<PersonManagerEntity>, tiers: Map<String, String>): TierCaseTotals {
     var a = BigDecimal.ZERO
     var b = BigDecimal.ZERO
     var c = BigDecimal.ZERO
@@ -47,7 +74,9 @@ class CaseTotalsService(
     var missing = BigDecimal.ZERO
     var notSupervised = BigDecimal.ZERO
 
-    for (tier in getTiers(crns)) {
+    for (case in cases) {
+      val tier = tiers.getOrDefault(case.crn, "MISSING")
+
       when (tier) {
         "A" -> a = a.inc()
         "B" -> b = b.inc()
@@ -56,17 +85,12 @@ class CaseTotalsService(
         "E" -> e = e.inc()
         "F" -> f = f.inc()
         "G" -> g = g.inc()
-        "MISSING" -> missing = missing.inc()
         "NOT_SUPERVISED" -> notSupervised = notSupervised.inc()
+        else -> missing = missing.inc()
       }
     }
 
     return TierCaseTotals(a, b, c, d, e, f, g, missing, notSupervised)
-  }
-
-  private suspend fun getTiers(crns: List<String>): List<String> {
-    // Tiering API only accepts 20 CRNs at a time, so we have to batch the calls
-    return crns.chunked(20).flatMap { tierApiClient.getTierByCrns(it).values }
   }
 
   private fun teamStaffId(teamCode: String, staffCode: String) = "$teamCode-$staffCode"

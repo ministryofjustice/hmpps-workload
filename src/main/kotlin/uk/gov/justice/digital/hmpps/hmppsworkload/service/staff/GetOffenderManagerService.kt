@@ -74,7 +74,7 @@ class GetOffenderManagerService(
       overview.nextReductionChange = getReductionService.findNextReductionChange(staffIdentifier)
       overview.reductionHours = getReductionService.findReductionHours(staffIdentifier)
       overview.contractedHours = getWeeklyHours.findWeeklyHours(staffIdentifier, officerView.getGrade())
-      overview.tierCaseTotals = caseTotalsService.getTotalsByTier(staffIdentifier.staffCode, staffIdentifier.teamCode)
+      overview.tierCaseTotals = caseTotalsService.getPractitionerTotalsByTier(staffIdentifier.staffCode, staffIdentifier.teamCode)
     }
     return OffenderManagerOverview.from(overview, officerView)
   }
