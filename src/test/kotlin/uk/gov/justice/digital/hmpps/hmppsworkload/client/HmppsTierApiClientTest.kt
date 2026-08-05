@@ -52,4 +52,34 @@ class HmppsTierApiClientTest {
     val webClient = WebClient.builder().exchangeFunction(exchangeFunction).build()
     assertThrows(WorkloadFailedDependencyException::class.java) { runBlocking { HmppsTierApiClient(webClient).getTierByCrn("X123456") } }
   }
+
+  @Test
+  fun `test get tier by crns`() = runBlocking {
+    val exchangeFunction = ExchangeFunction { _ ->
+      Mono.just(
+        ClientResponse.create(HttpStatus.OK)
+          .header("Content-Type", "application/json")
+          .body("{\"X123456\": {\"tierScore\":\"A\"}, \"X234567\": {\"tierScore\":\"B\"}}")
+          .build(),
+      )
+    }
+
+    val webClient = WebClient.builder().exchangeFunction(exchangeFunction).build()
+    val result = HmppsTierApiClient(webClient).getTierByCrns(listOf("X123456", "X234567"))
+
+    assertTrue(result["X123456"] == "A")
+    assertTrue(result["X234567"] == "B")
+  }
+
+  @Test
+  fun `test get tier by crns throws error`() = runBlocking<Unit> {
+    val exchangeFunction = ExchangeFunction { _ ->
+      Mono.just(
+        ClientResponse.create(HttpStatus.INTERNAL_SERVER_ERROR)
+          .build(),
+      )
+    }
+    val webClient = WebClient.builder().exchangeFunction(exchangeFunction).build()
+    assertThrows(WorkloadFailedDependencyException::class.java) { runBlocking { HmppsTierApiClient(webClient).getTierByCrns(listOf("X123456", "X234567")) } }
+  }
 }

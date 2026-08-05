@@ -19,6 +19,7 @@ import uk.gov.justice.digital.hmpps.hmppsworkload.domain.EventDetails
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.OffenderManagerActiveCase
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.StaffIdentifier
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.Tier
+import uk.gov.justice.digital.hmpps.hmppsworkload.domain.TierCaseTotals
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.entity.CaseDetailsEntity
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.mapping.OffenderManagerCaseloadTotals
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.mapping.OverviewOffenderManager
@@ -26,6 +27,7 @@ import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.CaseDetailsRepo
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.OffenderManagerRepository
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.WorkloadPointsRepository
 import uk.gov.justice.digital.hmpps.hmppsworkload.service.reduction.GetReductionService
+import uk.gov.justice.digital.hmpps.hmppsworkload.service.staff.CaseTotalsService
 import uk.gov.justice.digital.hmpps.hmppsworkload.service.staff.GetOffenderManagerService
 import uk.gov.justice.digital.hmpps.hmppsworkload.service.staff.JpaBasedGetEventManager
 import java.math.BigDecimal
@@ -49,6 +51,7 @@ class GetOffenderManagerServiceTest {
   private val caseDetailsRepository = mockk<CaseDetailsRepository>()
   private val getWeeklyHours = mockk<GetWeeklyHours>()
   private val getEventManager = mockk<JpaBasedGetEventManager>()
+  private val caseTotalsService = mockk<CaseTotalsService>()
 
   private val offenderManagerService = GetOffenderManagerService(
     offenderManagerRepository,
@@ -59,6 +62,7 @@ class GetOffenderManagerServiceTest {
     getWeeklyHours,
     getEventManager,
     workforceAllocationsToDeliusApiClient,
+    caseTotalsService,
   )
 
   @Test
@@ -163,6 +167,7 @@ class GetOffenderManagerServiceTest {
     coEvery { getReductionService.findReductionHours(staffIdentifier) } returns reductionHours
     coEvery { getWeeklyHours.findWeeklyHours(staffIdentifier, OFFICER_GRADE) } returns workWeekHours
     coEvery { offenderManagerRepository.findByCaseloadTotals(13) } returns caseLoadTotals
+    coEvery { caseTotalsService.getPractitionerTotalsByTier(staffIdentifier.staffCode, staffIdentifier.teamCode) } returns TierCaseTotals(BigDecimal.valueOf(120), BigDecimal.valueOf(122), BigDecimal.valueOf(124), BigDecimal.valueOf(126), BigDecimal.valueOf(128), BigDecimal.valueOf(130), BigDecimal.valueOf(132), BigDecimal.valueOf(134), BigDecimal.valueOf(25))
 
     val overview = offenderManagerService.getOverview(staffIdentifier)
 
@@ -175,11 +180,11 @@ class GetOffenderManagerServiceTest {
     assertEquals(overview?.caseTotals?.B, BigDecimal.valueOf(122))
     assertEquals(overview?.caseTotals?.C, BigDecimal.valueOf(124))
     assertEquals(overview?.caseTotals?.D, BigDecimal.valueOf(126))
-    assertEquals(overview?.caseTotals?.AS, BigDecimal.valueOf(128))
-    assertEquals(overview?.caseTotals?.BS, BigDecimal.valueOf(130))
-    assertEquals(overview?.caseTotals?.CS, BigDecimal.valueOf(132))
-    assertEquals(overview?.caseTotals?.DS, BigDecimal.valueOf(134))
-    assertEquals(overview?.caseTotals?.untiered, BigDecimal.valueOf(25))
+    assertEquals(overview?.caseTotals?.E, BigDecimal.valueOf(128))
+    assertEquals(overview?.caseTotals?.F, BigDecimal.valueOf(130))
+    assertEquals(overview?.caseTotals?.G, BigDecimal.valueOf(132))
+    assertEquals(overview?.caseTotals?.missing, BigDecimal.valueOf(134))
+    assertEquals(overview?.caseTotals?.notSupervised, BigDecimal.valueOf(25))
     assertEquals(overview?.caseEndDue, BigInteger.valueOf(4))
     assertEquals(overview?.pointsAvailable, BigInteger.valueOf(availablePoints))
     assertEquals(overview?.pointsUsed, totalPoints)

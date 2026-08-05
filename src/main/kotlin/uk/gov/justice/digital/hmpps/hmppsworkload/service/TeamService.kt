@@ -7,7 +7,6 @@ import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.WorkforceAllocationsToDeliusApiClient
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.StaffMember
-import uk.gov.justice.digital.hmpps.hmppsworkload.domain.AllocationReason
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.Practitioner
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.PractitionerStats
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.PractitionerWithRawWorkloadPoints
@@ -18,16 +17,13 @@ import uk.gov.justice.digital.hmpps.hmppsworkload.domain.powerbi.ReportPractitio
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.powerbi.ReportPractitionerId
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.mapping.TeamOverview
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.CaseDetailsRepository
-import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.OffenderManagerRepository
-import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.PersonManagerRepository
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.TeamRepository
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.WorkloadPointsRepository
 import uk.gov.justice.digital.hmpps.hmppsworkload.service.powerbi.ReportDataService
-import java.math.BigDecimal
+import uk.gov.justice.digital.hmpps.hmppsworkload.service.staff.CaseTotalsService
 import java.math.BigInteger
 import java.time.LocalDate
 import java.time.ZoneId
-import java.time.ZonedDateTime
 
 private const val CASE_COUNT_PERIOD_DAYS = 7L
 
@@ -35,11 +31,10 @@ private const val CASE_COUNT_PERIOD_DAYS = 7L
 class TeamService(
   private val teamRepository: TeamRepository,
   private val workloadPointsRepository: WorkloadPointsRepository,
-  private val personManagerRepository: PersonManagerRepository,
   private val caseDetailsRepository: CaseDetailsRepository,
-  private val offenderManagerRepository: OffenderManagerRepository,
   private val workforceAllocationsToDeliusApiClient: WorkforceAllocationsToDeliusApiClient,
   private val reportDataService: ReportDataService,
+  private val caseTotalsService: CaseTotalsService,
 ) {
 
   companion object {
@@ -50,22 +45,22 @@ class TeamService(
     return workforceAllocationsToDeliusApiClient.choosePractitioners(crn, teamCodes)?.let { choosePractitionerResponse ->
       val practitionerWorkloads = teamRepository.findAllByTeamCodes(teamCodes).associateBy { teamStaffId(it.teamCode, it.staffCode) }
       val caseCountAfter = LocalDate.now().atStartOfDay(ZoneId.systemDefault()).minusDays(CASE_COUNT_PERIOD_DAYS)
-      val practitionerAllocationCaseCounts = getPractitionerAllocationCaseCounts(teamCodes, caseCountAfter)
-      val practitionerReallocationCaseCounts = getPractitionerReallocationCaseCounts(teamCodes, caseCountAfter)
+      val practitionerAllocationCaseCounts = caseTotalsService.getPractitionerAllocationCaseCounts(teamCodes, caseCountAfter)
+      val practitionerReallocationCaseCounts = caseTotalsService.getPractitionerReallocationCaseCounts(teamCodes, caseCountAfter)
 
       val teamNames = teamRepository.findAllByCodeIn(teamCodes).associate { it.code to it.description }
       val reportPractitionerData = reportDataService.getPractitionerData(teamNames.values.toList())
+      val teamTierTotals = caseTotalsService.getTeamTotalsByTier(teamCodes)
 
       val enrichedTeams = choosePractitionerResponse.teams.mapValues { team ->
         team.value
           .filter { grades == null || grades.contains(it.getGrade()) }
           .map {
             val teamStaffId = teamStaffId(team.key, it.code)
-            val practitionerWorkload = practitionerWorkloads[teamStaffId]
-              ?: getTeamOverviewForOffenderManagerWithoutWorkload(it.code, it.getGrade(), team.key)
+            val practitionerWorkload = practitionerWorkloads[teamStaffId] ?: getTeamOverviewForOffenderManagerWithoutWorkload(it.code, it.getGrade(), team.key)
 
             val reportPractitionerId = getReportPractitionerId(teamNames, team.key, it)
-            val practitionerStats = getPractitionerStats(practitionerAllocationCaseCounts, practitionerReallocationCaseCounts, reportPractitionerData, teamStaffId, reportPractitionerId, getCaseTierTotals(it.code, team.key))
+            val practitionerStats = getPractitionerStats(practitionerAllocationCaseCounts, practitionerReallocationCaseCounts, reportPractitionerData, teamStaffId, reportPractitionerId, teamTierTotals[teamStaffId])
 
             Practitioner.from(it, practitionerWorkload, practitionerStats)
           }
@@ -110,11 +105,12 @@ class TeamService(
     return workforceAllocationsToDeliusApiClient.choosePractitioners(teamCodes)?.let { choosePractitionerResponse ->
       val practitionerWorkloads = teamRepository.findAllByTeamCodes(teamCodes).associateBy { it.staffCode }
       val caseCountAfter = LocalDate.now().atStartOfDay(ZoneId.systemDefault()).minusDays(CASE_COUNT_PERIOD_DAYS)
-      val practitionerAllocationCaseCounts = getPractitionerAllocationCaseCountsTeamCodeOnly(teamCodes, caseCountAfter)
-      val practitionerReallocationCaseCounts = getPractitionerReallocationCaseCountsTeamCodeOnly(teamCodes, caseCountAfter)
+      val practitionerAllocationCaseCounts = caseTotalsService.getPractitionerAllocationCaseCountsTeamCodeOnly(teamCodes, caseCountAfter)
+      val practitionerReallocationCaseCounts = caseTotalsService.getPractitionerReallocationCaseCountsTeamCodeOnly(teamCodes, caseCountAfter)
 
       val teamNames = teamRepository.findAllByCodeIn(teamCodes).associate { it.code to it.description }
       val reportPractitionerData = reportDataService.getPractitionerData(teamNames.values.toList())
+      val teamTierTotals = caseTotalsService.getTeamTotalsByTier(teamCodes)
 
       log.info("Practitioner Workloads: $practitionerWorkloads")
       log.info("Practitioner Allocation Case Counts: $practitionerAllocationCaseCounts")
@@ -126,11 +122,10 @@ class TeamService(
           log.info("StaffId to get workload: $teamStaffId")
           log.info("Practitioner Workload: ${practitionerWorkloads[teamStaffId]}")
 
-          val practitionerWorkload = practitionerWorkloads[teamStaffId]
-            ?: getTeamOverviewForOffenderManagerWithoutWorkload(it.code, it.retrieveGrade(), team.key)
+          val practitionerWorkload = practitionerWorkloads[teamStaffId] ?: getTeamOverviewForOffenderManagerWithoutWorkload(it.code, it.retrieveGrade(), team.key)
 
           val reportPractitionerId = getReportPractitionerId(teamNames, team.key, it)
-          val practitionerStats = getPractitionerStats(practitionerAllocationCaseCounts, practitionerReallocationCaseCounts, reportPractitionerData, teamStaffId, reportPractitionerId, getCaseTierTotals(it.code, team.key))
+          val practitionerStats = getPractitionerStats(practitionerAllocationCaseCounts, practitionerReallocationCaseCounts, reportPractitionerData, teamStaffId, reportPractitionerId, teamTierTotals[teamStaffId(team.key, it.code)])
 
           PractitionerWithRawWorkloadPoints.from(it, practitionerWorkload, practitionerStats)
         }
@@ -168,39 +163,4 @@ class TeamService(
     reportPractitionerData.partCReportsInNext14Days.getOrDefault(reportPractitionerId, 0),
     tierCaseTotals,
   )
-
-  suspend fun getPractitionerAllocationCaseCounts(teamCodes: List<String>, caseCountAfter: ZonedDateTime): Map<String, Int> = personManagerRepository.findByTeamCodeInAndCreatedDateGreaterThanEqualAndIsActiveIsTrue(teamCodes, caseCountAfter)
-    .filter { it.allocationReason == AllocationReason.INITIAL_ALLOCATION }
-    .groupBy { teamStaffId(it.teamCode, it.staffCode) }
-    .mapValues { countEntry -> countEntry.value.size }
-
-  suspend fun getPractitionerReallocationCaseCounts(teamCodes: List<String>, caseCountAfter: ZonedDateTime): Map<String, Int> = personManagerRepository.findByTeamCodeInAndCreatedDateGreaterThanEqualAndIsActiveIsTrue(teamCodes, caseCountAfter)
-    .filter { it.allocationReason != AllocationReason.INITIAL_ALLOCATION }
-    .groupBy { teamStaffId(it.teamCode, it.staffCode) }
-    .mapValues { countEntry -> countEntry.value.size }
-
-  suspend fun getPractitionerAllocationCaseCountsTeamCodeOnly(teamCodes: List<String>, caseCountAfter: ZonedDateTime): Map<String, Int> = personManagerRepository.findByTeamCodeInAndCreatedDateGreaterThanEqualAndIsActiveIsTrue(teamCodes, caseCountAfter)
-    .filter { it.allocationReason == AllocationReason.INITIAL_ALLOCATION }
-    .groupBy { it.staffCode }
-    .mapValues { countEntry -> countEntry.value.size }
-
-  suspend fun getPractitionerReallocationCaseCountsTeamCodeOnly(teamCodes: List<String>, caseCountAfter: ZonedDateTime): Map<String, Int> = personManagerRepository.findByTeamCodeInAndCreatedDateGreaterThanEqualAndIsActiveIsTrue(teamCodes, caseCountAfter)
-    .filter { it.allocationReason != AllocationReason.INITIAL_ALLOCATION }
-    .groupBy { it.staffCode }
-    .mapValues { countEntry -> countEntry.value.size }
-
-  suspend fun getCaseTierTotals(staffCode: String, teamCode: String): TierCaseTotals? {
-    val overview = offenderManagerRepository.findByOverview(teamCode, staffCode)
-    if (overview?.hasWorkload ?: false) {
-      offenderManagerRepository.findByCaseloadTotals(overview.workloadOwnerId).let { totals ->
-        overview.tierCaseTotals = totals.map { total ->
-          TierCaseTotals(total.getATotal(), total.getBTotal(), total.getCTotal(), total.getDTotal(), total.getASTotal(), total.getBSTotal(), total.getCSTotal(), total.getDSTotal(), total.untiered)
-        }
-          .fold(TierCaseTotals(BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO)) { first, second -> TierCaseTotals(first.A.add(second.A), first.B.add(second.B), first.C.add(second.C), first.D.add(second.D), first.AS.add(second.AS), first.BS.add(second.BS), first.CS.add(second.CS), first.DS.add(second.DS), first.untiered.add(second.untiered)) }
-      }
-      return overview.tierCaseTotals
-    } else {
-      return TierCaseTotals(BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO)
-    }
-  }
 }

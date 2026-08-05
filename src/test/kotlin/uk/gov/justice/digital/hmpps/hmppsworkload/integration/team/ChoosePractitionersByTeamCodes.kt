@@ -5,6 +5,7 @@ import uk.gov.justice.digital.hmpps.hmppsworkload.domain.AllocationReason
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.CaseType
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.Tier
 import uk.gov.justice.digital.hmpps.hmppsworkload.integration.IntegrationTestBase
+import uk.gov.justice.digital.hmpps.hmppsworkload.integration.mockserver.TierApiExtension.Companion.hmppsTier
 import uk.gov.justice.digital.hmpps.hmppsworkload.integration.mockserver.WorkforceAllocationsToDeliusExtension.Companion.workforceAllocationsToDelius
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.entity.PersonManagerEntity
 import java.time.ZonedDateTime
@@ -37,6 +38,8 @@ class ChoosePractitionersByTeamCodes : IntegrationTestBase() {
 
     val personManagerWithNoWorkload = PersonManagerEntity(crn = "CRN4", staffCode = noWorkloadStaffCode, teamCode = "T1", createdBy = "USER2", createdDate = ZonedDateTime.now().minusDays(2L), isActive = true, allocationReason = AllocationReason.INITIAL_ALLOCATION)
     personManagerRepository.save(personManagerWithNoWorkload)
+
+    hmppsTier.bulkTierCalculationResponse(mapOf("CRN5" to "A"))
 
     setupReportData()
 
@@ -106,7 +109,7 @@ class ChoosePractitionersByTeamCodes : IntegrationTestBase() {
       .jsonPath("$.teams.$teamCode[?(@.code == '$firstOm')].otherReportsInNext14Days")
       .isEqualTo(3)
       .jsonPath("$.teams.$teamCode[?(@.code == '$firstOm')].tierCaseTotals.a")
-      .isEqualTo(0)
+      .isEqualTo(1)
       .jsonPath("$.teams.$teamCode[?(@.code == '$noWorkloadStaffCode')].name.forename")
       .isEqualTo("No")
       .jsonPath("$.teams.$teamCode[?(@.code == '$noWorkloadStaffCode')].name.surname")
@@ -173,6 +176,8 @@ class ChoosePractitionersByTeamCodes : IntegrationTestBase() {
 
     val personManagerWithNoWorkload = PersonManagerEntity(crn = "CRN4", staffCode = noWorkloadStaffCode, teamCode = "T1", createdBy = "USER2", createdDate = ZonedDateTime.now().minusDays(2L), isActive = true, allocationReason = AllocationReason.INITIAL_ALLOCATION)
     personManagerRepository.save(personManagerWithNoWorkload)
+
+    hmppsTier.bulkTierCalculationResponse(mapOf("CRN5" to "A"))
 
     setupReportData()
 
@@ -242,7 +247,7 @@ class ChoosePractitionersByTeamCodes : IntegrationTestBase() {
       .jsonPath("$.teams.$teamCode[?(@.code == '$firstOm')].otherReportsInNext14Days")
       .isEqualTo(3)
       .jsonPath("$.teams.$teamCode[?(@.code == '$firstOm')].tierCaseTotals.a")
-      .isEqualTo(0)
+      .isEqualTo(1)
       .jsonPath("$.teams.$teamCode[?(@.code == '$noWorkloadStaffCode')].name.forename")
       .isEqualTo("No")
       .jsonPath("$.teams.$teamCode[?(@.code == '$noWorkloadStaffCode')].name.surname")
@@ -298,6 +303,8 @@ class ChoosePractitionersByTeamCodes : IntegrationTestBase() {
     val movedPersonManager = PersonManagerEntity(crn = "CRN3", staffCode = firstOm, teamCode = teamCode, createdBy = "USER1", createdDate = ZonedDateTime.now().minusDays(5L), isActive = false, allocationReason = AllocationReason.INITIAL_ALLOCATION)
     personManagerRepository.save(movedPersonManager)
 
+    hmppsTier.bulkTierCalculationResponse(mapOf("CRN5" to "A"))
+
     setupReportData()
 
     webTestClient.get()
@@ -342,7 +349,7 @@ class ChoosePractitionersByTeamCodes : IntegrationTestBase() {
       .jsonPath("$.$teamCode.teams[?(@.code == '$firstOm')].otherReportsInNext14Days")
       .isEqualTo(3)
       .jsonPath("$.$teamCode.teams[?(@.code == '$firstOm')].tierCaseTotals.a")
-      .isEqualTo(0)
+      .isEqualTo(1)
   }
 
   @Test
@@ -371,6 +378,8 @@ class ChoosePractitionersByTeamCodes : IntegrationTestBase() {
     val personManagerWithNoWorkload = PersonManagerEntity(crn = "CRN4", staffCode = noWorkloadStaffCode, teamCode = "T1", createdBy = "USER2", createdDate = ZonedDateTime.now().minusDays(2L), isActive = true, allocationReason = AllocationReason.INITIAL_ALLOCATION)
     personManagerRepository.save(personManagerWithNoWorkload)
 
+    hmppsTier.bulkTierCalculationResponse(mapOf("CRN5" to "A"))
+
     webTestClient.get()
       .uri("/team/choose-practitioner?crn=$crn&teamCodes=$teamCode,$teamCode2")
       .headers { it.authToken(roles = listOf("ROLE_WORKLOAD_MEASUREMENT")) }
@@ -391,6 +400,8 @@ class ChoosePractitionersByTeamCodes : IntegrationTestBase() {
 
     val firstOm = firstWmtStaff.offenderManager.code
     val noWorkloadStaffCode = "NOWORKLOAD1"
+
+    hmppsTier.bulkTierCalculationResponse(mapOf("CRN5" to "A"))
 
     webTestClient.get()
       .uri("/team/choose-practitioner?crn=$crn&teamCodes=$teamCode,$teamCode2&grades=PO,PQiP")
@@ -498,6 +509,8 @@ class ChoosePractitionersByTeamCodes : IntegrationTestBase() {
     val storedPersonManager = PersonManagerEntity(crn = "CRN1", staffCode = firstOm, teamCode = teamCode, createdBy = "USER1", isActive = true, allocationReason = AllocationReason.INITIAL_ALLOCATION)
     personManagerRepository.save(storedPersonManager)
 
+    hmppsTier.bulkTierCalculationResponse(mapOf("CRN5" to "A"))
+
     webTestClient.get()
       .uri("/team/choose-practitioner?crn=$crn&teamCodes=$teamCode")
       .headers { it.authToken(roles = listOf("ROLE_WORKLOAD_MEASUREMENT")) }
@@ -526,6 +539,8 @@ class ChoosePractitionersByTeamCodes : IntegrationTestBase() {
 
     val storedPersonManager = PersonManagerEntity(crn = "CRN1", staffCode = firstOm, teamCode = teamCode, createdBy = "USER1", isActive = true, allocationReason = AllocationReason.INITIAL_ALLOCATION)
     personManagerRepository.save(storedPersonManager)
+
+    hmppsTier.bulkTierCalculationResponse(mapOf("CRN5" to "A"))
 
     webTestClient.get()
       .uri("/team/choose-practitioner?crn=$crn&teamCodes=$teamCode")
@@ -557,6 +572,8 @@ class ChoosePractitionersByTeamCodes : IntegrationTestBase() {
 
     val storedPersonManager = PersonManagerEntity(crn = "CRN1", staffCode = firstOm, teamCode = teamCode, createdBy = "USER1", isActive = true, allocationReason = AllocationReason.INITIAL_ALLOCATION)
     personManagerRepository.save(storedPersonManager)
+
+    hmppsTier.bulkTierCalculationResponse(mapOf("CRN5" to "A"))
 
     webTestClient.get()
       .uri("/team/choose-practitioner?crn=$crn&teamCodes=$teamCode")
