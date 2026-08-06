@@ -38,6 +38,7 @@ class CaseTotalsServiceTest {
         buildCase("X111119", STAFF_CODE_2, TEAM_CODE_2),
         buildCase("X111120", STAFF_CODE_2, TEAM_CODE_2),
         buildCase("X111121", STAFF_CODE_2, TEAM_CODE_2),
+        buildCase("X111122", STAFF_CODE_2, TEAM_CODE_2),
       )
 
       coEvery { hmppsTierApiClient.getTierByCrns(any()) } returns mapOf(
@@ -52,13 +53,14 @@ class CaseTotalsServiceTest {
         "X111119" to "MISSING",
         "X111120" to "NOT_SUPERVISED",
         "X111121" to "INVALID_VALUE", // Treated as 'MISSING'
+        "X111121" to null, // Treated as 'MISSING'
       )
 
       val totals = caseTotalsService.getTeamTotalsByTier(listOf(TEAM_CODE_1, TEAM_CODE_2))
 
       assertEquals(2, totals.size)
       assertEquals(TierCaseTotals(BigDecimal.valueOf(2), BigDecimal.valueOf(1), BigDecimal.valueOf(1), BigDecimal.valueOf(1), BigDecimal.valueOf(1), BigDecimal.valueOf(0), BigDecimal.valueOf(0), BigDecimal.valueOf(0), BigDecimal.valueOf(0)), totals["$TEAM_CODE_1-$STAFF_CODE_1"])
-      assertEquals(TierCaseTotals(BigDecimal.valueOf(0), BigDecimal.valueOf(0), BigDecimal.valueOf(0), BigDecimal.valueOf(0), BigDecimal.valueOf(0), BigDecimal.valueOf(1), BigDecimal.valueOf(1), BigDecimal.valueOf(2), BigDecimal.valueOf(1)), totals["$TEAM_CODE_2-$STAFF_CODE_2"])
+      assertEquals(TierCaseTotals(BigDecimal.valueOf(0), BigDecimal.valueOf(0), BigDecimal.valueOf(0), BigDecimal.valueOf(0), BigDecimal.valueOf(0), BigDecimal.valueOf(1), BigDecimal.valueOf(1), BigDecimal.valueOf(3), BigDecimal.valueOf(1)), totals["$TEAM_CODE_2-$STAFF_CODE_2"])
     }
   }
 
@@ -77,6 +79,7 @@ class CaseTotalsServiceTest {
         buildCase("X111119", STAFF_CODE_1, TEAM_CODE_1),
         buildCase("X111120", STAFF_CODE_1, TEAM_CODE_1),
         buildCase("X111121", STAFF_CODE_1, TEAM_CODE_1),
+        buildCase("X111122", STAFF_CODE_1, TEAM_CODE_1),
       )
 
       coEvery { hmppsTierApiClient.getTierByCrns(any()) } returns mapOf(
@@ -91,11 +94,12 @@ class CaseTotalsServiceTest {
         "X111119" to "MISSING",
         "X111120" to "NOT_SUPERVISED",
         "X111121" to "INVALID_VALUE", // Treated as 'MISSING'
+        "X111121" to null, // Treated as 'MISSING'
       )
 
       val totals = caseTotalsService.getPractitionerTotalsByTier(STAFF_CODE_1, TEAM_CODE_1)
 
-      assertEquals(TierCaseTotals(BigDecimal.valueOf(2), BigDecimal.valueOf(1), BigDecimal.valueOf(1), BigDecimal.valueOf(1), BigDecimal.valueOf(1), BigDecimal.valueOf(1), BigDecimal.valueOf(1), BigDecimal.valueOf(2), BigDecimal.valueOf(1)), totals)
+      assertEquals(TierCaseTotals(BigDecimal.valueOf(2), BigDecimal.valueOf(1), BigDecimal.valueOf(1), BigDecimal.valueOf(1), BigDecimal.valueOf(1), BigDecimal.valueOf(1), BigDecimal.valueOf(1), BigDecimal.valueOf(3), BigDecimal.valueOf(1)), totals)
     }
   }
 

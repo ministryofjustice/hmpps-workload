@@ -47,7 +47,7 @@ class HmppsTierApiClient(private val webClient: WebClient) {
     }
   }
 
-  suspend fun getTierByCrns(crns: List<String>): Map<String, String> {
+  suspend fun getTierByCrns(crns: List<String>): Map<String, String?> {
     try {
       return withTimeout(TIMEOUT_VALUE) {
         webClient
@@ -57,7 +57,7 @@ class HmppsTierApiClient(private val webClient: WebClient) {
           .awaitExchange { response ->
             when {
               response.statusCode() == HttpStatus.OK -> {
-                response.awaitBody<Map<String, TierDto>>().mapValues { it.value.tierScore }
+                response.awaitBody<Map<String, TierDto?>>().mapValues { it.value?.tierScore }
               }
               response.statusCode().is5xxServerError -> {
                 throw WorkloadFailedDependencyException("Tier service failed with ${response.statusCode()}")

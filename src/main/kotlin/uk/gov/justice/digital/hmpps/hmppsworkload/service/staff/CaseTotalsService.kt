@@ -52,8 +52,8 @@ class CaseTotalsService(
     return totals
   }
 
-  private suspend fun getTiers(crns: List<String>): Map<String, String> {
-    val tiers = mutableMapOf<String, String>()
+  private suspend fun getTiers(crns: List<String>): Map<String, String?> {
+    val tiers = mutableMapOf<String, String?>()
 
     // Tiering API only accepts 20 CRNs at a time, so we have to batch the calls
     for (chunk in crns.chunked(20)) {
@@ -63,7 +63,7 @@ class CaseTotalsService(
     return tiers
   }
 
-  private fun calculateTotals(cases: List<PersonManagerEntity>, tiers: Map<String, String>): TierCaseTotals {
+  private fun calculateTotals(cases: List<PersonManagerEntity>, tiers: Map<String, String?>): TierCaseTotals {
     var a = BigDecimal.ZERO
     var b = BigDecimal.ZERO
     var c = BigDecimal.ZERO
