@@ -34,7 +34,7 @@ class GetAllocatedEvents : IntegrationTestBase() {
       ),
     )
 
-    val caseDetails = caseDetailsRepository.save(CaseDetailsEntity(crn = storedEventManager.crn, tier = Tier.B2, provisionalTier = false, type = CaseType.COMMUNITY, "", ""))
+    val caseDetails = caseDetailsRepository.save(CaseDetailsEntity(crn = storedEventManager.crn, tier = Tier.B, provisionalTier = false, type = CaseType.COMMUNITY, "", ""))
 
     workforceAllocationsToDelius.allocationDetailsResponse(listOf(AllocationDetailIntegration(storedEventManager.crn, storedEventManager.staffCode)))
 
@@ -81,7 +81,7 @@ class GetAllocatedEvents : IntegrationTestBase() {
     oldEventManager.createdDate = ZonedDateTime.now().minusDays(60)
     eventManagerRepository.save(oldEventManager)
 
-    caseDetailsRepository.save(CaseDetailsEntity(crn = oldEventManager.crn, tier = Tier.B2, provisionalTier = false, type = CaseType.COMMUNITY, "", ""))
+    caseDetailsRepository.save(CaseDetailsEntity(crn = oldEventManager.crn, tier = Tier.B, provisionalTier = false, type = CaseType.COMMUNITY, "", ""))
 
     workforceAllocationsToDelius.allocationDetailsResponse(listOf(AllocationDetailIntegration(oldEventManager.crn, oldEventManager.staffCode)))
 
@@ -149,7 +149,7 @@ class GetAllocatedEvents : IntegrationTestBase() {
 
     workforceAllocationsToDelius.allocationDetailsResponse(emptyList())
 
-    caseDetailsRepository.save(CaseDetailsEntity(crn = noDeliusDetailsEventManager.crn, tier = Tier.B2, provisionalTier = false, type = CaseType.COMMUNITY, "", ""))
+    caseDetailsRepository.save(CaseDetailsEntity(crn = noDeliusDetailsEventManager.crn, tier = Tier.B, provisionalTier = false, type = CaseType.COMMUNITY, "", ""))
 
     webTestClient.post()
       .uri(

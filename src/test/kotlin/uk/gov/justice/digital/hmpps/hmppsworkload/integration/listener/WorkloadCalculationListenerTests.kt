@@ -27,7 +27,7 @@ class WorkloadCalculationListenerTests : IntegrationTestBase() {
     val staffCode = "staff1"
     val teamCode = "team1"
     val availableHours = BigDecimal.TEN
-    val caseDetailsEntity = CaseDetailsEntity(crn, Tier.C3, false, CaseType.COMMUNITY, "Jane", "Doe")
+    val caseDetailsEntity = CaseDetailsEntity(crn, Tier.C, false, CaseType.COMMUNITY, "Jane", "Doe")
 
     caseDetailsRepository.save(caseDetailsEntity)
 
@@ -68,7 +68,7 @@ class WorkloadCalculationListenerTests : IntegrationTestBase() {
     val staffCode = "staff1"
     val teamCode = "team1"
     val availableHours = BigDecimal.TEN
-    val caseDetailsEntity = CaseDetailsEntity(crn, Tier.C3, false, CaseType.COMMUNITY, "Jane", "Doe")
+    val caseDetailsEntity = CaseDetailsEntity(crn, Tier.C, false, CaseType.COMMUNITY, "Jane", "Doe")
 
     caseDetailsRepository.save(caseDetailsEntity)
 

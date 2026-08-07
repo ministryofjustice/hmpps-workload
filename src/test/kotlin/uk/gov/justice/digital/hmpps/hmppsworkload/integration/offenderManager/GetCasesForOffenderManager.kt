@@ -24,7 +24,7 @@ class GetCasesForOffenderManager : IntegrationTestBase() {
         ActiveCasesIntegration("CRN1111", "John", "Doe", "LICENSE"),
       ),
     )
-    val realTimeCaseDetails = caseDetailsRepository.saveAll(listOf(CaseDetailsEntity("CRN2222", Tier.B3, false, CaseType.CUSTODY, "Sally", "Smith"), CaseDetailsEntity("CRN3333", Tier.C1, false, CaseType.COMMUNITY, "John", "Williams"), CaseDetailsEntity("CRN1111", Tier.C1, false, CaseType.LICENSE, "John", "Doe")))
+    val realTimeCaseDetails = caseDetailsRepository.saveAll(listOf(CaseDetailsEntity("CRN2222", Tier.B, false, CaseType.CUSTODY, "Sally", "Smith"), CaseDetailsEntity("CRN3333", Tier.C, false, CaseType.COMMUNITY, "John", "Williams"), CaseDetailsEntity("CRN1111", Tier.C, false, CaseType.LICENSE, "John", "Doe")))
     val wmtStaff = setupCurrentWmtStaff(staffCodeOM, teamCode)
 
     realTimeCaseDetails.forEach { caseDetails ->
@@ -51,7 +51,7 @@ class GetCasesForOffenderManager : IntegrationTestBase() {
       .jsonPath("$.email")
       .isEqualTo("sheila.hancock@test.justice.gov.uk")
       .jsonPath("$.activeCases[?(@.crn == 'CRN2222')].tier")
-      .isEqualTo("B3")
+      .isEqualTo("B")
       .jsonPath("$.activeCases[?(@.crn == 'CRN2222')].type")
       .isEqualTo("CUSTODY")
       .jsonPath("$.activeCases[?(@.crn == 'CRN2222')].name.forename")
@@ -59,7 +59,7 @@ class GetCasesForOffenderManager : IntegrationTestBase() {
       .jsonPath("$.activeCases[?(@.crn == 'CRN2222')].name.surname")
       .isEqualTo("Smith")
       .jsonPath("$.activeCases[?(@.crn == 'CRN3333')].tier")
-      .isEqualTo("C1")
+      .isEqualTo("C")
       .jsonPath("$.activeCases[?(@.crn == 'CRN3333')].type")
       .isEqualTo("COMMUNITY")
       .jsonPath("$.activeCases[?(@.crn == 'CRN3333')].name.forename")
@@ -67,7 +67,7 @@ class GetCasesForOffenderManager : IntegrationTestBase() {
       .jsonPath("$.activeCases[?(@.crn == 'CRN3333')].name.surname")
       .isEqualTo("Williams")
       .jsonPath("$.activeCases[?(@.crn == 'CRN1111')].tier")
-      .isEqualTo("C1")
+      .isEqualTo("C")
       .jsonPath("$.activeCases[?(@.crn == 'CRN1111')].type")
       .isEqualTo("LICENSE")
       .jsonPath("$.activeCases[?(@.crn == 'CRN1111')].name.forename")

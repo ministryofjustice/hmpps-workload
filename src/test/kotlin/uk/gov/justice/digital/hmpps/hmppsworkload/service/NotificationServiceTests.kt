@@ -103,7 +103,7 @@ class NotificationServiceTests {
     "allocatingOfficerGrade" to "SPO",
   )
 
-  private val caseDetails = CaseDetailsEntity("", Tier.B3, false, CaseType.CUSTODY, "Jane", "Doe")
+  private val caseDetails = CaseDetailsEntity("", Tier.B, false, CaseType.CUSTODY, "Jane", "Doe")
 
   @BeforeEach
   fun setup() {
@@ -179,7 +179,7 @@ class NotificationServiceTests {
   @Test
   fun `must add induction statement booked and due on when initial appointment is booked in the future`() = runBlocking {
     val allocationDetails = getAllocationDetails(allocateCase.crn, LocalDate.now().plusDays(5L))
-    val caseDetails = CaseDetailsEntity("", Tier.B3, false, CaseType.COMMUNITY, "Jane", "Doe")
+    val caseDetails = CaseDetailsEntity("", Tier.B, false, CaseType.COMMUNITY, "Jane", "Doe")
 
     notificationService.notifyAllocation(allocationDetails, allocateCase, caseDetails)
     val parameters = slot<NotificationEmail>()
@@ -190,7 +190,7 @@ class NotificationServiceTests {
   @Test
   fun `must add induction statement is overdue and was due on when initial appointment is booked in the past`() = runBlocking {
     val allocationDetails = getAllocationDetails(allocateCase.crn, LocalDate.now().minusDays(5L))
-    val caseDetails = CaseDetailsEntity("", Tier.B3, false, CaseType.COMMUNITY, "Jane", "Doe")
+    val caseDetails = CaseDetailsEntity("", Tier.B, false, CaseType.COMMUNITY, "Jane", "Doe")
 
     notificationService.notifyAllocation(allocationDetails, allocateCase, caseDetails)
     val parameters = slot<NotificationEmail>()
@@ -201,7 +201,7 @@ class NotificationServiceTests {
   @Test
   fun `must add induction statement has not been booked and is due on when initial appointment is not booked at all`() = runBlocking {
     val allocationDetails = getAllocationDetails(allocateCase.crn)
-    val caseDetails = CaseDetailsEntity("", Tier.B3, false, CaseType.COMMUNITY, "Jane", "Doe")
+    val caseDetails = CaseDetailsEntity("", Tier.B, false, CaseType.COMMUNITY, "Jane", "Doe")
 
     notificationService.notifyAllocation(allocationDetails, allocateCase, caseDetails)
     val parameters = slot<NotificationEmail>()
@@ -460,7 +460,7 @@ class NotificationServiceTests {
       laoCase = false, allocationReason = null, nextAppointmentDate = null, lastOasysAssessmentDate = null, failureToComply = null,
     )
     val reallocationDetails = ReallocationDetails("Laziness", "never", "tomorrow", "12", getManager(), ArrayList<Requirement>(), ArrayList<OffenceDetails>(), ArrayList<SentenceDetails>())
-    notificationService.notifyReallocation(allocationDetails, allocateCase, Tier.A1.name, reallocationDetails)
+    notificationService.notifyReallocation(allocationDetails, allocateCase, Tier.A.name, reallocationDetails)
 
     val parameters = slot<NotificationEmail>()
     coVerify(exactly = 1) { sqsSuccessPublisher.sendNotification(capture(parameters)) }
@@ -482,7 +482,7 @@ class NotificationServiceTests {
       laoCase = false, allocationReason = null, nextAppointmentDate = null, lastOasysAssessmentDate = null, failureToComply = null,
     )
     val reallocationDetails = ReallocationDetails("Laziness", "never", "tomorrow", "12", getManager(), ArrayList<Requirement>(), ArrayList<OffenceDetails>(), ArrayList<SentenceDetails>())
-    notificationService.notifyReallocation(allocationDetails, allocateCase, Tier.A1.name, reallocationDetails)
+    notificationService.notifyReallocation(allocationDetails, allocateCase, Tier.A.name, reallocationDetails)
 
     var parameters = mutableListOf<NotificationEmail>()
 
@@ -515,7 +515,7 @@ class NotificationServiceTests {
       laoCase = true, allocationReason = null, nextAppointmentDate = null, lastOasysAssessmentDate = null, failureToComply = null,
     )
     val reallocationDetails = ReallocationDetails("Laziness", "never", "tomorrow", "12", getManager(), ArrayList<Requirement>(), ArrayList<OffenceDetails>(), ArrayList<SentenceDetails>())
-    notificationService.notifyReallocation(allocationDetails, allocateCase, Tier.A1.name, reallocationDetails)
+    notificationService.notifyReallocation(allocationDetails, allocateCase, Tier.A.name, reallocationDetails)
 
     var parameters = mutableListOf<NotificationEmail>()
 

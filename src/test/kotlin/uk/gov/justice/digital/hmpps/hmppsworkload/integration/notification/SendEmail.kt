@@ -12,7 +12,7 @@ import org.springframework.http.HttpHeaders
 import reactor.util.context.Context
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.AllocateCase
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.CaseType.COMMUNITY
-import uk.gov.justice.digital.hmpps.hmppsworkload.domain.Tier.B3
+import uk.gov.justice.digital.hmpps.hmppsworkload.domain.Tier
 import uk.gov.justice.digital.hmpps.hmppsworkload.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.hmppsworkload.integration.getAllocationDetails
 import uk.gov.justice.digital.hmpps.hmppsworkload.integration.mockserver.AssessRisksNeedsApiExtension.Companion.assessRisksNeedsApi
@@ -38,7 +38,7 @@ class SendEmail : IntegrationTestBase() {
     val crn = "X123456"
     val allocateCase = AllocateCase(crn, sendEmailCopyToAllocatingOfficer = false, eventNumber = 1, allocationJustificationNotes = "some notes", sensitiveNotes = false, spoOversightNotes = "spo notes", sensitiveOversightNotes = null, laoCase = false)
     val allocationDetails = getAllocationDetails(crn)
-    val caseDetailsEntity = CaseDetailsEntity(crn, B3, false, COMMUNITY, "Jane", "Doe")
+    val caseDetailsEntity = CaseDetailsEntity(crn, Tier.B, false, COMMUNITY, "Jane", "Doe")
 
     assessRisksNeedsApi.riskSummaryErrorResponse(crn)
     assessRisksNeedsApi.riskPredictorV1Response(crn)
@@ -61,7 +61,7 @@ class SendEmail : IntegrationTestBase() {
     val crn = "X123456"
     val allocateCase = AllocateCase(crn, sendEmailCopyToAllocatingOfficer = false, eventNumber = 1, allocationJustificationNotes = "some notes", sensitiveNotes = false, spoOversightNotes = "spo notes", sensitiveOversightNotes = null, laoCase = true)
     val allocationDetails = getAllocationDetails(crn)
-    val caseDetailsEntity = CaseDetailsEntity(crn, B3, false, COMMUNITY, "Jane", "Doe")
+    val caseDetailsEntity = CaseDetailsEntity(crn, Tier.B, false, COMMUNITY, "Jane", "Doe")
 
     assessRisksNeedsApi.riskSummaryErrorResponse(crn)
     assessRisksNeedsApi.riskPredictorV1Response(crn)
@@ -81,7 +81,7 @@ class SendEmail : IntegrationTestBase() {
     val crn = "X123456"
     val allocateCase = AllocateCase(crn, sendEmailCopyToAllocatingOfficer = false, eventNumber = 1, allocationJustificationNotes = "some notes", sensitiveNotes = false, spoOversightNotes = "spo notes", sensitiveOversightNotes = null, laoCase = false)
     val allocationDetails = getAllocationDetails(crn)
-    val caseDetailsEntity = CaseDetailsEntity(crn, B3, false, COMMUNITY, "Jane", "Doe")
+    val caseDetailsEntity = CaseDetailsEntity(crn, Tier.B, false, COMMUNITY, "Jane", "Doe")
 
     assessRisksNeedsApi.riskSummaryResponse(crn)
     assessRisksNeedsApi.riskPredictorErrorResponse(crn)
@@ -102,7 +102,7 @@ class SendEmail : IntegrationTestBase() {
     val crn = "X123456"
     val allocateCase = AllocateCase(crn, sendEmailCopyToAllocatingOfficer = false, eventNumber = 1, allocationJustificationNotes = "some notes", sensitiveNotes = false, spoOversightNotes = "spo notes", sensitiveOversightNotes = null, laoCase = true)
     val allocationDetails = getAllocationDetails(crn)
-    val caseDetailsEntity = CaseDetailsEntity(crn, B3, false, COMMUNITY, "Jane", "Doe")
+    val caseDetailsEntity = CaseDetailsEntity(crn, Tier.B, false, COMMUNITY, "Jane", "Doe")
 
     assessRisksNeedsApi.riskSummaryResponse(crn)
     assessRisksNeedsApi.riskPredictorErrorResponse(crn)

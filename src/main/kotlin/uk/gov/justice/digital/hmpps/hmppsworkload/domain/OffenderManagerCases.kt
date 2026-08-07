@@ -27,7 +27,7 @@ data class OffenderManagerCases @JsonCreator constructor(
 data class OffenderManagerActiveCase(
   @Schema(description = "CRN", example = "CRN111111")
   val crn: String,
-  @Schema(description = "Tier", example = "B1")
+  @Schema(description = "Tier", example = "B")
   val tier: String,
   @Schema(description = "name")
   val name: Name,
