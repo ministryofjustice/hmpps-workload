@@ -26,6 +26,7 @@ import uk.gov.justice.digital.hmpps.hmppsworkload.domain.AllocationReason
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.CaseAllocated
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.CaseType
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.Tier
+import uk.gov.justice.digital.hmpps.hmppsworkload.domain.UpdatedCaseDetails
 import uk.gov.justice.digital.hmpps.hmppsworkload.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.hmppsworkload.integration.mockserver.AssessRisksNeedsApiExtension.Companion.assessRisksNeedsApi
 import uk.gov.justice.digital.hmpps.hmppsworkload.integration.mockserver.TierApiExtension.Companion.hmppsTier
@@ -82,7 +83,7 @@ class AllocateCaseToOffenderManager : IntegrationTestBase() {
     hmppsTier.tierCalculationResponse(crn)
     assessRisksNeedsApi.riskSummaryErrorResponse(crn)
     assessRisksNeedsApi.riskPredictorV1Response(crn)
-    casesDbService.insertCaseDetails("Jane", "Doe", Tier.A0, CaseType.CUSTODY, crn)
+    casesDbService.insertCaseDetails(UpdatedCaseDetails("Jane", "Doe", Tier.A0, false, CaseType.CUSTODY, crn))
     every { notificationClient.sendEmail(any(), any(), any(), any()) } returns
       SendEmailResponse(emailResponse())
     coEvery { notificationService.notifyAllocation(any(), any(), any()) } returns
@@ -144,7 +145,7 @@ class AllocateCaseToOffenderManager : IntegrationTestBase() {
   @Test
   fun `Notify error still keeps entry in db`() {
     every { notificationClient.sendEmail(any(), any(), any(), any()) } throws NotificationClientException("An exception")
-    casesDbService.insertCaseDetails("Jane", "Doe", Tier.A0, CaseType.CUSTODY, crn)
+    casesDbService.insertCaseDetails(UpdatedCaseDetails("Jane", "Doe", Tier.A0, false, CaseType.CUSTODY, crn))
 
     webTestClient.post()
       .uri("/team/$teamCode/offenderManager/$staffCode/case")
@@ -278,7 +279,7 @@ class AllocateCaseToOffenderManager : IntegrationTestBase() {
     // WFP-2937 we have changed the front end behaviour to disable the button after the first click
     workforceAllocationsToDelius.allocationResponse(crn, eventNumber, staffCode, allocatingOfficerUsername)
 
-    casesDbService.insertCaseDetails("Jane", "Doe", Tier.A0, CaseType.CUSTODY, crn)
+    casesDbService.insertCaseDetails(UpdatedCaseDetails("Jane", "Doe", Tier.A0, false, CaseType.CUSTODY, crn))
 
     webTestClient.post()
       .uri("/team/$teamCode/offenderManager/$staffCode/case")
@@ -308,7 +309,7 @@ class AllocateCaseToOffenderManager : IntegrationTestBase() {
   @Test
   fun `must emit staff grade to tier allocation telemetry event`() {
     val caseDetailsEntity = CaseDetailsEntity(crn, Tier.A0, false, CaseType.CUSTODY, "Jane", "Doe")
-    casesDbService.insertCaseDetails("Jane", "Doe", Tier.A0, CaseType.CUSTODY, crn)
+    casesDbService.insertCaseDetails(UpdatedCaseDetails("Jane", "Doe", Tier.A0, false, CaseType.CUSTODY, crn))
     webTestClient.post()
       .uri("/team/$teamCode/offenderManager/$staffCode/case")
       .bodyValue(allocateCase(crn, eventNumber))
@@ -417,7 +418,7 @@ class AllocateCaseToOffenderManager : IntegrationTestBase() {
 
   @Test
   fun `can send email when selecting a second person to receive email`() = runBlocking {
-    casesDbService.insertCaseDetails("Jane", "Doe", Tier.A0, CaseType.COMMUNITY, crn)
+    casesDbService.insertCaseDetails(UpdatedCaseDetails("Jane", "Doe", Tier.A0, false, CaseType.COMMUNITY, crn))
     webTestClient.post()
       .uri("/team/$teamCode/offenderManager/$staffCode/case")
       .bodyValue(allocateCase(crn, eventNumber))

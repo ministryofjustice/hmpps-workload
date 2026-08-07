@@ -14,6 +14,7 @@ import software.amazon.awssdk.services.sns.model.PublishRequest
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.AllocationReason
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.CaseType
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.Tier
+import uk.gov.justice.digital.hmpps.hmppsworkload.domain.UpdatedCaseDetails
 import uk.gov.justice.digital.hmpps.hmppsworkload.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.hmppsworkload.integration.mockserver.TierApiExtension.Companion.hmppsTier
 import uk.gov.justice.digital.hmpps.hmppsworkload.integration.mockserver.WorkforceAllocationsToDeliusExtension.Companion.workforceAllocationsToDelius
@@ -134,7 +135,7 @@ class SentenceChangedEventListenerTests : IntegrationTestBase() {
   @Test
   fun `case details deleted if no active convictions exist`() {
     val crn = "J678910"
-    casesDbService.insertCaseDetails("Jane", "Doe", Tier.C1, CaseType.COMMUNITY, crn)
+    casesDbService.insertCaseDetails(UpdatedCaseDetails("Jane", "Doe", Tier.C1, false, CaseType.COMMUNITY, crn))
 
     val personManagerEntity = personManagerRepository.save(PersonManagerEntity(crn = crn, staffCode = "STFFCDE", teamCode = "TM1", createdBy = "USER1", isActive = true, allocationReason = AllocationReason.INITIAL_ALLOCATION))
     val eventManagerEntity = eventManagerRepository.save(
@@ -191,7 +192,7 @@ class SentenceChangedEventListenerTests : IntegrationTestBase() {
 
     val caseDetailsEntity = CaseDetailsEntity(crn, Tier.C3, false, CaseType.COMMUNITY, "Jane", "Doe")
     personManagerRepository.save(PersonManagerEntity(crn = crn, staffCode = staffCode, teamCode = teamCode, createdBy = "createdby", isActive = true, allocationReason = AllocationReason.INITIAL_ALLOCATION))
-    casesDbService.insertCaseDetails("Jane", "Doe", Tier.C3, CaseType.COMMUNITY, crn)
+    casesDbService.insertCaseDetails(UpdatedCaseDetails("Jane", "Doe", Tier.C3, false, CaseType.COMMUNITY, crn))
 
     placeSentenceChangedEventOnOffenderTopic(crn)
 
@@ -210,7 +211,7 @@ class SentenceChangedEventListenerTests : IntegrationTestBase() {
     workforceAllocationsToDelius.personResponseByCrn(crn)
     hmppsTier.tierCalculationResponse(crn)
 
-    casesDbService.insertCaseDetails("Jane", "Doe", Tier.C3, CaseType.COMMUNITY, crn)
+    casesDbService.insertCaseDetails(UpdatedCaseDetails("Jane", "Doe", Tier.C3, false, CaseType.COMMUNITY, crn))
 
     workforceAllocationsToDelius.officerViewResponse(staffCode)
     personManagerRepository.save(PersonManagerEntity(crn = crn, staffCode = staffCode, teamCode = teamCode, createdBy = "createdby", isActive = true, allocationReason = AllocationReason.INITIAL_ALLOCATION))
