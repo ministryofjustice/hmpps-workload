@@ -189,7 +189,7 @@ class SentenceChangedEventListenerTests : IntegrationTestBase() {
     workforceAllocationsToDelius.personResponseByCrn(crn)
     hmppsTier.tierCalculationResponse(crn)
 
-    val caseDetailsEntity = CaseDetailsEntity(crn, Tier.C3, CaseType.COMMUNITY, "Jane", "Doe")
+    val caseDetailsEntity = CaseDetailsEntity(crn, Tier.C3, false, CaseType.COMMUNITY, "Jane", "Doe")
     personManagerRepository.save(PersonManagerEntity(crn = crn, staffCode = staffCode, teamCode = teamCode, createdBy = "createdby", isActive = true, allocationReason = AllocationReason.INITIAL_ALLOCATION))
     casesDbService.insertCaseDetails("Jane", "Doe", Tier.C3, CaseType.COMMUNITY, crn)
 

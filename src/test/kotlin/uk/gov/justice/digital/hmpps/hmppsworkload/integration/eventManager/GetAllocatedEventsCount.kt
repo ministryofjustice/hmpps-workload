@@ -32,7 +32,7 @@ class GetAllocatedEventsCount : IntegrationTestBase() {
       ),
     )
 
-    caseDetailsRepository.save(CaseDetailsEntity(crn = storedEventManager.crn, tier = Tier.B2, type = CaseType.COMMUNITY, "", ""))
+    caseDetailsRepository.save(CaseDetailsEntity(crn = storedEventManager.crn, tier = Tier.B2, provisionalTier = false, type = CaseType.COMMUNITY, "", ""))
 
     webTestClient.post()
       .uri(
@@ -67,7 +67,7 @@ class GetAllocatedEventsCount : IntegrationTestBase() {
     oldEventManager.createdDate = ZonedDateTime.now().minusDays(60)
     eventManagerRepository.save(oldEventManager)
 
-    caseDetailsRepository.save(CaseDetailsEntity(crn = oldEventManager.crn, tier = Tier.B2, type = CaseType.COMMUNITY, "", ""))
+    caseDetailsRepository.save(CaseDetailsEntity(crn = oldEventManager.crn, tier = Tier.B2, provisionalTier = false, type = CaseType.COMMUNITY, "", ""))
 
     webTestClient.post()
       .uri(

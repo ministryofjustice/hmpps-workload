@@ -28,7 +28,7 @@ class WorkloadPrisonerListenerTests : IntegrationTestBase() {
     val staffCode = "staff1"
     val teamCode = "team1"
     val availableHours = BigDecimal.valueOf(37)
-    val caseDetailsEntity = CaseDetailsEntity(crn, Tier.C3, CaseType.COMMUNITY, "Jane", "Doe")
+    val caseDetailsEntity = CaseDetailsEntity(crn, Tier.C3, false, CaseType.COMMUNITY, "Jane", "Doe")
 
     caseDetailsRepository.save(caseDetailsEntity)
     workforceAllocationsToDelius.officerViewResponse(staffCode)

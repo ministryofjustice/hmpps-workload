@@ -38,7 +38,7 @@ class GetLatestEventManagerTest : IntegrationTestBase() {
     val eventManagerEntity = eventManagerRepository.findByIdOrNull(savedEntity.id!!)!!
     val realtimeCase = EventDetails(Tier.A1, CaseType.LICENSE, eventManagerEntity.crn, eventManagerEntity.createdDate!!)
     // realtime
-    caseDetailsRepository.save(CaseDetailsEntity(realtimeCase.crn, realtimeCase.tier, realtimeCase.type, "Jane", "Doe"))
+    caseDetailsRepository.save(CaseDetailsEntity(realtimeCase.crn, realtimeCase.tier, false, realtimeCase.type, "Jane", "Doe"))
     val result = getEventManager.findLatestByStaffAndTeam(StaffIdentifier(staffCode, teamCode))
 
     Assertions.assertEquals(realtimeCase, result)
@@ -82,7 +82,7 @@ class GetLatestEventManagerTest : IntegrationTestBase() {
       ),
     )
 
-    caseDetailsRepository.save(CaseDetailsEntity(eventManagerEntity.crn, Tier.A1, CaseType.LICENSE, "Jane", "Doe"))
+    caseDetailsRepository.save(CaseDetailsEntity(eventManagerEntity.crn, Tier.A1, false, CaseType.LICENSE, "Jane", "Doe"))
 
     val savedEntity = eventManagerRepository.save(
       EventManagerEntity(
@@ -99,7 +99,7 @@ class GetLatestEventManagerTest : IntegrationTestBase() {
     val latestEventManagerEntity = eventManagerRepository.findByIdOrNull(savedEntity.id!!)!!
     val realtimeCase = EventDetails(Tier.C3, CaseType.COMMUNITY, latestEventManagerEntity.crn, latestEventManagerEntity.createdDate!!)
     // realtime
-    caseDetailsRepository.save(CaseDetailsEntity(latestEventManagerEntity.crn, realtimeCase.tier, realtimeCase.type, "Jane", "Doe"))
+    caseDetailsRepository.save(CaseDetailsEntity(latestEventManagerEntity.crn, realtimeCase.tier, false, realtimeCase.type, "Jane", "Doe"))
 
     val result = getEventManager.findLatestByStaffAndTeam(StaffIdentifier(staffCode, teamCode))
 
@@ -125,7 +125,7 @@ class GetLatestEventManagerTest : IntegrationTestBase() {
     )
     val eventManagerEntity = eventManagerRepository.findByIdOrNull(savedEntity.id!!)!!
     val realtimeCase = EventDetails(Tier.A1, CaseType.LICENSE, eventManagerEntity.crn, eventManagerEntity.createdDate!!)
-    caseDetailsRepository.save(CaseDetailsEntity(realtimeCase.crn, realtimeCase.tier, realtimeCase.type, "Jane", "Doe"))
+    caseDetailsRepository.save(CaseDetailsEntity(realtimeCase.crn, realtimeCase.tier, false, realtimeCase.type, "Jane", "Doe"))
 
     eventManagerRepository.save(
       EventManagerEntity(

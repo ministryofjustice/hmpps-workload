@@ -290,7 +290,7 @@ class GetOverviewForOffenderManager : IntegrationTestBase() {
       ),
     )
     val storedEventManager = eventManagerRepository.findByIdOrNull(eventManager.id!!)!!
-    val caseDetails = caseDetailsRepository.save(CaseDetailsEntity(storedEventManager.crn, Tier.C3, CaseType.COMMUNITY, "Jane", "Doe"))
+    val caseDetails = caseDetailsRepository.save(CaseDetailsEntity(storedEventManager.crn, Tier.C3, false, CaseType.COMMUNITY, "Jane", "Doe"))
     webTestClient.get()
       .uri("/team/$teamCode/offenderManagers/$offenderManagerCode")
       .headers {

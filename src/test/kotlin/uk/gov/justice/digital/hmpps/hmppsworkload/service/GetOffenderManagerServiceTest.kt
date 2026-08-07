@@ -75,7 +75,7 @@ class GetOffenderManagerServiceTest {
     val totalPoints = BigInteger.valueOf(15)
 
     coEvery { workforceAllocationsToDeliusApiClient.impact(crn, staffIdentifier.staffCode) } returns ImpactResponse(crn, name, staffMember)
-    coEvery { caseDetailsRepository.findByIdOrNull(crn) } returns CaseDetailsEntity(crn, Tier.A1, CaseType.CUSTODY, "John", "Smith")
+    coEvery { caseDetailsRepository.findByIdOrNull(crn) } returns CaseDetailsEntity(crn, Tier.A1, false, CaseType.CUSTODY, "John", "Smith")
     coEvery { offenderManagerRepository.findByOverview(STAFF_TEAM_CODE, STAFF_CODE) } returns OverviewOffenderManager(
       communityCases,
       licenseCases,
@@ -144,7 +144,7 @@ class GetOffenderManagerServiceTest {
       BigInteger.valueOf(5),
       BigInteger.valueOf(6),
     )
-    coEvery { caseDetailsRepository.findByIdOrNull(crn) } returns CaseDetailsEntity(crn, Tier.A1, CaseType.CUSTODY, "John", "Smith")
+    coEvery { caseDetailsRepository.findByIdOrNull(crn) } returns CaseDetailsEntity(crn, Tier.A1, false, CaseType.CUSTODY, "John", "Smith")
     coEvery { offenderManagerRepository.findByOverview(STAFF_TEAM_CODE, STAFF_CODE) } returns OverviewOffenderManager(
       communityCases,
       licenseCases,
@@ -197,7 +197,7 @@ class GetOffenderManagerServiceTest {
 
     coEvery { workforceAllocationsToDeliusApiClient.staffActiveCases(staffIdentifier.staffCode, any()) } returns StaffActiveCases("002", name, OFFICER_GRADE, OFFICER_EMAIL, listOf(ActiveCase(crn, name, "CUSTODY", now)))
 
-    val caseDetailsEntity = CaseDetailsEntity(crn, Tier.A1, CaseType.CUSTODY, "John", "Smith")
+    val caseDetailsEntity = CaseDetailsEntity(crn, Tier.A1, false, CaseType.CUSTODY, "John", "Smith")
     coEvery { caseDetailsRepository.findAllById(listOf("002")) } returns listOf(caseDetailsEntity)
 
     coEvery { offenderManagerRepository.findCasesByTeamCodeAndStaffCode(STAFF_CODE, STAFF_TEAM_CODE) } returns listOf("002")

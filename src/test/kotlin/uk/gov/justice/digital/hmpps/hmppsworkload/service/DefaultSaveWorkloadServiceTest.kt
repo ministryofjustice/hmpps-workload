@@ -94,7 +94,7 @@ class DefaultSaveWorkloadServiceTest {
       val staffIdentifier = StaffIdentifier(STAFF_CODE, STAFF_TEAM_CODE)
       val staffMember = StaffMember(OFFICER_CODE, name, OFFICER_EMAIL, OFFICER_GRADE)
       val allocatingStaffMember = StaffMember(STAFF_CODE, name, OFFICER_EMAIL, OFFICER_GRADE)
-      val caseDetails = CaseDetailsEntity(crn, Tier.A1, CaseType.CUSTODY, "John", "Smith")
+      val caseDetails = CaseDetailsEntity(crn, Tier.A1, false, CaseType.CUSTODY, "John", "Smith")
 
       coEvery { caseDetailsRepository.findByIdOrNull(crn) } returns caseDetails
       val sentence = SentenceDetails("fraud", ZonedDateTime.now(), "life")
@@ -177,7 +177,7 @@ class DefaultSaveWorkloadServiceTest {
 
       val staffMember = StaffMember(OFFICER_CODE, name, OFFICER_EMAIL, OFFICER_GRADE)
       val allocatingStaffMember = StaffMember(STAFF_CODE, name, OFFICER_EMAIL, OFFICER_GRADE)
-      val caseDetails = CaseDetailsEntity(crn, Tier.A1, CaseType.CUSTODY, "John", "Smith")
+      val caseDetails = CaseDetailsEntity(crn, Tier.A1, false, CaseType.CUSTODY, "John", "Smith")
 
       coEvery { caseDetailsRepository.findByIdOrNull(crn) } returns caseDetails
       val sentence = SentenceDetails("fraud", ZonedDateTime.now(), "life")

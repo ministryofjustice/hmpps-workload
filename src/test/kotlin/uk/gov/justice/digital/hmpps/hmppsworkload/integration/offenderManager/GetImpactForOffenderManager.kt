@@ -17,7 +17,7 @@ class GetImpactForOffenderManager : IntegrationTestBase() {
     val teamCode = "T1"
     workforceAllocationsToDelius.getImpactResponse(crn, staffCode)
     setupCurrentWmtStaff(staffCode, teamCode)
-    val caseDetailsEntity = CaseDetailsEntity(crn, Tier.B3, CaseType.CUSTODY, "Jane", "Doe")
+    val caseDetailsEntity = CaseDetailsEntity(crn, Tier.B3, false, CaseType.CUSTODY, "Jane", "Doe")
     caseDetailsRepository.save(caseDetailsEntity)
 
     webTestClient.get()
@@ -61,7 +61,7 @@ class GetImpactForOffenderManager : IntegrationTestBase() {
     val teamCode = "T1"
     workforceAllocationsToDelius.getImpactResponse(crn, staffCode)
     val wmtStaff = setupCurrentWmtStaff(staffCode, teamCode)
-    val caseDetails = caseDetailsRepository.save(CaseDetailsEntity(crn, Tier.B3, CaseType.CUSTODY, "Jane", "Doe"))
+    val caseDetails = caseDetailsRepository.save(CaseDetailsEntity(crn, Tier.B3, false, CaseType.CUSTODY, "Jane", "Doe"))
     setupWmtManagedCase(wmtStaff, caseDetails.tier, crn, caseDetails.type)
 
     webTestClient.get()
@@ -86,7 +86,7 @@ class GetImpactForOffenderManager : IntegrationTestBase() {
     val staffCode = "NOWORKLOAD1"
     val teamCode = "T1"
     workforceAllocationsToDelius.getImpactResponse(crn, staffCode)
-    caseDetailsRepository.save(CaseDetailsEntity(crn, Tier.B3, CaseType.CUSTODY, "Jane", "Doe"))
+    caseDetailsRepository.save(CaseDetailsEntity(crn, Tier.B3, false, CaseType.CUSTODY, "Jane", "Doe"))
     webTestClient.get()
       .uri("/team/$teamCode/offenderManager/$staffCode/impact/person/$crn")
       .headers {
@@ -109,7 +109,7 @@ class GetImpactForOffenderManager : IntegrationTestBase() {
     val staffCode = "NOWORKLOAD1"
     val teamCode = "T1"
     workforceAllocationsToDelius.getImpactNoGradeResponse(crn, staffCode)
-    caseDetailsRepository.save(CaseDetailsEntity(crn, Tier.B3, CaseType.CUSTODY, "Jane", "Doe"))
+    caseDetailsRepository.save(CaseDetailsEntity(crn, Tier.B3, false, CaseType.CUSTODY, "Jane", "Doe"))
     webTestClient.get()
       .uri("/team/$teamCode/offenderManager/$staffCode/impact/person/$crn")
       .headers {

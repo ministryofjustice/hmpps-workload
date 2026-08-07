@@ -307,7 +307,7 @@ class AllocateCaseToOffenderManager : IntegrationTestBase() {
 
   @Test
   fun `must emit staff grade to tier allocation telemetry event`() {
-    val caseDetailsEntity = CaseDetailsEntity(crn, Tier.A0, CaseType.CUSTODY, "Jane", "Doe")
+    val caseDetailsEntity = CaseDetailsEntity(crn, Tier.A0, false, CaseType.CUSTODY, "Jane", "Doe")
     casesDbService.insertCaseDetails("Jane", "Doe", Tier.A0, CaseType.CUSTODY, crn)
     webTestClient.post()
       .uri("/team/$teamCode/offenderManager/$staffCode/case")

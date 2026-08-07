@@ -22,6 +22,9 @@ data class CaseDetailsEntity(
   var tier: Tier,
 
   @Column
+  var provisionalTier: Boolean,
+
+  @Column
   @Enumerated(EnumType.STRING)
   var type: CaseType,
 

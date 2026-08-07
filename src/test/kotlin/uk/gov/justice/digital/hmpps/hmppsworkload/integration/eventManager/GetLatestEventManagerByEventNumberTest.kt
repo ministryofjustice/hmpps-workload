@@ -23,7 +23,7 @@ class GetLatestEventManagerByEventNumberTest : IntegrationTestBase() {
     )
     eventManagerRepository.save(storedEventManager)
 
-    val caseDetailsEntity = CaseDetailsEntity(crn = storedEventManager.crn, Tier.C2, CaseType.CUSTODY, "Jane", "Doe")
+    val caseDetailsEntity = CaseDetailsEntity(crn = storedEventManager.crn, Tier.C2, false, CaseType.CUSTODY, "Jane", "Doe")
     caseDetailsRepository.save(caseDetailsEntity)
 
     webTestClient.get()
