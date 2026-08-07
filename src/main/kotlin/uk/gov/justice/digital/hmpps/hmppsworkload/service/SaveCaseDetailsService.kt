@@ -46,7 +46,7 @@ class SaveCaseDetailsService(
     log.info("Entered savePerson() for crn: ${personSummary?.crn} with case type: ${personSummary?.type}")
     personSummary?.takeUnless { it.type == CaseType.UNKNOWN }?.type?.let { caseType ->
       hmppsTierApiClient.getTierByCrn(personSummary.crn)?.let {
-        val tier = Tier.valueOf(it)
+        val tier = Tier.valueOf(it.tierScore)
         databaseService.insertCaseDetails(personSummary.name.forename, personSummary.name.surname, tier, caseType, personSummary.crn)
         val staff: PersonManager? = getPersonManager.findLatestByCrn(personSummary.crn)
         log.info("PersonManager in savePerson() = $staff for crn ${personSummary.crn}")

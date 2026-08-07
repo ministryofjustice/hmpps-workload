@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.HmppsTierApiClient
+import uk.gov.justice.digital.hmpps.hmppsworkload.client.TierWithStatus
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.WorkforceAllocationsToDeliusApiClient
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.AllocatedActiveEvent
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.AllocatedCaseView
@@ -208,7 +209,7 @@ class DefaultSaveWorkloadServiceTest {
 
       val allocatedCaseView = AllocatedCaseView(name, LocalDate.now(), "Male", "pnc", null, null, activeEvents)
 
-      coEvery { tierService.getTierByCrn(any()) } returns Tier.A1.name
+      coEvery { tierService.getTierByCrn(any()) } returns TierWithStatus(Tier.A1.name, false)
       coEvery { workforceAllocationsToDeliusApiClient.getCrnDetails(crn) } returns crnDetails
       coEvery { workforceAllocationsToDeliusApiClient.getOfficerView(PREVIOUS_STAFF_CODE) } returns OfficerView(PREVIOUS_STAFF_CODE, name, "SPO", null, BigInteger.ONE, BigInteger.ONE, BigInteger.ONE)
       coEvery { workforceAllocationsToDeliusApiClient.allocationDetails(crn, 1, STAFF_CODE, loggedInUser) } returns

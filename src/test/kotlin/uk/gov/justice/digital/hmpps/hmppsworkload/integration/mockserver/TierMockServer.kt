@@ -11,7 +11,7 @@ import org.mockserver.model.HttpResponse
 import org.mockserver.model.JsonBody
 import org.mockserver.model.MediaType
 import org.mockserver.verify.VerificationTimes
-import uk.gov.justice.digital.hmpps.hmppsworkload.client.TierDto
+import uk.gov.justice.digital.hmpps.hmppsworkload.client.TierWithStatus
 import uk.gov.justice.digital.hmpps.hmppsworkload.integration.mockserver.TierApiExtension.Companion.hmppsTier
 import uk.gov.justice.digital.hmpps.hmppsworkload.integration.responses.notFoundTierResponse
 
@@ -41,21 +41,21 @@ class TierMockServer : ClientAndServer(MOCKSERVER_PORT) {
     private const val MOCKSERVER_PORT = 8082
   }
   fun tierCalculationResponse(crn: String, tier: String = "B3") {
-    val request = HttpRequest.request().withPath("/crn/$crn/tier")
+    val request = HttpRequest.request().withPath("/v3/crn/$crn/tier")
     hmppsTier.`when`(request, Times.exactly(1)).respond(
       HttpResponse.response().withContentType(MediaType.APPLICATION_JSON).withBody("{\"tierScore\":\"${tier}\"}"),
     )
   }
 
   fun tierCalculationNotFoundResponse(crn: String) {
-    val request = HttpRequest.request().withPath("/crn/$crn/tier")
+    val request = HttpRequest.request().withPath("/v3/crn/$crn/tier")
     hmppsTier.`when`(request, Times.exactly(1)).respond(
       HttpResponse.notFoundResponse().withContentType(MediaType.APPLICATION_JSON).withBody(notFoundTierResponse()),
     )
   }
 
   fun bulkTierCalculationResponse(crnTiers: Map<String, String>) {
-    val response = crnTiers.mapValues { TierDto(it.value) }
+    val response = crnTiers.mapValues { TierWithStatus(it.value, false) }
     val request = HttpRequest.request().withMethod("POST").withPath("/v3/crns/tier")
     hmppsTier.`when`(request).respond(
       HttpResponse.response().withContentType(MediaType.APPLICATION_JSON).withBody(JsonBody.json(response)),
@@ -65,7 +65,7 @@ class TierMockServer : ClientAndServer(MOCKSERVER_PORT) {
   fun verifyTierCalled(crn: String, times: Int) {
     TierApiExtension.hmppsTier.verify(
       HttpRequest.request()
-        .withPath("/crn/$crn/tier"),
+        .withPath("/v3/crn/$crn/tier"),
       VerificationTimes.exactly(times),
     )
   }
