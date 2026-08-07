@@ -13,7 +13,6 @@ import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.Name
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.OfficerView
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.StaffActiveCases
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.StaffMember
-import uk.gov.justice.digital.hmpps.hmppsworkload.domain.Case
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.CaseType
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.EventDetails
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.OffenderManagerActiveCase
@@ -46,7 +45,6 @@ class GetOffenderManagerServiceTest {
   private val workforceAllocationsToDeliusApiClient = mockk<WorkforceAllocationsToDeliusApiClient>()
   private val workloadPointsRepository = mockk<WorkloadPointsRepository>()
   private val offenderManagerRepository = mockk<OffenderManagerRepository>()
-  private val caseCalculator = mockk<CaseCalculator>()
   private val getReductionService = mockk<GetReductionService>()
   private val caseDetailsRepository = mockk<CaseDetailsRepository>()
   private val getWeeklyHours = mockk<GetWeeklyHours>()
@@ -55,7 +53,6 @@ class GetOffenderManagerServiceTest {
 
   private val offenderManagerService = GetOffenderManagerService(
     offenderManagerRepository,
-    caseCalculator,
     getReductionService,
     workloadPointsRepository,
     caseDetailsRepository,
@@ -91,7 +88,6 @@ class GetOffenderManagerServiceTest {
       BigInteger.valueOf(12L),
     )
     coEvery { offenderManagerRepository.findCaseByTeamCodeAndStaffCodeAndCrn(STAFF_TEAM_CODE, STAFF_CODE, crn) } returns "002"
-    coEvery { caseCalculator.getPointsForCase(Case(Tier.A1, CaseType.CUSTODY, false, crn)) } returns BigInteger.valueOf(12)
 
     val workload = offenderManagerService.getPotentialWorkload(staffIdentifier, crn)
     assertEquals(workload?.name, name)
@@ -161,7 +157,6 @@ class GetOffenderManagerServiceTest {
       BigInteger.valueOf(12L),
     )
     coEvery { offenderManagerRepository.findCaseByTeamCodeAndStaffCodeAndCrn(STAFF_TEAM_CODE, STAFF_CODE, "1234") } returns "002"
-    coEvery { caseCalculator.getPointsForCase(Case(Tier.A1, CaseType.CUSTODY, false, crn)) } returns BigInteger.valueOf(12)
     coEvery { getEventManager.findLatestByStaffAndTeam(staffIdentifier) } returns eventDetails
     coEvery { getReductionService.findNextReductionChange(staffIdentifier) } returns ZonedDateTime.now().plusDays(1)
     coEvery { getReductionService.findReductionHours(staffIdentifier) } returns reductionHours

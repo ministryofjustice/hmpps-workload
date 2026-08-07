@@ -33,7 +33,7 @@ class GetImpactForOffenderManager : IntegrationTestBase() {
       .jsonPath("$.capacity")
       .isEqualTo(50)
       .jsonPath("$.potentialCapacity")
-      .isEqualTo(55)
+      .isEqualTo(50)
       .jsonPath("$.tier")
       .isEqualTo(caseDetailsEntity.tier.name)
       .jsonPath("$.name.forename")
@@ -100,7 +100,7 @@ class GetImpactForOffenderManager : IntegrationTestBase() {
       .jsonPath("$.capacity")
       .isEqualTo(0)
       .jsonPath("$.potentialCapacity")
-      .isEqualTo(2)
+      .isEqualTo(0)
   }
 
   @Test
@@ -125,6 +125,6 @@ class GetImpactForOffenderManager : IntegrationTestBase() {
       .jsonPath("$.capacity")
       .isEqualTo(0)
       .jsonPath("$.potentialCapacity")
-      .isEqualTo(2)
+      .isEqualTo(0)
   }
 }

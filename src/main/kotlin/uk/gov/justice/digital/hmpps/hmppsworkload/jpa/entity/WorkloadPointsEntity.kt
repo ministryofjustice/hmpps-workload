@@ -1,14 +1,11 @@
 package uk.gov.justice.digital.hmpps.hmppsworkload.jpa.entity
 
 import jakarta.persistence.Column
-import jakarta.persistence.Embedded
 import jakarta.persistence.Entity
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.Table
-import uk.gov.justice.digital.hmpps.hmppsworkload.domain.CaseType
-import uk.gov.justice.digital.hmpps.hmppsworkload.domain.Tier
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.time.ZonedDateTime
@@ -20,15 +17,6 @@ data class WorkloadPointsEntity(
   @Column
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   val id: Long? = null,
-
-  @Embedded
-  val communityTierPoints: CommunityTierPoints,
-
-  @Embedded
-  val licenseTierPoints: LicenseTierPoints,
-
-  @Embedded
-  val custodyTierPoints: CustodyTierPoints,
 
   @Column(name = "effective_from")
   val effectiveFrom: ZonedDateTime,
@@ -73,13 +61,6 @@ data class WorkloadPointsEntity(
   val communityARMAssessmentWeighting: BigInteger,
 
 ) {
-  fun getTierPointsMap(caseType: CaseType): Map<Tier, BigInteger> = when (caseType) {
-    CaseType.CUSTODY -> custodyTierPoints.asMap()
-    CaseType.LICENSE -> licenseTierPoints.asMap()
-    CaseType.COMMUNITY -> communityTierPoints.asMap()
-    else -> emptyMap()
-  }
-
   fun getDefaultPointsAvailable(grade: String): BigDecimal = when (grade) {
     "SPO" -> defaultAvailablePointsSPO
     else -> defaultAvailablePointsPO
