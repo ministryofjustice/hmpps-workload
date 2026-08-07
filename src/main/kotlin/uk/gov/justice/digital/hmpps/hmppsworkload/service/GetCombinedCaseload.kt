@@ -25,5 +25,5 @@ class GetCombinedCaseload(
         ).map { c -> c.crn },
       ),
   )
-    .map { cde -> Case(cde.tier, cde.type, false, cde.crn) }
+    .map { cde -> Case(cde.tier, cde.provisionalTier, cde.type, false, cde.crn) }
 }

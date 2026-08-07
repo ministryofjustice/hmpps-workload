@@ -75,9 +75,10 @@ data class OffenderManagerOverview @JsonCreator constructor(
 data class LastAllocatedEvent @JsonCreator constructor(
   val allocatedOn: ZonedDateTime,
   val tier: Tier,
+  val provisionalTier: Boolean,
   val sentenceType: CaseType,
 ) {
   companion object {
-    fun from(eventDetails: EventDetails): LastAllocatedEvent = LastAllocatedEvent(eventDetails.allocatedOn, eventDetails.tier, eventDetails.type)
+    fun from(eventDetails: EventDetails): LastAllocatedEvent = LastAllocatedEvent(eventDetails.allocatedOn, eventDetails.tier, eventDetails.provisionalTier, eventDetails.type)
   }
 }

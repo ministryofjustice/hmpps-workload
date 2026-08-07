@@ -101,7 +101,7 @@ class GetOffenderManagerServiceTest {
     val crn = "1234"
     val name = Name("Jim", "A", "Bond")
     val staffIdentifier = StaffIdentifier(STAFF_CODE, STAFF_TEAM_CODE)
-    val eventDetails = EventDetails(Tier.A, CaseType.CUSTODY, crn, ZonedDateTime.now())
+    val eventDetails = EventDetails(Tier.A, false, CaseType.CUSTODY, crn, ZonedDateTime.now())
     val reductionHours = BigDecimal.valueOf(1.5)
     val workWeekHours = BigDecimal.valueOf(40)
     val totalPoints = BigInteger.valueOf(15)
@@ -180,6 +180,6 @@ class GetOffenderManagerServiceTest {
     assertEquals(cases?.name, name)
     assertEquals(cases?.code, "002")
     assertEquals(cases?.grade, "SPO")
-    assertEquals(cases?.activeCases, listOf(OffenderManagerActiveCase(crn, Tier.A.toString(), name, "CUSTODY", now)))
+    assertEquals(cases?.activeCases, listOf(OffenderManagerActiveCase(crn, Tier.A.toString(), false, name, "CUSTODY", now)))
   }
 }

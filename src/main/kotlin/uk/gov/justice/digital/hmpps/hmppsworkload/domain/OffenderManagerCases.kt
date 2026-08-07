@@ -29,6 +29,8 @@ data class OffenderManagerActiveCase(
   val crn: String,
   @Schema(description = "Tier", example = "B")
   val tier: String,
+  @Schema(description = "Whether tier score is provisional")
+  val provisionalTier: Boolean,
   @Schema(description = "name")
   val name: Name,
   @Schema(description = "type")
@@ -37,6 +39,6 @@ data class OffenderManagerActiveCase(
   val initialAllocationDate: LocalDate?,
 ) {
   companion object {
-    fun from(activeCase: ActiveCase, caseDetails: CaseDetailsEntity): OffenderManagerActiveCase = OffenderManagerActiveCase(activeCase.crn, caseDetails.tier.name, activeCase.name, activeCase.type, activeCase.initialAllocationDate)
+    fun from(activeCase: ActiveCase, caseDetails: CaseDetailsEntity): OffenderManagerActiveCase = OffenderManagerActiveCase(activeCase.crn, caseDetails.tier.name, caseDetails.provisionalTier, activeCase.name, activeCase.type, activeCase.initialAllocationDate)
   }
 }

@@ -60,6 +60,8 @@ class GetAllocatedEvents : IntegrationTestBase() {
       .isEqualTo("Sally Smith")
       .jsonPath("$.cases[?(@.crn == '${storedEventManager.crn}')].tier")
       .isEqualTo(caseDetails.tier.name)
+      .jsonPath("$.cases[?(@.crn == '${storedEventManager.crn}')].provisionalTier")
+      .isEqualTo(caseDetails.provisionalTier)
       .jsonPath("$.cases[?(@.crn == '${storedEventManager.crn}')].allocatedOn")
       .exists()
   }

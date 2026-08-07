@@ -44,7 +44,7 @@ class GetOffenderManagerService(
   }
 
   private fun getPotentialCase(crn: String): Case = caseDetailsRepository.findByIdOrNull(crn)!!
-    .let { Case(tier = it.tier, type = it.type, crn = crn) }
+    .let { Case(tier = it.tier, provisionalTier = it.provisionalTier, type = it.type, crn = crn) }
 
   private fun getDefaultOffenderManagerOverview(staffCode: String, grade: String): OverviewOffenderManager {
     val workloadPoints = workloadPointsRepository.findFirstByIsT2AAndEffectiveToIsNullOrderByEffectiveFromDesc(false)
