@@ -54,7 +54,7 @@ class CaseTotalsServiceTest {
         "X111119" to TierWithStatus("MISSING", false),
         "X111120" to TierWithStatus("NOT_SUPERVISED", false),
         "X111121" to TierWithStatus("INVALID_VALUE", false), // Treated as 'MISSING'
-        "X111121" to null, // Treated as 'MISSING'
+        "X111122" to null, // Treated as 'MISSING'
       )
 
       val totals = caseTotalsService.getTeamTotalsByTier(listOf(TEAM_CODE_1, TEAM_CODE_2))
@@ -95,7 +95,7 @@ class CaseTotalsServiceTest {
         "X111119" to TierWithStatus("MISSING", false),
         "X111120" to TierWithStatus("NOT_SUPERVISED", false),
         "X111121" to TierWithStatus("INVALID_VALUE", false), // Treated as 'MISSING'
-        "X111121" to null, // Treated as 'MISSING'
+        "X111122" to null, // Treated as 'MISSING'
       )
 
       val totals = caseTotalsService.getPractitionerTotalsByTier(STAFF_CODE_1, TEAM_CODE_1)
