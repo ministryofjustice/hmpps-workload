@@ -6,6 +6,7 @@ import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.HmppsTierApiClient
+import uk.gov.justice.digital.hmpps.hmppsworkload.client.TierWithStatus
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.AllocationReason
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.TierCaseTotals
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.entity.PersonManagerEntity
@@ -42,18 +43,18 @@ class CaseTotalsServiceTest {
       )
 
       coEvery { hmppsTierApiClient.getTierByCrns(any()) } returns mapOf(
-        "X111111" to "A",
-        "X111112" to "A",
-        "X111113" to "B",
-        "X111114" to "C",
-        "X111115" to "D",
-        "X111116" to "E",
-        "X111117" to "F",
-        "X111118" to "G",
-        "X111119" to "MISSING",
-        "X111120" to "NOT_SUPERVISED",
-        "X111121" to "INVALID_VALUE", // Treated as 'MISSING'
-        "X111121" to null, // Treated as 'MISSING'
+        "X111111" to TierWithStatus("A", false),
+        "X111112" to TierWithStatus("A", false),
+        "X111113" to TierWithStatus("B", false),
+        "X111114" to TierWithStatus("C", false),
+        "X111115" to TierWithStatus("D", false),
+        "X111116" to TierWithStatus("E", false),
+        "X111117" to TierWithStatus("F", false),
+        "X111118" to TierWithStatus("G", false),
+        "X111119" to TierWithStatus("MISSING", false),
+        "X111120" to TierWithStatus("NOT_SUPERVISED", false),
+        "X111121" to TierWithStatus("INVALID_VALUE", false), // Treated as 'MISSING'
+        "X111122" to null, // Treated as 'MISSING'
       )
 
       val totals = caseTotalsService.getTeamTotalsByTier(listOf(TEAM_CODE_1, TEAM_CODE_2))
@@ -83,18 +84,18 @@ class CaseTotalsServiceTest {
       )
 
       coEvery { hmppsTierApiClient.getTierByCrns(any()) } returns mapOf(
-        "X111111" to "A",
-        "X111112" to "A",
-        "X111113" to "B",
-        "X111114" to "C",
-        "X111115" to "D",
-        "X111116" to "E",
-        "X111117" to "F",
-        "X111118" to "G",
-        "X111119" to "MISSING",
-        "X111120" to "NOT_SUPERVISED",
-        "X111121" to "INVALID_VALUE", // Treated as 'MISSING'
-        "X111121" to null, // Treated as 'MISSING'
+        "X111111" to TierWithStatus("A", false),
+        "X111112" to TierWithStatus("A", false),
+        "X111113" to TierWithStatus("B", false),
+        "X111114" to TierWithStatus("C", false),
+        "X111115" to TierWithStatus("D", false),
+        "X111116" to TierWithStatus("E", false),
+        "X111117" to TierWithStatus("F", false),
+        "X111118" to TierWithStatus("G", false),
+        "X111119" to TierWithStatus("MISSING", false),
+        "X111120" to TierWithStatus("NOT_SUPERVISED", false),
+        "X111121" to TierWithStatus("INVALID_VALUE", false), // Treated as 'MISSING'
+        "X111122" to null, // Treated as 'MISSING'
       )
 
       val totals = caseTotalsService.getPractitionerTotalsByTier(STAFF_CODE_1, TEAM_CODE_1)

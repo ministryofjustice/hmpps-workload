@@ -70,6 +70,7 @@ class TeamService(
         PractitionerWorkload.from(
           choosePractitionerResponse,
           it.tier,
+          it.provisionalTier,
           enrichedTeams,
         )
       }

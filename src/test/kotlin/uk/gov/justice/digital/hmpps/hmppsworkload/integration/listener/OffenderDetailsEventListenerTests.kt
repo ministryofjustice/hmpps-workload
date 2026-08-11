@@ -37,7 +37,7 @@ class OffenderDetailsEventListenerTests : IntegrationTestBase() {
     hmppsTier.verifyTierCalled(crn, 1)
     Assertions.assertEquals(crn, caseDetail.crn)
     Assertions.assertEquals(CaseType.CUSTODY, caseDetail.type)
-    Assertions.assertEquals(Tier.B3, caseDetail.tier)
+    Assertions.assertEquals(Tier.B, caseDetail.tier)
     Assertions.assertEquals("Jane", caseDetail.firstName)
     Assertions.assertEquals("Doe", caseDetail.surname)
   }

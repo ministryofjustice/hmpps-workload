@@ -1,7 +1,5 @@
 package uk.gov.justice.digital.hmpps.hmppsworkload.client
 
-import com.fasterxml.jackson.annotation.JsonCreator
-import com.fasterxml.jackson.annotation.JsonProperty
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.withTimeout
 import org.slf4j.LoggerFactory
@@ -18,16 +16,16 @@ class HmppsTierApiClient(private val webClient: WebClient) {
     private val log = LoggerFactory.getLogger(this::class.java)
   }
 
-  suspend fun getTierByCrn(crn: String): String? {
+  suspend fun getTierByCrn(crn: String): TierWithStatus? {
     try {
       return withTimeout(TIMEOUT_VALUE) {
         webClient
           .get()
-          .uri("/crn/{crn}/tier", crn)
+          .uri("/v3/crn/{crn}/tier", crn)
           .awaitExchangeOrNull { response ->
             when {
               response.statusCode() == HttpStatus.OK -> {
-                response.awaitBody<TierDto>().tierScore
+                response.awaitBody<TierWithStatus>()
               }
               response.statusCode() == HttpStatus.NOT_FOUND -> {
                 null
@@ -47,7 +45,7 @@ class HmppsTierApiClient(private val webClient: WebClient) {
     }
   }
 
-  suspend fun getTierByCrns(crns: List<String>): Map<String, String?> {
+  suspend fun getTierByCrns(crns: List<String>): Map<String, TierWithStatus?> {
     try {
       return withTimeout(TIMEOUT_VALUE) {
         webClient
@@ -57,7 +55,7 @@ class HmppsTierApiClient(private val webClient: WebClient) {
           .awaitExchange { response ->
             when {
               response.statusCode() == HttpStatus.OK -> {
-                response.awaitBody<Map<String, TierDto?>>().mapValues { it.value?.tierScore }
+                response.awaitBody<Map<String, TierWithStatus?>>()
               }
               response.statusCode().is5xxServerError -> {
                 throw WorkloadFailedDependencyException("Tier service failed with ${response.statusCode()}")
@@ -77,8 +75,3 @@ class HmppsTierApiClient(private val webClient: WebClient) {
 
 class WorkloadWebClientTimeoutException(message: String) : RuntimeException(message)
 class WorkloadFailedDependencyException(message: String) : RuntimeException(message)
-
-data class TierDto @JsonCreator constructor(
-  @JsonProperty("tierScore")
-  val tierScore: String,
-)

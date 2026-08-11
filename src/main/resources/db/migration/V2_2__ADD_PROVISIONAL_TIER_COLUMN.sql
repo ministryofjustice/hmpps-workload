@@ -1,0 +1,1 @@
+ALTER TABLE case_details ADD COLUMN provisional_tier BOOLEAN NOT NULL DEFAULT FALSE;

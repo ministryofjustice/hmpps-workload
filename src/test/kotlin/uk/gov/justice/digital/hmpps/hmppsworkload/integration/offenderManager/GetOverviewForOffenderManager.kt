@@ -29,8 +29,8 @@ class GetOverviewForOffenderManager : IntegrationTestBase() {
     workforceAllocationsToDelius.officerViewResponse(offenderManagerCode)
     val wmtStaff = setupCurrentWmtStaff(offenderManagerCode, teamCode)
 
-    setupWmtManagedCase(wmtStaff, Tier.A2, "CRN3333", CaseType.COMMUNITY)
-    setupWmtManagedCase(wmtStaff, Tier.D2, "CRN2222", CaseType.CUSTODY)
+    setupWmtManagedCase(wmtStaff, Tier.A, "CRN3333", CaseType.COMMUNITY)
+    setupWmtManagedCase(wmtStaff, Tier.D, "CRN2222", CaseType.CUSTODY)
 
     val reductionCategory = reductionCategoryRepository.save(ReductionCategoryEntity())
     val reductionReason = reductionReasonRepository.save(ReductionReasonEntity(reductionCategoryEntity = reductionCategory))
@@ -290,7 +290,7 @@ class GetOverviewForOffenderManager : IntegrationTestBase() {
       ),
     )
     val storedEventManager = eventManagerRepository.findByIdOrNull(eventManager.id!!)!!
-    val caseDetails = caseDetailsRepository.save(CaseDetailsEntity(storedEventManager.crn, Tier.C3, CaseType.COMMUNITY, "Jane", "Doe"))
+    val caseDetails = caseDetailsRepository.save(CaseDetailsEntity(storedEventManager.crn, Tier.C, false, CaseType.COMMUNITY, "Jane", "Doe"))
     webTestClient.get()
       .uri("/team/$teamCode/offenderManagers/$offenderManagerCode")
       .headers {

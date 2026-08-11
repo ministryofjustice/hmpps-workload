@@ -29,7 +29,7 @@ class JpaBasedGetEventManager(
   }
   fun findLatestByStaffAndTeam(staffIdentifier: StaffIdentifier): EventDetails? = eventManagerRepository.findFirstByStaffCodeAndTeamCodeAndIsActiveTrueOrderByCreatedDateDesc(staffIdentifier.staffCode, staffIdentifier.teamCode)?.let { eventManagerEntity ->
     caseDetailsRepository.findByIdOrNull(eventManagerEntity.crn)?.let { caseDetails ->
-      EventDetails(caseDetails.tier, caseDetails.type, caseDetails.crn, eventManagerEntity.createdDate!!)
+      EventDetails(caseDetails.tier, caseDetails.provisionalTier, caseDetails.type, caseDetails.crn, eventManagerEntity.createdDate!!)
     }
   }
 

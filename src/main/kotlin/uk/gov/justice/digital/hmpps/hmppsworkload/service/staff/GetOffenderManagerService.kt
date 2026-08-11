@@ -13,7 +13,6 @@ import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.mapping.OverviewOffenderMa
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.CaseDetailsRepository
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.OffenderManagerRepository
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.WorkloadPointsRepository
-import uk.gov.justice.digital.hmpps.hmppsworkload.service.CaseCalculator
 import uk.gov.justice.digital.hmpps.hmppsworkload.service.GetWeeklyHours
 import uk.gov.justice.digital.hmpps.hmppsworkload.service.calculateCapacity
 import uk.gov.justice.digital.hmpps.hmppsworkload.service.reduction.GetReductionService
@@ -23,7 +22,6 @@ import java.time.LocalDateTime
 @Service
 class GetOffenderManagerService(
   private val offenderManagerRepository: OffenderManagerRepository,
-  private val caseCalculator: CaseCalculator,
   private val getReductionService: GetReductionService,
   private val workloadPointsRepository: WorkloadPointsRepository,
   private val caseDetailsRepository: CaseDetailsRepository,
@@ -37,22 +35,16 @@ class GetOffenderManagerService(
     val impactResponse = workforceAllocationsToDeliusApiClient.impact(crn, staffIdentifier.staffCode)
     val potentialCase = getPotentialCase(crn)
     val overview = findOffenderManagerOverview(staffIdentifier, impactResponse.staff.getGrade())
-    val currentCaseImpact = getCurrentCasePoints(staffIdentifier, potentialCase)
 
     overview.potentialCapacity = calculateCapacity(
-      overview.totalPoints.minus(currentCaseImpact)
-        .plus(caseCalculator.getPointsForCase(potentialCase)),
+      overview.totalPoints,
       overview.availablePoints,
     )
     return OffenderManagerPotentialWorkload.from(overview, impactResponse, potentialCase)
   }
 
   private fun getPotentialCase(crn: String): Case = caseDetailsRepository.findByIdOrNull(crn)!!
-    .let { Case(tier = it.tier, type = it.type, crn = crn) }
-
-  private fun getCurrentCasePoints(staffIdentifier: StaffIdentifier, case: Case): BigInteger = offenderManagerRepository.findCaseByTeamCodeAndStaffCodeAndCrn(staffIdentifier.teamCode, staffIdentifier.staffCode, case.crn)?.let {
-    return caseCalculator.getPointsForCase(case)
-  } ?: BigInteger.ZERO
+    .let { Case(tier = it.tier, provisionalTier = it.provisionalTier, type = it.type, crn = crn) }
 
   private fun getDefaultOffenderManagerOverview(staffCode: String, grade: String): OverviewOffenderManager {
     val workloadPoints = workloadPointsRepository.findFirstByIsT2AAndEffectiveToIsNullOrderByEffectiveFromDesc(false)

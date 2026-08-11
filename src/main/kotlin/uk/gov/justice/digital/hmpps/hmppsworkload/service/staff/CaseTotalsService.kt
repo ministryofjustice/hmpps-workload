@@ -57,7 +57,7 @@ class CaseTotalsService(
 
     // Tiering API only accepts 20 CRNs at a time, so we have to batch the calls
     for (chunk in crns.chunked(20)) {
-      tiers += tierApiClient.getTierByCrns(chunk)
+      tiers += tierApiClient.getTierByCrns(chunk).mapValues { it.value?.tierScore }
     }
 
     return tiers

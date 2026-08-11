@@ -11,14 +11,15 @@ interface CaseDetailsRepository : CrudRepository<CaseDetailsEntity, String> {
   @Suppress("LongParameterList")
   @Modifying
   @Query(
-    value = """INSERT INTO case_details(first_name, surname, tier, "type", crn) VALUES (:firstName, :surname, :tier, :caseType, :crn)
-     ON CONFLICT (crn) DO UPDATE  set first_name = excluded.first_name, surname = excluded.surname, tier = excluded.tier, type = excluded.type, crn = excluded.crn;""",
+    value = """INSERT INTO case_details(first_name, surname, tier, provisional_tier, "type", crn) VALUES (:firstName, :surname, :tier, :provisionalTier, :caseType, :crn)
+     ON CONFLICT (crn) DO UPDATE  set first_name = excluded.first_name, surname = excluded.surname, tier = excluded.tier, provisional_tier = excluded.provisional_tier, type = excluded.type, crn = excluded.crn;""",
     nativeQuery = true,
   )
   fun insertCaseDetails(
     @Param("firstName") firstName: String,
     @Param("surname") surname: String,
     @Param("tier") tier: String,
+    @Param("provisionalTier") provisionalTier: Boolean,
     @Param("caseType") caseType: String,
     @Param("crn") crn: String,
   )
