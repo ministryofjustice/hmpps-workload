@@ -34,7 +34,7 @@ class GetAllocatedEvents : IntegrationTestBase() {
       ),
     )
 
-    val caseDetails = caseDetailsRepository.save(CaseDetailsEntity(crn = storedEventManager.crn, tier = Tier.B2, type = CaseType.COMMUNITY, "", ""))
+    val caseDetails = caseDetailsRepository.save(CaseDetailsEntity(crn = storedEventManager.crn, tier = Tier.B, provisionalTier = false, type = CaseType.COMMUNITY, "", ""))
 
     workforceAllocationsToDelius.allocationDetailsResponse(listOf(AllocationDetailIntegration(storedEventManager.crn, storedEventManager.staffCode)))
 
@@ -60,6 +60,8 @@ class GetAllocatedEvents : IntegrationTestBase() {
       .isEqualTo("Sally Smith")
       .jsonPath("$.cases[?(@.crn == '${storedEventManager.crn}')].tier")
       .isEqualTo(caseDetails.tier.name)
+      .jsonPath("$.cases[?(@.crn == '${storedEventManager.crn}')].provisionalTier")
+      .isEqualTo(caseDetails.provisionalTier)
       .jsonPath("$.cases[?(@.crn == '${storedEventManager.crn}')].allocatedOn")
       .exists()
   }
@@ -81,7 +83,7 @@ class GetAllocatedEvents : IntegrationTestBase() {
     oldEventManager.createdDate = ZonedDateTime.now().minusDays(60)
     eventManagerRepository.save(oldEventManager)
 
-    caseDetailsRepository.save(CaseDetailsEntity(crn = oldEventManager.crn, tier = Tier.B2, type = CaseType.COMMUNITY, "", ""))
+    caseDetailsRepository.save(CaseDetailsEntity(crn = oldEventManager.crn, tier = Tier.B, provisionalTier = false, type = CaseType.COMMUNITY, "", ""))
 
     workforceAllocationsToDelius.allocationDetailsResponse(listOf(AllocationDetailIntegration(oldEventManager.crn, oldEventManager.staffCode)))
 
@@ -149,7 +151,7 @@ class GetAllocatedEvents : IntegrationTestBase() {
 
     workforceAllocationsToDelius.allocationDetailsResponse(emptyList())
 
-    caseDetailsRepository.save(CaseDetailsEntity(crn = noDeliusDetailsEventManager.crn, tier = Tier.B2, type = CaseType.COMMUNITY, "", ""))
+    caseDetailsRepository.save(CaseDetailsEntity(crn = noDeliusDetailsEventManager.crn, tier = Tier.B, provisionalTier = false, type = CaseType.COMMUNITY, "", ""))
 
     webTestClient.post()
       .uri(

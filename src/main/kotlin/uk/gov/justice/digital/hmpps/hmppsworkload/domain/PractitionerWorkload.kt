@@ -18,6 +18,7 @@ data class PractitionerWorkload @JsonCreator constructor(
   val crn: String,
   val name: Name,
   val tier: Tier,
+  val provisionalTier: Boolean,
   val probationStatus: ProbationStatus,
   val communityPersonManager: CommunityPersonManager?,
   val teams: Map<String, List<Practitioner>>,
@@ -26,11 +27,13 @@ data class PractitionerWorkload @JsonCreator constructor(
     fun from(
       choosePractitionerResponse: ChoosePractitionerResponse,
       tier: Tier,
+      provisionalTier: Boolean,
       teams: Map<String, List<Practitioner>>,
     ): PractitionerWorkload = PractitionerWorkload(
       choosePractitionerResponse.crn,
       choosePractitionerResponse.name,
       tier,
+      provisionalTier,
       choosePractitionerResponse.probationStatus,
       choosePractitionerResponse.communityPersonManager?.takeUnless { it.isUnallocated },
       teams,

@@ -152,7 +152,7 @@ class DefaultSaveWorkloadService(
 
     var allocationData = workforceAllocationsToDeliusApiClient.allocationDetails(allocateCase.crn, firstEvent, allocatedStaffId.staffCode, loggedInUser)
 
-    val personManagerSaveResult = savePersonManager(allocatedStaffId, allocationData.staff, loggedInUser, allocateCase.allocationReason, allocateCase.crn, "", tier)
+    val personManagerSaveResult = savePersonManager(allocatedStaffId, allocationData.staff, loggedInUser, allocateCase.allocationReason, allocateCase.crn, "", tier?.tierScore)
     val allUnallocatedRequirements = arrayListOf<Requirement>()
     val allOffences = arrayListOf<OffenceDetails>()
     val allOrders = arrayListOf<SentenceDetails>()
@@ -175,7 +175,7 @@ class DefaultSaveWorkloadService(
     val reallocationNotificationDetails = getAdditionalNotificationDetails(previousStaffCode, allocateCase, allUnallocatedRequirements, allOffences, allOrders)
 
     try {
-      notificationService.notifyReallocation(allocationData, allocateCase, tier, reallocationNotificationDetails)
+      notificationService.notifyReallocation(allocationData, allocateCase, tier?.tierScore, reallocationNotificationDetails)
       log.info("Reallocation notified for case: ${allocateCase.crn}, to: ${allocationData.staff.code}, from: ${allocationData.allocatingStaff.code}")
       sqsSuccessPublisher.auditAllocation(allocateCase.crn, null, loggedInUser, allUnallocatedRequirements.map { it.id })
       log.info("Case reallocated: ${allocateCase.crn}, by ${allocationData.allocatingStaff.code}")

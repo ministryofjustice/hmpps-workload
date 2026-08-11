@@ -78,6 +78,7 @@ import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.powerbi.Upcomin
 import uk.gov.justice.digital.hmpps.hmppsworkload.listener.HmppsOffenderEvent
 import uk.gov.justice.digital.hmpps.hmppsworkload.service.AuditMessage
 import uk.gov.justice.digital.hmpps.hmppsworkload.service.SaveCasesDbService
+import uk.gov.justice.digital.hmpps.hmppsworkload.service.staff.CaseTotalsService
 import uk.gov.justice.hmpps.sqs.HmppsQueueService
 import uk.gov.justice.hmpps.sqs.MissingQueueException
 import java.math.BigDecimal
@@ -232,6 +233,9 @@ abstract class IntegrationTestBase {
 
   @Autowired
   protected lateinit var hmppsQueueService: HmppsQueueService
+
+  @Autowired
+  protected lateinit var caseTotalsService: CaseTotalsService
 
   @Autowired
   protected lateinit var tiersRepository: TiersRepository

@@ -1,11 +1,10 @@
 package uk.gov.justice.digital.hmpps.hmppsworkload.domain
 
-import java.time.ZonedDateTime
-
-data class EventDetails constructor(
+data class UpdatedCaseDetails(
+  val firstName: String,
+  val surname: String,
   val tier: Tier,
   val provisionalTier: Boolean,
-  val type: CaseType,
+  val caseType: CaseType,
   val crn: String,
-  val allocatedOn: ZonedDateTime,
 )
