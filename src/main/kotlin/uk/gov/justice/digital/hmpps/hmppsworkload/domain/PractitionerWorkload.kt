@@ -79,7 +79,7 @@ data class PractitionerWithRawWorkloadPoints(
       practitionerWorkload.availablePoints,
       practitionerWorkload.totalPoints,
       practitionerStats.ispsDueInNext14Days,
-      practitionerWorkload.totalCommunityCases + practitionerWorkload.totalLicenseCases + practitionerWorkload.totalCustodyCases - practitionerStats.contactSuspendedCases,
+      getActiveCases(practitionerWorkload.totalCommunityCases, practitionerWorkload.totalLicenseCases, practitionerWorkload.totalCustodyCases, practitionerStats.contactSuspendedCases),
       practitionerStats.contactSuspendedCases,
       practitionerStats.custodyReleasesInNext7Days,
       practitionerStats.paroleReportsInNext28Days,
@@ -123,12 +123,21 @@ data class Practitioner constructor(
       practitionerWorkload.totalLicenseCases,
       practitionerWorkload.totalCustodyCases,
       practitionerStats.ispsDueInNext14Days,
-      practitionerWorkload.totalCommunityCases + practitionerWorkload.totalLicenseCases + practitionerWorkload.totalCustodyCases - practitionerStats.contactSuspendedCases,
+      getActiveCases(practitionerWorkload.totalCommunityCases, practitionerWorkload.totalLicenseCases, practitionerWorkload.totalCustodyCases, practitionerStats.contactSuspendedCases),
       practitionerStats.contactSuspendedCases,
       practitionerStats.custodyReleasesInNext7Days,
       practitionerStats.paroleReportsInNext28Days,
       practitionerStats.hdcrotlReportsInNext14Days + practitionerStats.partBReportsInNext14Days + practitionerStats.partCReportsInNext14Days,
       practitionerStats.tierCaseTotals,
     )
+  }
+}
+
+private fun getActiveCases(communityCases: Int, licenseCases: Int, custodyCases: Int, contactSuspendedCases: Int): Int {
+  val activeCases = communityCases + licenseCases + custodyCases - contactSuspendedCases
+  return if (activeCases < 0) {
+    0
+  } else {
+    activeCases
   }
 }
