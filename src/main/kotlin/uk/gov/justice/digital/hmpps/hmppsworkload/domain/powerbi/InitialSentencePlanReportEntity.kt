@@ -21,31 +21,7 @@ data class InitialSentencePlanReportEntity @JsonCreator constructor(
 
   @Column
   @NotNull
-  val crn: String,
-
-  @Column
-  @NotNull
-  val personOnProbation: String,
-
-  @Column
-  @NotNull
-  val inductionDate: Date,
-
-  @Column
-  @NotNull
   val targetDate: Date,
-
-  @Column
-  @NotNull
-  val actions: String,
-
-  @Column
-  @NotNull
-  val rosh: String,
-
-  @Column
-  @NotNull
-  val pdu: String,
 
   @Column
   @NotNull

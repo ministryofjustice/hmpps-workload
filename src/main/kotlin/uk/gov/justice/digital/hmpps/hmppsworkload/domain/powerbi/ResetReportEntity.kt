@@ -20,34 +20,6 @@ data class ResetReportEntity @JsonCreator constructor(
 
   @Column
   @NotNull
-  val crn: String,
-
-  @Column
-  @NotNull
-  val personOnProbation: String,
-
-  @Column
-  @NotNull
-  val actions: String,
-
-  @Column
-  @NotNull
-  val notes: String,
-
-  @Column
-  @NotNull
-  val activeRequirements: String,
-
-  @Column
-  @NotNull
-  val orderCategory: String,
-
-  @Column
-  @NotNull
-  val pdu: String,
-
-  @Column
-  @NotNull
   val team: String,
 
   @Column
