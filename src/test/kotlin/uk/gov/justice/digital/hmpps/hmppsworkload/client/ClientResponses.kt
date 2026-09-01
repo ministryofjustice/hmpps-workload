@@ -334,5 +334,27 @@ class ClientResponses {
         }
       }
     """.trimIndent()
+
+    fun deliusResponseGetAllocatedCaseViewNoOptionalFields(): String = """
+      {
+        "name": {
+          "forename": "John",
+          "middleName": "D",
+          "surname": "Doe"
+        },
+        "dateOfBirth": "1980-01-01",
+        "activeEvents": [{
+          "number": 1,
+          "failureToComplyCount": 2,
+          "offences": [],
+          "requirements": [
+            {
+              "mainCategory": "Cat 3",
+              "length": "4 Years"
+            }
+          ]
+        }]
+      }
+    """.trimIndent()
   }
 }

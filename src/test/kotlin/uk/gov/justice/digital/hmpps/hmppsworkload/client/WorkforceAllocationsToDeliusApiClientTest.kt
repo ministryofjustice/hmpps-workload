@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.api.assertThrows
 import org.springframework.http.HttpStatus
 import org.springframework.web.reactive.function.client.ClientRequest
@@ -393,5 +394,23 @@ class WorkforceAllocationsToDeliusApiClientTest {
     assertEquals("Pdu1", result.teams.get(0).localAdminUnit.probationDeliveryUnit.description)
     assertEquals("REG1", result.teams.get(0).localAdminUnit.probationDeliveryUnit.provider.code)
     assertEquals("Region1", result.teams.get(0).localAdminUnit.probationDeliveryUnit.provider.description)
+  }
+
+  @Test
+  fun `test get allocated case view with missing optional fields`(): Unit = runBlocking {
+    val exchangeFunction = ExchangeFunction {
+      Mono.just(
+        ClientResponse.create(HttpStatus.OK)
+          .header("Content-Type", "application/json")
+          .body(ClientResponses.deliusResponseGetAllocatedCaseViewNoOptionalFields())
+          .build(),
+      )
+    }
+
+    val webClient = WebClient.builder()
+      .exchangeFunction(exchangeFunction)
+      .build()
+
+    assertDoesNotThrow { WorkforceAllocationsToDeliusApiClient(webClient).getAllocatedCaseView("SM00234") }
   }
 }
