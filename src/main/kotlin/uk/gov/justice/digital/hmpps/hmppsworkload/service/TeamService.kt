@@ -11,6 +11,7 @@ import uk.gov.justice.digital.hmpps.hmppsworkload.domain.Practitioner
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.PractitionerStats
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.PractitionerWithRawWorkloadPoints
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.PractitionerWorkload
+import uk.gov.justice.digital.hmpps.hmppsworkload.domain.StaffIdentifier
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.TierCaseTotals
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.WorkloadCase
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.powerbi.ReportPractitionerData
@@ -21,6 +22,7 @@ import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.TeamRepository
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.WorkloadPointsRepository
 import uk.gov.justice.digital.hmpps.hmppsworkload.service.powerbi.ReportDataService
 import uk.gov.justice.digital.hmpps.hmppsworkload.service.staff.CaseTotalsService
+import uk.gov.justice.digital.hmpps.hmppsworkload.service.staff.GetOffenderManagerService
 import java.math.BigInteger
 import java.time.LocalDate
 import java.time.ZoneId
@@ -35,6 +37,7 @@ class TeamService(
   private val workforceAllocationsToDeliusApiClient: WorkforceAllocationsToDeliusApiClient,
   private val reportDataService: ReportDataService,
   private val caseTotalsService: CaseTotalsService,
+  private val offenderManagerService: GetOffenderManagerService,
 ) {
 
   companion object {
@@ -57,10 +60,12 @@ class TeamService(
           .filter { grades == null || grades.contains(it.getGrade()) }
           .map {
             val teamStaffId = teamStaffId(team.key, it.code)
-            val practitionerWorkload = practitionerWorkloads[teamStaffId] ?: getTeamOverviewForOffenderManagerWithoutWorkload(it.code, it.getGrade(), team.key)
+            val practitionerWorkload = updatePractitionerWorkloadCaseTypes(practitionerWorkloads[teamStaffId], it.code, team.key) ?:
+            getTeamOverviewForOffenderManagerWithoutWorkload(it.code, it.getGrade(), team.key)
 
             val reportPractitionerId = getReportPractitionerId(teamNames, team.key, it)
-            val practitionerStats = getPractitionerStats(practitionerAllocationCaseCounts, practitionerReallocationCaseCounts, reportPractitionerData, teamStaffId, reportPractitionerId, teamTierTotals[teamStaffId])
+            val practitionerStats = getPractitionerStats(practitionerAllocationCaseCounts, practitionerReallocationCaseCounts,
+              reportPractitionerData, teamStaffId, reportPractitionerId, teamTierTotals[teamStaffId])
 
             Practitioner.from(it, practitionerWorkload, practitionerStats)
           }
@@ -123,7 +128,8 @@ class TeamService(
           log.info("StaffId to get workload: $teamStaffId")
           log.info("Practitioner Workload: ${practitionerWorkloads[teamStaffId]}")
 
-          val practitionerWorkload = practitionerWorkloads[teamStaffId] ?: getTeamOverviewForOffenderManagerWithoutWorkload(it.code, it.retrieveGrade(), team.key)
+          val practitionerWorkload = updatePractitionerWorkloadCaseTypes(practitionerWorkloads[teamStaffId], it.code, team.key) ?:
+          getTeamOverviewForOffenderManagerWithoutWorkload(it.code, it.getGrade(), team.key)
 
           val reportPractitionerId = getReportPractitionerId(teamNames, team.key, it)
           val practitionerStats = getPractitionerStats(practitionerAllocationCaseCounts, practitionerReallocationCaseCounts, reportPractitionerData, teamStaffId, reportPractitionerId, teamTierTotals[teamStaffId(team.key, it.code)])
@@ -164,4 +170,12 @@ class TeamService(
     reportPractitionerData.partCReportsInNext14Days.getOrDefault(reportPractitionerId, 0),
     tierCaseTotals,
   )
+
+  private suspend fun updatePractitionerWorkloadCaseTypes(practitionerWorkload: TeamOverview?, staffCode: String, teamCode: String): TeamOverview? {
+    val practitionerCases = offenderManagerService.getCases(StaffIdentifier(staffCode, teamCode))!!
+    practitionerWorkload?.totalLicenseCases = practitionerCases.activeCases.filter { it.type == "License" }.size
+    practitionerWorkload?.totalCommunityCases = practitionerCases.activeCases.filter { it.type == "Community" }.size
+    practitionerWorkload?.totalCustodyCases = practitionerCases.activeCases.filter { it.type == "Custody" }.size
+    return practitionerWorkload
+  }
 }
