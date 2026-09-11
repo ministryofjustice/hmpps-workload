@@ -5,7 +5,7 @@ import java.time.LocalDate
 data class AllocatedCaseView(
   val name: Name,
   val dateOfBirth: LocalDate,
-  val gender: String,
+  val gender: String?,
   val pncNumber: String?,
   val mainAddress: MainAddressDto?,
   val nextAppointmentDate: LocalDate?,
@@ -36,7 +36,7 @@ data class AllocatedActiveEvent @JsonCreator constructor(
 
 data class AllocatedEventRequirement @JsonCreator constructor(
   val mainCategory: String,
-  val subCategory: String,
+  val subCategory: String?,
   val length: String,
 )
 
