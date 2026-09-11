@@ -23,6 +23,7 @@ import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.entity.CaseDetailsEntity
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.mapping.OverviewOffenderManager
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.CaseDetailsRepository
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.OffenderManagerRepository
+import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.PersonManagerRepository
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.WorkloadPointsRepository
 import uk.gov.justice.digital.hmpps.hmppsworkload.service.reduction.GetReductionService
 import uk.gov.justice.digital.hmpps.hmppsworkload.service.staff.CaseTotalsService
@@ -49,8 +50,10 @@ class GetOffenderManagerServiceTest {
   private val getWeeklyHours = mockk<GetWeeklyHours>()
   private val getEventManager = mockk<JpaBasedGetEventManager>()
   private val caseTotalsService = mockk<CaseTotalsService>()
+  private val personManagerRepository = mockk<PersonManagerRepository>()
 
   private val offenderManagerService = GetOffenderManagerService(
+    personManagerRepository,
     offenderManagerRepository,
     getReductionService,
     workloadPointsRepository,
