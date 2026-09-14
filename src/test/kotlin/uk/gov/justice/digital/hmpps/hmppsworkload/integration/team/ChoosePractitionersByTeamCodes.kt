@@ -3,14 +3,11 @@ package uk.gov.justice.digital.hmpps.hmppsworkload.integration.team
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.AllocationReason
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.CaseType
-import uk.gov.justice.digital.hmpps.hmppsworkload.domain.StaffIdentifier
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.Tier
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.UpdatedCaseDetails
 import uk.gov.justice.digital.hmpps.hmppsworkload.integration.IntegrationTestBase
-import uk.gov.justice.digital.hmpps.hmppsworkload.integration.domain.ActiveCasesIntegration
 import uk.gov.justice.digital.hmpps.hmppsworkload.integration.mockserver.TierApiExtension.Companion.hmppsTier
 import uk.gov.justice.digital.hmpps.hmppsworkload.integration.mockserver.WorkforceAllocationsToDeliusExtension.Companion.workforceAllocationsToDelius
-import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.entity.CaseDetailsEntity
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.entity.PersonManagerEntity
 import java.time.ZonedDateTime
 

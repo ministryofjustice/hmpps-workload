@@ -501,8 +501,7 @@ abstract class IntegrationTestBase {
     partCReportRepository.saveAll(listOf(partCReportAtThreshold, partCReportAfterThreshold))
   }
 
-
-  protected fun setupTeamWithNoWorkCases(){
+  protected fun setupTeamWithNoWorkCases() {
     workforceAllocationsToDelius.staffActiveCasesResponse("OM1")
     workforceAllocationsToDelius.staffActiveCasesResponse("OM2")
     workforceAllocationsToDelius.staffActiveCasesResponse("OM3")
