@@ -173,9 +173,9 @@ class TeamService(
 
   private suspend fun updatePractitionerWorkloadCaseTypes(practitionerWorkload: TeamOverview?, staffCode: String, teamCode: String): TeamOverview? {
     val practitionerCases = offenderManagerService.getCases(StaffIdentifier(staffCode, teamCode))!!
-    practitionerWorkload?.totalLicenseCases = practitionerCases.activeCases.filter { it.type == "License" }.size
-    practitionerWorkload?.totalCommunityCases = practitionerCases.activeCases.filter { it.type == "Community" }.size
-    practitionerWorkload?.totalCustodyCases = practitionerCases.activeCases.filter { it.type == "Custody" }.size
+    practitionerWorkload?.totalLicenseCases = practitionerCases.activeCases.filter { it.type == "LICENSE" }.size
+    practitionerWorkload?.totalCommunityCases = practitionerCases.activeCases.filter { it.type == "COMMUNITY" }.size
+    practitionerWorkload?.totalCustodyCases = practitionerCases.activeCases.filter { it.type == "CUSTODY" }.size
     return practitionerWorkload
   }
 }
