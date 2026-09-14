@@ -60,12 +60,18 @@ class TeamService(
           .filter { grades == null || grades.contains(it.getGrade()) }
           .map {
             val teamStaffId = teamStaffId(team.key, it.code)
-            val practitionerWorkload = updatePractitionerWorkloadCaseTypes(practitionerWorkloads[teamStaffId], it.code, team.key) ?:
-            getTeamOverviewForOffenderManagerWithoutWorkload(it.code, it.getGrade(), team.key)
+            val practitionerWorkload = updatePractitionerWorkloadCaseTypes(practitionerWorkloads[teamStaffId], it.code, team.key)
+              ?: getTeamOverviewForOffenderManagerWithoutWorkload(it.code, it.getGrade(), team.key)
 
             val reportPractitionerId = getReportPractitionerId(teamNames, team.key, it)
-            val practitionerStats = getPractitionerStats(practitionerAllocationCaseCounts, practitionerReallocationCaseCounts,
-              reportPractitionerData, teamStaffId, reportPractitionerId, teamTierTotals[teamStaffId])
+            val practitionerStats = getPractitionerStats(
+              practitionerAllocationCaseCounts,
+              practitionerReallocationCaseCounts,
+              reportPractitionerData,
+              teamStaffId,
+              reportPractitionerId,
+              teamTierTotals[teamStaffId],
+            )
 
             Practitioner.from(it, practitionerWorkload, practitionerStats)
           }
@@ -128,8 +134,8 @@ class TeamService(
           log.info("StaffId to get workload: $teamStaffId")
           log.info("Practitioner Workload: ${practitionerWorkloads[teamStaffId]}")
 
-          val practitionerWorkload = updatePractitionerWorkloadCaseTypes(practitionerWorkloads[teamStaffId], it.code, team.key) ?:
-          getTeamOverviewForOffenderManagerWithoutWorkload(it.code, it.getGrade(), team.key)
+          val practitionerWorkload = updatePractitionerWorkloadCaseTypes(practitionerWorkloads[teamStaffId], it.code, team.key)
+            ?: getTeamOverviewForOffenderManagerWithoutWorkload(it.code, it.getGrade(), team.key)
 
           val reportPractitionerId = getReportPractitionerId(teamNames, team.key, it)
           val practitionerStats = getPractitionerStats(practitionerAllocationCaseCounts, practitionerReallocationCaseCounts, reportPractitionerData, teamStaffId, reportPractitionerId, teamTierTotals[teamStaffId(team.key, it.code)])
