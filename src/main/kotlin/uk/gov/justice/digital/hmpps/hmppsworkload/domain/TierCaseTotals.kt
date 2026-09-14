@@ -3,13 +3,13 @@ package uk.gov.justice.digital.hmpps.hmppsworkload.domain
 import java.math.BigDecimal
 
 data class TierCaseTotals(
-  val A: BigDecimal,
-  val B: BigDecimal,
-  val C: BigDecimal,
-  val D: BigDecimal,
-  val E: BigDecimal,
-  val F: BigDecimal,
-  val G: BigDecimal,
-  val missing: BigDecimal,
-  val notSupervised: BigDecimal,
+  val A: BigDecimal = BigDecimal.ZERO,
+  val B: BigDecimal = BigDecimal.ZERO,
+  val C: BigDecimal = BigDecimal.ZERO,
+  val D: BigDecimal = BigDecimal.ZERO,
+  val E: BigDecimal = BigDecimal.ZERO,
+  val F: BigDecimal = BigDecimal.ZERO,
+  val G: BigDecimal = BigDecimal.ZERO,
+  val missing: BigDecimal = BigDecimal.ZERO,
+  val notSupervised: BigDecimal = BigDecimal.ZERO,
 )

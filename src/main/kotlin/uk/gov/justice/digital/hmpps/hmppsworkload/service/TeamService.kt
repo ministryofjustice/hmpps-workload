@@ -162,6 +162,6 @@ class TeamService(
     reportPractitionerData.hdcrotlReportsInNext14Days.getOrDefault(reportPractitionerId, 0),
     reportPractitionerData.partBReportsInNext14Days.getOrDefault(reportPractitionerId, 0),
     reportPractitionerData.partCReportsInNext14Days.getOrDefault(reportPractitionerId, 0),
-    tierCaseTotals,
+    tierCaseTotals ?: TierCaseTotals(),
   )
 }

@@ -10,5 +10,5 @@ data class PractitionerStats(
   val hdcrotlReportsInNext14Days: Int,
   val partBReportsInNext14Days: Int,
   val partCReportsInNext14Days: Int,
-  val tierCaseTotals: TierCaseTotals?,
+  val tierCaseTotals: TierCaseTotals,
 )
