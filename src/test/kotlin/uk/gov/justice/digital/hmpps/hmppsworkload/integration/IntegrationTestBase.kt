@@ -17,6 +17,7 @@ import org.springframework.test.web.reactive.server.WebTestClient
 import software.amazon.awssdk.services.sqs.model.DeleteMessageRequest
 import software.amazon.awssdk.services.sqs.model.PurgeQueueRequest
 import software.amazon.awssdk.services.sqs.model.ReceiveMessageRequest
+import uk.gov.justice.digital.hmpps.hmppsworkload.domain.AllocationReason
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.CaseType
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.Tier
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.event.HmppsAllocationMessage
@@ -28,6 +29,7 @@ import uk.gov.justice.digital.hmpps.hmppsworkload.domain.powerbi.PartBReportEnti
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.powerbi.PartCReportEntity
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.powerbi.ResetReportEntity
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.powerbi.UpcomingReleasesReportEntity
+import uk.gov.justice.digital.hmpps.hmppsworkload.integration.domain.ActiveCasesIntegration
 import uk.gov.justice.digital.hmpps.hmppsworkload.integration.domain.WMTPointsWeightings
 import uk.gov.justice.digital.hmpps.hmppsworkload.integration.domain.WMTStaff
 import uk.gov.justice.digital.hmpps.hmppsworkload.integration.jpa.entity.CaseCategoryEntity
@@ -49,8 +51,11 @@ import uk.gov.justice.digital.hmpps.hmppsworkload.integration.mockserver.AssessR
 import uk.gov.justice.digital.hmpps.hmppsworkload.integration.mockserver.HmppsAuthApiExtension
 import uk.gov.justice.digital.hmpps.hmppsworkload.integration.mockserver.TierApiExtension
 import uk.gov.justice.digital.hmpps.hmppsworkload.integration.mockserver.WorkforceAllocationsToDeliusExtension
+import uk.gov.justice.digital.hmpps.hmppsworkload.integration.mockserver.WorkforceAllocationsToDeliusExtension.Companion.workforceAllocationsToDelius
+import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.entity.CaseDetailsEntity
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.entity.OffenderManagerEntity
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.entity.PduEntity
+import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.entity.PersonManagerEntity
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.entity.RegionEntity
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.entity.TeamEntity
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.entity.WMTWorkloadOwnerEntity
@@ -494,6 +499,41 @@ abstract class IntegrationTestBase {
     val partCReportAtThreshold = PartCReportEntity(targetDate = Date.valueOf(LocalDate.now().plusDays(14)), team = team, probationPractitioner = practitioner)
     val partCReportAfterThreshold = partCReportAtThreshold.copy(targetDate = Date.valueOf(LocalDate.now().plusDays(15)))
     partCReportRepository.saveAll(listOf(partCReportAtThreshold, partCReportAfterThreshold))
+  }
+
+
+  protected fun setupTeamWithNoWorkCases(){
+    workforceAllocationsToDelius.staffActiveCasesResponse("OM1")
+    workforceAllocationsToDelius.staffActiveCasesResponse("OM2")
+    workforceAllocationsToDelius.staffActiveCasesResponse("OM3")
+    workforceAllocationsToDelius.staffActiveCasesResponse("NOWORKLOAD1")
+  }
+
+  protected fun setupCasesForTeamMember(staffCode: String, teamCode: String) {
+    workforceAllocationsToDelius.staffActiveCasesResponse(
+      staffCode,
+      activeCases = listOf(
+        ActiveCasesIntegration("CRN1", "Sally", "Smith", "CUSTODY"),
+        ActiveCasesIntegration("CRN2", "John", "Williams", "COMMUNITY"),
+        ActiveCasesIntegration("CRN3", "John", "Doe", "LICENSE"),
+      ),
+    )
+
+    caseDetailsRepository.saveAll(
+      listOf(
+        CaseDetailsEntity("CRN1", Tier.B, false, CaseType.CUSTODY, "Sally", "Smith"),
+        CaseDetailsEntity("CRN2", Tier.C, false, CaseType.COMMUNITY, "John", "Williams"),
+        CaseDetailsEntity("CRN3", Tier.C, false, CaseType.LICENSE, "John", "Doe"),
+      ),
+    )
+
+    personManagerRepository.saveAll(
+      listOf(
+        PersonManagerEntity(crn = "CRN1", teamCode = teamCode, staffCode = staffCode, createdBy = "USER.NAME", isActive = true, allocationReason = AllocationReason.INITIAL_ALLOCATION),
+        PersonManagerEntity(crn = "CRN2", teamCode = teamCode, staffCode = staffCode, createdBy = "USER.NAME", isActive = true, allocationReason = AllocationReason.INITIAL_ALLOCATION),
+        PersonManagerEntity(crn = "CRN3", teamCode = teamCode, staffCode = staffCode, createdBy = "USER.NAME", isActive = true, allocationReason = AllocationReason.INITIAL_ALLOCATION),
+      ),
+    )
   }
 
   protected fun getWmtWorkloadWeightings(): WMTPointsWeightings = WMTPointsWeightings(
