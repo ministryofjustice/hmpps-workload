@@ -16,14 +16,11 @@ import uk.gov.justice.digital.hmpps.hmppsworkload.domain.TierCaseTotals
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.WorkloadCase
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.powerbi.ReportPractitionerData
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.powerbi.ReportPractitionerId
-import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.mapping.TeamOverview
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.CaseDetailsRepository
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.TeamRepository
-import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.WorkloadPointsRepository
 import uk.gov.justice.digital.hmpps.hmppsworkload.service.powerbi.ReportDataService
 import uk.gov.justice.digital.hmpps.hmppsworkload.service.staff.CaseTotalsService
 import uk.gov.justice.digital.hmpps.hmppsworkload.service.staff.GetOffenderManagerService
-import java.math.BigInteger
 import java.time.LocalDate
 import java.time.ZoneId
 
@@ -32,7 +29,6 @@ private const val CASE_COUNT_PERIOD_DAYS = 7L
 @Service
 class TeamService(
   private val teamRepository: TeamRepository,
-  private val workloadPointsRepository: WorkloadPointsRepository,
   private val caseDetailsRepository: CaseDetailsRepository,
   private val workforceAllocationsToDeliusApiClient: WorkforceAllocationsToDeliusApiClient,
   private val reportDataService: ReportDataService,
@@ -91,25 +87,6 @@ class TeamService(
   suspend fun getWorkloadCases(teams: List<String>): Flow<WorkloadCase> = teamRepository.findWorkloadCountCaseByCode(teams).map {
     WorkloadCase(it.teamCode, it.totalCases, calculateCapacity(it.totalPoints.toBigInteger(), it.availablePoints.toBigInteger()).toDouble())
   }.asFlow()
-
-  private fun getTeamOverviewForOffenderManagerWithoutWorkload(
-    staffCode: String,
-    grade: String?,
-    teamCode: String,
-  ): TeamOverview = TeamOverview(
-    0,
-    0,
-    0,
-    defaultAvailablePointsForGrade(grade ?: "PO"),
-    BigInteger.ZERO,
-    staffCode,
-    teamCode,
-  )
-
-  private fun defaultAvailablePointsForGrade(grade: String): BigInteger {
-    val workloadPoints = workloadPointsRepository.findFirstByIsT2AAndEffectiveToIsNullOrderByEffectiveFromDesc(false)
-    return workloadPoints.getDefaultPointsAvailable(grade).toBigInteger()
-  }
 
   suspend fun getPractitioners(teamCodes: List<String>): Map<String, List<PractitionerWithRawWorkloadPoints>>? {
     return workforceAllocationsToDeliusApiClient.choosePractitioners(teamCodes)?.let { choosePractitionerResponse ->

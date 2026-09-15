@@ -12,45 +12,8 @@ import jakarta.persistence.ManyToOne
 import jakarta.persistence.NamedNativeQuery
 import jakarta.persistence.SqlResultSetMapping
 import jakarta.persistence.Table
-import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.mapping.TeamOverview
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.mapping.WorkloadCaseResult
-import java.math.BigInteger
 
-@SqlResultSetMapping(
-  name = "TeamOverviewResult",
-  classes = [
-    ConstructorResult(
-      targetClass = TeamOverview::class,
-      columns = [
-        ColumnResult(name = "totalCommunityCases", type = Int::class),
-        ColumnResult(name = "totalLicenseCases", type = Int::class),
-        ColumnResult(name = "totalCustodyCases", type = Int::class),
-        ColumnResult(name = "availablePoints", type = BigInteger::class),
-        ColumnResult(name = "totalPoints", type = BigInteger::class),
-        ColumnResult(name = "staffCode"),
-        ColumnResult(name = "teamCode"),
-      ],
-    ),
-  ],
-)
-@NamedNativeQuery(
-  name = "TeamEntity.findAllByTeamCodes",
-  resultSetMapping = "TeamOverviewResult",
-  query = """SELECT
-    w.total_filtered_community_cases as totalCommunityCases, w.total_filtered_license_cases as totalLicenseCases, w.total_filtered_custody_cases as totalCustodyCases , wpc.available_points AS availablePoints, wpc.total_points AS totalPoints, om."key" as staffCode, t.code as teamCode
-    FROM app.workload_owner AS wo
-    JOIN app.team AS t
-        ON wo.team_id = t.id
-    JOIN app.workload AS w
-        ON wo.id = w.workload_owner_id
-    JOIN app.workload_points_calculations AS wpc
-        ON wpc.workload_id = w.id
-    JOIN app.workload_report AS wr
-        ON wr.id = wpc.workload_report_id
-    JOIN app.offender_manager AS om
-        ON om.id = wo.offender_manager_id
-    WHERE wr.effective_from IS NOT NULL AND wr.effective_to IS NULL AND t.code in ?1""",
-)
 @SqlResultSetMapping(
   name = "WorkloadCaseResult",
   classes = [
