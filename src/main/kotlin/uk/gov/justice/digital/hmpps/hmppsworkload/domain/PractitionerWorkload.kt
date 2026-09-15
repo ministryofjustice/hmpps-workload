@@ -6,10 +6,6 @@ import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.CommunityPersonMana
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.Name
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.ProbationStatus
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.StaffMember
-import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.mapping.TeamOverview
-import uk.gov.justice.digital.hmpps.hmppsworkload.service.calculateCapacity
-import java.math.BigDecimal
-import java.math.BigInteger
 
 /***
  * Person on probation and practitioner workload
@@ -46,7 +42,6 @@ data class PractitionerWithRawWorkloadPoints(
   val name: Name,
   val email: String?,
   val grade: String,
-  val workload: BigDecimal,
   val casesPastWeek: Int,
   val allocatedCasesPastWeek: Int,
   val reallocatedCasesPastWeek: Int,
@@ -54,8 +49,6 @@ data class PractitionerWithRawWorkloadPoints(
   val communityCases: Int,
   val licenseCases: Int,
   val custodyCases: Int,
-  val availablePoints: BigInteger,
-  val totalPoints: BigInteger,
   val ispsDueInNext14Days: Int,
   val activeCases: Int,
   val contactSuspendedCases: Int,
@@ -65,23 +58,20 @@ data class PractitionerWithRawWorkloadPoints(
   val tierCaseTotals: TierCaseTotals?,
 ) {
   companion object {
-    fun from(staffMember: StaffMember, practitionerWorkload: TeamOverview, practitionerStats: PractitionerStats): PractitionerWithRawWorkloadPoints = PractitionerWithRawWorkloadPoints(
+    fun from(staffMember: StaffMember, practitionerCases: OffenderManagerCases, practitionerStats: PractitionerStats): PractitionerWithRawWorkloadPoints = PractitionerWithRawWorkloadPoints(
       staffMember.code,
       staffMember.name,
       staffMember.email.takeUnless { email -> email.isNullOrBlank() },
       staffMember.getGrade(),
-      calculateCapacity(practitionerWorkload.totalPoints, practitionerWorkload.availablePoints),
       practitionerStats.allocatedCaseCount + practitionerStats.reallocatedCaseCount,
       practitionerStats.allocatedCaseCount,
       practitionerStats.reallocatedCaseCount,
-      practitionerWorkload.totalCommunityCases + practitionerWorkload.totalLicenseCases + practitionerWorkload.totalCustodyCases,
-      practitionerWorkload.totalCommunityCases,
-      practitionerWorkload.totalLicenseCases,
-      practitionerWorkload.totalCustodyCases,
-      practitionerWorkload.availablePoints,
-      practitionerWorkload.totalPoints,
+      practitionerCases.activeCases.size + practitionerStats.contactSuspendedCases,
+      practitionerCases.activeCases.filter { it.type == "LICENSE" }.size,
+      practitionerCases.activeCases.filter { it.type == "COMMUNITY" }.size,
+      practitionerCases.activeCases.filter { it.type == "CUSTODY" }.size,
       practitionerStats.ispsDueInNext14Days,
-      getActiveCases(practitionerWorkload.totalCommunityCases, practitionerWorkload.totalLicenseCases, practitionerWorkload.totalCustodyCases, practitionerStats.contactSuspendedCases),
+      practitionerCases.activeCases.size,
       practitionerStats.contactSuspendedCases,
       practitionerStats.custodyReleasesInNext7Days,
       practitionerStats.paroleReportsInNext28Days,
@@ -96,7 +86,6 @@ data class Practitioner constructor(
   val name: Name,
   val email: String?,
   val grade: String,
-  val workload: BigDecimal,
   val casesPastWeek: Int,
   val allocatedCasesPastWeek: Int,
   val reallocatedCasesPastWeek: Int,
@@ -113,21 +102,20 @@ data class Practitioner constructor(
   val tierCaseTotals: TierCaseTotals?,
 ) {
   companion object {
-    fun from(staffMember: StaffMember, practitionerWorkload: TeamOverview, practitionerStats: PractitionerStats): Practitioner = Practitioner(
+    fun from(staffMember: StaffMember, practitionerCases: OffenderManagerCases, practitionerStats: PractitionerStats): Practitioner = Practitioner(
       staffMember.code,
       staffMember.name,
       staffMember.email.takeUnless { email -> email.isNullOrBlank() },
       staffMember.getGrade(),
-      calculateCapacity(practitionerWorkload.totalPoints, practitionerWorkload.availablePoints),
       practitionerStats.allocatedCaseCount + practitionerStats.reallocatedCaseCount,
       practitionerStats.allocatedCaseCount,
       practitionerStats.reallocatedCaseCount,
-      practitionerWorkload.totalCommunityCases + practitionerWorkload.totalLicenseCases + practitionerWorkload.totalCustodyCases,
-      practitionerWorkload.totalCommunityCases,
-      practitionerWorkload.totalLicenseCases,
-      practitionerWorkload.totalCustodyCases,
+      practitionerCases.activeCases.size + practitionerStats.contactSuspendedCases,
+      practitionerCases.activeCases.filter { it.type == "LICENSE" }.size,
+      practitionerCases.activeCases.filter { it.type == "COMMUNITY" }.size,
+      practitionerCases.activeCases.filter { it.type == "CUSTODY" }.size,
       practitionerStats.ispsDueInNext14Days,
-      getActiveCases(practitionerWorkload.totalCommunityCases, practitionerWorkload.totalLicenseCases, practitionerWorkload.totalCustodyCases, practitionerStats.contactSuspendedCases),
+      practitionerCases.activeCases.size,
       practitionerStats.contactSuspendedCases,
       practitionerStats.custodyReleasesInNext7Days,
       practitionerStats.paroleReportsInNext28Days,
