@@ -175,7 +175,7 @@ class DefaultSaveWorkloadService(
     val reallocationNotificationDetails = getAdditionalNotificationDetails(previousStaffCode, allocateCase, allUnallocatedRequirements, allOffences, allOrders)
 
     try {
-      notificationService.notifyReallocation(allocationData, allocateCase, tier?.tierScore, reallocationNotificationDetails)
+      notificationService.notifyReallocation(allocationData, allocateCase, tier, reallocationNotificationDetails)
       log.info("Reallocation notified for case: ${allocateCase.crn}, to: ${allocationData.staff.code}, from: ${allocationData.allocatingStaff.code}")
       sqsSuccessPublisher.auditAllocation(allocateCase.crn, null, loggedInUser, allUnallocatedRequirements.map { it.id })
       log.info("Case reallocated: ${allocateCase.crn}, by ${allocationData.allocatingStaff.code}")

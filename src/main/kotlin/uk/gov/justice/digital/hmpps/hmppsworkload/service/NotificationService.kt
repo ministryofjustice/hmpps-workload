@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.AssessRisksNeedsApiClient
+import uk.gov.justice.digital.hmpps.hmppsworkload.client.TierWithStatus
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.WorkforceAllocationsToDeliusApiClient
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.AllocationDemandDetails
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.InitialAppointment
@@ -20,6 +21,7 @@ import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.StaffMember
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.AllocateCase
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.CaseType
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.ReallocateCase
+import uk.gov.justice.digital.hmpps.hmppsworkload.domain.Tier
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.entity.CaseDetailsEntity
 import uk.gov.justice.digital.hmpps.hmppsworkload.utils.DateUtils
 import uk.gov.justice.digital.hmpps.hmppsworkload.utils.capitalize
@@ -43,6 +45,7 @@ private const val REQUIREMENTS = "requirements"
 private const val OFFICER_GRADE = "officerGrade"
 private const val INDUCTION_STATEMENT = "induction_statement"
 private const val TIER = "tier"
+private const val TIER_STATUS = "tier_status"
 private const val PREVIOUS_PRACTITIONER = "previous_pp"
 private const val PREVIOUS_PRACTITIONER_GRADE = "previous_pp_grade"
 private const val REALLOCATION_REASON = "reallocation_reason"
@@ -83,6 +86,7 @@ class NotificationService(
         ALLOCATING_EMAIL to allocationDemandDetails.allocatingStaff.email!!,
         PRACTITIONER_EMAIL to allocationDemandDetails.staff.email!!,
       ).plus(getLoggedInUserParameters(allocationDemandDetails.allocatingStaff))
+        .plus(getTierParameters(caseDetails.tier, caseDetails.provisionalTier))
         .plus(CRN to allocationDemandDetails.crn)
     } else {
       templateId = allocationTemplateId
@@ -96,6 +100,7 @@ class NotificationService(
         .plus(getConvictionParameters(allocationDemandDetails))
         .plus(getPersonOnProbationParameters(allocationDemandDetails.name.getCombinedName(), allocateCase.crn, allocateCase.allocationJustificationNotes))
         .plus(getLoggedInUserParameters(allocationDemandDetails.allocatingStaff))
+        .plus(getTierParameters(caseDetails.tier, caseDetails.provisionalTier))
         .plus(CRN to allocationDemandDetails.crn)
     }
     logProbationEstateDetails(allocationDemandDetails.allocatingStaff.code, allocationDemandDetails.crn, allocationDemandDetails.staff.code)
@@ -109,18 +114,18 @@ class NotificationService(
   }
 
   @Suppress("LongParameterList", "LongMethod", "TooGenericExceptionCaught")
-  suspend fun notifyReallocation(allocationDemandDetails: AllocationDemandDetails, allocateCase: ReallocateCase, tier: String?, reallocationDetail: ReallocationDetails): NotificationMessageResponse {
-    val response = notifyReallocationNewPractitioner(allocationDemandDetails, allocateCase, tier, reallocationDetail)
+  suspend fun notifyReallocation(allocationDemandDetails: AllocationDemandDetails, allocateCase: ReallocateCase, tierDetails: TierWithStatus?, reallocationDetail: ReallocationDetails): NotificationMessageResponse {
+    val response = notifyReallocationNewPractitioner(allocationDemandDetails, allocateCase, tierDetails, reallocationDetail)
 
     if (allocateCase.emailPreviousOfficer) {
-      notifyReallocationPreviousPractitioner(allocationDemandDetails, allocateCase, tier, reallocationDetail)
+      notifyReallocationPreviousPractitioner(allocationDemandDetails, allocateCase, tierDetails, reallocationDetail)
     }
 
     return response
   }
 
   @Suppress("LongParameterList", "LongMethod", "TooGenericExceptionCaught")
-  suspend fun notifyReallocationNewPractitioner(allocationDemandDetails: AllocationDemandDetails, allocateCase: ReallocateCase, tier: String?, reallocationDetail: ReallocationDetails): NotificationMessageResponse {
+  suspend fun notifyReallocationNewPractitioner(allocationDemandDetails: AllocationDemandDetails, allocateCase: ReallocateCase, tierDetails: TierWithStatus?, reallocationDetail: ReallocationDetails): NotificationMessageResponse {
     val emailReferenceId = UUID.randomUUID().toString()
     val notifyData = getNotifyData(allocateCase.crn)
     val parameters: Map<String, Any>
@@ -132,6 +137,7 @@ class NotificationService(
         ALLOCATING_EMAIL to allocationDemandDetails.allocatingStaff.email!!,
         PRACTITIONER_EMAIL to allocationDemandDetails.staff.email!!,
       ).plus(getLoggedInUserParameters(allocationDemandDetails.allocatingStaff))
+        .plus(getTierParameters(Tier.valueOf(tierDetails?.tierScore ?: "MISSING"), tierDetails?.provisional ?: false))
         .plus(CRN to allocationDemandDetails.crn)
     } else {
       templateId = reallocationTemplateId
@@ -148,11 +154,11 @@ class NotificationService(
         NEXT_APPOINTMENT to (reallocationDetail.nextAppointment ?: ""),
         FAILURE_TO_COMPLY_SINCE to (reallocationDetail.failureToComply ?: ""),
         PRACTITIONER_EMAIL to allocationDemandDetails.staff.email!!,
-        TIER to (tier ?: ""),
       ).plus(getRiskParameters(notifyData.riskSummary, notifyData.riskPredictors))
         .plus(getConvictionParameters(allocationDemandDetails, reallocationDetail))
         .plus(getPersonOnProbationParameters(allocationDemandDetails.name.getCombinedName(), allocateCase.crn, allocateCase.reallocationNotes))
         .plus(getLoggedInUserParameters(allocationDemandDetails.allocatingStaff))
+        .plus(getTierParameters(Tier.valueOf(tierDetails?.tierScore ?: "MISSING"), tierDetails?.provisional ?: false))
         .plus(CRN to allocationDemandDetails.crn)
     }
     logProbationEstateDetails(allocationDemandDetails.allocatingStaff.code, allocationDemandDetails.crn, allocationDemandDetails.staff.code)
@@ -165,7 +171,7 @@ class NotificationService(
   }
 
   @Suppress("LongParameterList", "LongMethod", "TooGenericExceptionCaught")
-  suspend fun notifyReallocationPreviousPractitioner(allocationDemandDetails: AllocationDemandDetails, allocateCase: ReallocateCase, tier: String?, reallocationDetail: ReallocationDetails): NotificationMessageResponse {
+  suspend fun notifyReallocationPreviousPractitioner(allocationDemandDetails: AllocationDemandDetails, allocateCase: ReallocateCase, tierDetails: TierWithStatus?, reallocationDetail: ReallocationDetails): NotificationMessageResponse {
     val emailReferenceId = UUID.randomUUID().toString()
     val notifyData = getNotifyData(allocateCase.crn)
     val parameters: Map<String, Any>
@@ -177,6 +183,7 @@ class NotificationService(
         ALLOCATING_EMAIL to allocationDemandDetails.allocatingStaff.email!!,
         PRACTITIONER_EMAIL to reallocationDetail.previouslyManagedBy.email!!,
       ).plus(getLoggedInUserParameters(allocationDemandDetails.allocatingStaff))
+        .plus(getTierParameters(Tier.valueOf(tierDetails?.tierScore ?: "MISSING"), tierDetails?.provisional ?: false))
         .plus(CRN to allocationDemandDetails.crn)
     } else {
       templateId = reallocationPreviousTemplateId
@@ -193,12 +200,12 @@ class NotificationService(
         OASYS_LAST_UPDATED to (reallocationDetail.oasysLastUpdated ?: ""),
         NEXT_APPOINTMENT to (reallocationDetail.nextAppointment ?: ""),
         FAILURE_TO_COMPLY_SINCE to (reallocationDetail.failureToComply ?: ""),
-        TIER to allocationDemandDetails.crn,
 
       ).plus(getRiskParameters(notifyData.riskSummary, notifyData.riskPredictors))
         .plus(getConvictionParameters(allocationDemandDetails, reallocationDetail))
         .plus(getPersonOnProbationParameters(allocationDemandDetails.name.getCombinedName(), allocateCase.crn, allocateCase.reallocationNotes))
         .plus(getLoggedInUserParameters(allocationDemandDetails.allocatingStaff))
+        .plus(getTierParameters(Tier.valueOf(tierDetails?.tierScore ?: "MISSING"), tierDetails?.provisional ?: false))
         .plus(CRN to allocationDemandDetails.crn)
     }
     logProbationEstateDetails(allocationDemandDetails.allocatingStaff.code, allocationDemandDetails.crn, allocationDemandDetails.staff.code)
@@ -238,6 +245,23 @@ class NotificationService(
     "allocatingOfficerName" to loggedInUser.name.getCombinedName(),
     "allocatingOfficerGrade" to loggedInUser.getGrade(),
   )
+
+  private fun getTierParameters(tier: Tier, tierStatus: Boolean): Map<String, Any> = if (tier == Tier.MISSING) {
+    mapOf(
+      TIER to "Tier missing",
+      TIER_STATUS to "",
+    )
+  } else if (tierStatus) {
+    mapOf(
+      TIER to tier,
+      TIER_STATUS to "provisional",
+    )
+  } else {
+    mapOf(
+      TIER to tier,
+      TIER_STATUS to "",
+    )
+  }
 
   private suspend fun logProbationEstateDetails(loggedInUser: String, crn: String, allocatedUser: String) {
     val loggedInTeams = workforceAllocationsToDeliusApiClient.getDeliusAllowedTeamInfo(loggedInUser).teams.map { it.code }
