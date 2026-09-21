@@ -5,6 +5,7 @@ import kotlinx.coroutines.flow.asFlow
 import org.slf4j.LoggerFactory
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.hmppsworkload.client.HmppsProbationEstateApiClient
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.WorkforceAllocationsToDeliusApiClient
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.StaffMember
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.Practitioner
@@ -31,6 +32,7 @@ class TeamService(
   private val teamRepository: TeamRepository,
   private val caseDetailsRepository: CaseDetailsRepository,
   private val workforceAllocationsToDeliusApiClient: WorkforceAllocationsToDeliusApiClient,
+  private val hmppsProbationEstateApiClient: HmppsProbationEstateApiClient,
   private val reportDataService: ReportDataService,
   private val caseTotalsService: CaseTotalsService,
   private val offenderManagerService: GetOffenderManagerService,
@@ -46,7 +48,7 @@ class TeamService(
       val practitionerAllocationCaseCounts = caseTotalsService.getPractitionerAllocationCaseCounts(teamCodes, caseCountAfter)
       val practitionerReallocationCaseCounts = caseTotalsService.getPractitionerReallocationCaseCounts(teamCodes, caseCountAfter)
 
-      val teamNames = teamRepository.findAllByCodeIn(teamCodes).associate { it.code to it.description }
+      val teamNames = hmppsProbationEstateApiClient.getTeams(teamCodes).associate { it.code to it.name }
       val reportPractitionerData = reportDataService.getPractitionerData(teamNames.values.toList())
       val teamTierTotals = caseTotalsService.getTeamTotalsByTier(teamCodes)
 
@@ -85,7 +87,7 @@ class TeamService(
   private fun teamStaffId(teamCode: String, staffCode: String) = "$teamCode-$staffCode"
 
   suspend fun getWorkloadCases(teams: List<String>): Flow<WorkloadCase> = teamRepository.findWorkloadCountCaseByCode(teams).map {
-    WorkloadCase(it.teamCode, it.totalCases, calculateCapacity(it.totalPoints.toBigInteger(), it.availablePoints.toBigInteger()).toDouble())
+    WorkloadCase(it.teamCode, it.totalCases, 0.0)
   }.asFlow()
 
   suspend fun getPractitioners(teamCodes: List<String>): Map<String, List<PractitionerWithRawWorkloadPoints>>? {
@@ -94,7 +96,7 @@ class TeamService(
       val practitionerAllocationCaseCounts = caseTotalsService.getPractitionerAllocationCaseCountsTeamCodeOnly(teamCodes, caseCountAfter)
       val practitionerReallocationCaseCounts = caseTotalsService.getPractitionerReallocationCaseCountsTeamCodeOnly(teamCodes, caseCountAfter)
 
-      val teamNames = teamRepository.findAllByCodeIn(teamCodes).associate { it.code to it.description }
+      val teamNames = hmppsProbationEstateApiClient.getTeams(teamCodes).associate { it.code to it.name }
       val reportPractitionerData = reportDataService.getPractitionerData(teamNames.values.toList())
       val teamTierTotals = caseTotalsService.getTeamTotalsByTier(teamCodes)
 

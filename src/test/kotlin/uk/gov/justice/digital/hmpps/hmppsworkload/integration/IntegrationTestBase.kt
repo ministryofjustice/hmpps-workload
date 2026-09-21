@@ -49,6 +49,7 @@ import uk.gov.justice.digital.hmpps.hmppsworkload.integration.jpa.repository.Wor
 import uk.gov.justice.digital.hmpps.hmppsworkload.integration.jpa.repository.WorkloadReportRepository
 import uk.gov.justice.digital.hmpps.hmppsworkload.integration.mockserver.AssessRisksNeedsApiExtension
 import uk.gov.justice.digital.hmpps.hmppsworkload.integration.mockserver.HmppsAuthApiExtension
+import uk.gov.justice.digital.hmpps.hmppsworkload.integration.mockserver.HmppsProbationEstateApiExtension
 import uk.gov.justice.digital.hmpps.hmppsworkload.integration.mockserver.TierApiExtension
 import uk.gov.justice.digital.hmpps.hmppsworkload.integration.mockserver.WorkforceAllocationsToDeliusExtension
 import uk.gov.justice.digital.hmpps.hmppsworkload.integration.mockserver.WorkforceAllocationsToDeliusExtension.Companion.workforceAllocationsToDelius
@@ -95,6 +96,7 @@ import java.time.LocalDate
   TierApiExtension::class,
   WorkforceAllocationsToDeliusExtension::class,
   HmppsAuthApiExtension::class,
+  HmppsProbationEstateApiExtension::class,
 )
 @SpringBootTest(webEnvironment = RANDOM_PORT)
 @ActiveProfiles("test")
@@ -464,14 +466,8 @@ abstract class IntegrationTestBase {
     ?: caseCategoryRepository.save(CaseCategoryEntity(categoryName = "Untiered", categoryId = 0))
 
   protected fun setupReportData() {
-    val crn = "CRN5"
-    val pop = "Smith, John"
-    val placeholder = "Placeholder"
-    val rosh = "Medium"
-    val pdu = "Local Delivery Unit (Actually a Probation Delivery Unit)"
     val team = "Team 1"
     val practitioner = "Doe, Jane"
-    val prison = "Lincoln (HMP)"
 
     val ispReportAtThreshold = InitialSentencePlanReportEntity(targetDate = Date.valueOf(LocalDate.now().plusDays(14)), team = team, probationPractitioner = practitioner)
     val ispReportAfterThreshold = ispReportAtThreshold.copy(targetDate = Date.valueOf(LocalDate.now().plusDays(15)))

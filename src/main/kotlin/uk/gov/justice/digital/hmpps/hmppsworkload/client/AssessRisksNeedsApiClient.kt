@@ -12,8 +12,7 @@ import reactor.core.publisher.Mono
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.RiskPredictorNew
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.RiskSummary
 
-const val TIMEOUT_VALUE = 3000L
-const val OFFICER_VIEW_TIMEOUT_VALUE = 15000L
+private const val TIMEOUT_VALUE = 3000L
 
 @Suppress("SwallowedException")
 @Component
