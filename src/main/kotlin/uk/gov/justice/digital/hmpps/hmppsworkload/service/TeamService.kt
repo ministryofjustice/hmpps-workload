@@ -94,7 +94,7 @@ class TeamService(
       val active = activeTotals.getOrDefault(it, 0)
       val suspended = suspendedTotals.getOrDefault(teamNames[it].orEmpty(), 0)
 
-      WorkloadCase(it, active + suspended, 0.0)
+      WorkloadCase(it, active + suspended)
     }
 
     return totals.asFlow()

@@ -5,11 +5,11 @@ import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.TeamOverview
 import uk.gov.justice.digital.hmpps.hmppsworkload.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.hmppsworkload.integration.mockserver.HmppsProbationEstateApiExtension.Companion.hmppsProbationEstate
 
-class GetTeamWorkloadAndCasesByTeamCode : IntegrationTestBase() {
+class GetTeamTotalCasesByTeamCode : IntegrationTestBase() {
   val teamCode = "T1"
 
   @Test
-  fun `can get workload and cases by team code`() {
+  fun `can get cases by team code`() {
     setupCasesForTeamMember("OM1", teamCode)
     setupCasesForTeamMember("OM2", teamCode)
 
@@ -26,8 +26,6 @@ class GetTeamWorkloadAndCasesByTeamCode : IntegrationTestBase() {
       .expectBody()
       .jsonPath("$.[0].teamCode")
       .isEqualTo("T1")
-      .jsonPath("$.[0].workload")
-      .isEqualTo(0.0)
       .jsonPath("$.[0].totalCases")
       .isEqualTo(7)
   }
