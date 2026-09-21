@@ -18,7 +18,6 @@ import uk.gov.justice.digital.hmpps.hmppsworkload.domain.WorkloadCase
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.powerbi.ReportPractitionerData
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.powerbi.ReportPractitionerId
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.CaseDetailsRepository
-import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.TeamRepository
 import uk.gov.justice.digital.hmpps.hmppsworkload.service.powerbi.ReportDataService
 import uk.gov.justice.digital.hmpps.hmppsworkload.service.staff.CaseTotalsService
 import uk.gov.justice.digital.hmpps.hmppsworkload.service.staff.GetOffenderManagerService
@@ -29,7 +28,6 @@ private const val CASE_COUNT_PERIOD_DAYS = 7L
 
 @Service
 class TeamService(
-  private val teamRepository: TeamRepository,
   private val caseDetailsRepository: CaseDetailsRepository,
   private val workforceAllocationsToDeliusApiClient: WorkforceAllocationsToDeliusApiClient,
   private val hmppsProbationEstateApiClient: HmppsProbationEstateApiClient,
@@ -50,7 +48,7 @@ class TeamService(
 
       val teamNames = hmppsProbationEstateApiClient.getTeams(teamCodes).associate { it.code to it.name }
       val reportPractitionerData = reportDataService.getPractitionerData(teamNames.values.toList())
-      val teamTierTotals = caseTotalsService.getTeamTotalsByTier(teamCodes)
+      val teamTierTotals = caseTotalsService.getTeamPractitionerTotalsByTier(teamCodes)
 
       val enrichedTeams = choosePractitionerResponse.teams.mapValues { team ->
         team.value
@@ -86,9 +84,21 @@ class TeamService(
 
   private fun teamStaffId(teamCode: String, staffCode: String) = "$teamCode-$staffCode"
 
-  suspend fun getWorkloadCases(teams: List<String>): Flow<WorkloadCase> = teamRepository.findWorkloadCountCaseByCode(teams).map {
-    WorkloadCase(it.teamCode, it.totalCases, 0.0)
-  }.asFlow()
+  suspend fun getWorkloadCases(teams: List<String>): Flow<WorkloadCase> {
+    val activeTotals = caseTotalsService.getTeamTotals(teams)
+
+    val teamNames = hmppsProbationEstateApiClient.getTeams(teams).associate { it.code to it.name }
+    val suspendedTotals = reportDataService.getTeamContactSuspendedCases(teamNames.values.toList())
+
+    val totals = teams.map {
+      val active = activeTotals.getOrDefault(it, 0)
+      val suspended = suspendedTotals.getOrDefault(teamNames[it].orEmpty(), 0)
+
+      WorkloadCase(it, active + suspended, 0.0)
+    }
+
+    return totals.asFlow()
+  }
 
   suspend fun getPractitioners(teamCodes: List<String>): Map<String, List<PractitionerWithRawWorkloadPoints>>? {
     return workforceAllocationsToDeliusApiClient.choosePractitioners(teamCodes)?.let { choosePractitionerResponse ->
@@ -98,7 +108,7 @@ class TeamService(
 
       val teamNames = hmppsProbationEstateApiClient.getTeams(teamCodes).associate { it.code to it.name }
       val reportPractitionerData = reportDataService.getPractitionerData(teamNames.values.toList())
-      val teamTierTotals = caseTotalsService.getTeamTotalsByTier(teamCodes)
+      val teamTierTotals = caseTotalsService.getTeamPractitionerTotalsByTier(teamCodes)
 
       log.info("Practitioner Allocation Case Counts: $practitionerAllocationCaseCounts")
       log.info("Practitioner Reallocation Case Counts: $practitionerReallocationCaseCounts")
