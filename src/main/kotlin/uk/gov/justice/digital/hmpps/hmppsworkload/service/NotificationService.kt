@@ -46,6 +46,7 @@ private const val OFFICER_GRADE = "officerGrade"
 private const val INDUCTION_STATEMENT = "induction_statement"
 private const val TIER = "tier"
 private const val TIER_STATUS = "tier_status"
+private const val TIER_STATUS_MISSING = "MISSING"
 private const val PREVIOUS_PRACTITIONER = "previous_pp"
 private const val PREVIOUS_PRACTITIONER_GRADE = "previous_pp_grade"
 private const val REALLOCATION_REASON = "reallocation_reason"
@@ -137,7 +138,7 @@ class NotificationService(
         ALLOCATING_EMAIL to allocationDemandDetails.allocatingStaff.email!!,
         PRACTITIONER_EMAIL to allocationDemandDetails.staff.email!!,
       ).plus(getLoggedInUserParameters(allocationDemandDetails.allocatingStaff))
-        .plus(getTierParameters(Tier.valueOf(tierDetails?.tierScore ?: "MISSING"), tierDetails?.provisional ?: false))
+        .plus(getTierParameters(Tier.valueOf(tierDetails?.tierScore ?: TIER_STATUS_MISSING), tierDetails?.provisional ?: false))
         .plus(CRN to allocationDemandDetails.crn)
     } else {
       templateId = reallocationTemplateId
@@ -158,7 +159,7 @@ class NotificationService(
         .plus(getConvictionParameters(allocationDemandDetails, reallocationDetail))
         .plus(getPersonOnProbationParameters(allocationDemandDetails.name.getCombinedName(), allocateCase.crn, allocateCase.reallocationNotes))
         .plus(getLoggedInUserParameters(allocationDemandDetails.allocatingStaff))
-        .plus(getTierParameters(Tier.valueOf(tierDetails?.tierScore ?: "MISSING"), tierDetails?.provisional ?: false))
+        .plus(getTierParameters(Tier.valueOf(tierDetails?.tierScore ?: TIER_STATUS_MISSING), tierDetails?.provisional ?: false))
         .plus(CRN to allocationDemandDetails.crn)
     }
     logProbationEstateDetails(allocationDemandDetails.allocatingStaff.code, allocationDemandDetails.crn, allocationDemandDetails.staff.code)
@@ -183,7 +184,7 @@ class NotificationService(
         ALLOCATING_EMAIL to allocationDemandDetails.allocatingStaff.email!!,
         PRACTITIONER_EMAIL to reallocationDetail.previouslyManagedBy.email!!,
       ).plus(getLoggedInUserParameters(allocationDemandDetails.allocatingStaff))
-        .plus(getTierParameters(Tier.valueOf(tierDetails?.tierScore ?: "MISSING"), tierDetails?.provisional ?: false))
+        .plus(getTierParameters(Tier.valueOf(tierDetails?.tierScore ?: TIER_STATUS_MISSING), tierDetails?.provisional ?: false))
         .plus(CRN to allocationDemandDetails.crn)
     } else {
       templateId = reallocationPreviousTemplateId
@@ -205,7 +206,7 @@ class NotificationService(
         .plus(getConvictionParameters(allocationDemandDetails, reallocationDetail))
         .plus(getPersonOnProbationParameters(allocationDemandDetails.name.getCombinedName(), allocateCase.crn, allocateCase.reallocationNotes))
         .plus(getLoggedInUserParameters(allocationDemandDetails.allocatingStaff))
-        .plus(getTierParameters(Tier.valueOf(tierDetails?.tierScore ?: "MISSING"), tierDetails?.provisional ?: false))
+        .plus(getTierParameters(Tier.valueOf(tierDetails?.tierScore ?: TIER_STATUS_MISSING), tierDetails?.provisional ?: false))
         .plus(CRN to allocationDemandDetails.crn)
     }
     logProbationEstateDetails(allocationDemandDetails.allocatingStaff.code, allocationDemandDetails.crn, allocationDemandDetails.staff.code)
