@@ -10,6 +10,8 @@ import org.springframework.web.reactive.function.client.awaitExchange
 import org.springframework.web.reactive.function.client.awaitExchangeOrNull
 import org.springframework.web.reactive.function.client.createExceptionAndAwait
 
+private const val TIMEOUT_VALUE = 3000L
+
 @Suppress("SwallowedException")
 class HmppsTierApiClient(private val webClient: WebClient) {
   companion object {
@@ -72,6 +74,3 @@ class HmppsTierApiClient(private val webClient: WebClient) {
     }
   }
 }
-
-class WorkloadWebClientTimeoutException(message: String) : RuntimeException(message)
-class WorkloadFailedDependencyException(message: String) : RuntimeException(message)

@@ -25,7 +25,7 @@ class CaseTotalsServiceTest {
   private val caseTotalsService = CaseTotalsService(personManagerRepository, hmppsTierApiClient)
 
   @Test
-  fun `getTeamTotalsByTier should correctly calculate totals`() {
+  fun `getTeamPractitionerTotalsByTier should correctly calculate totals`() {
     runBlocking {
       coEvery { personManagerRepository.findByTeamCodeInAndIsActiveIsTrue(listOf(TEAM_CODE_1, TEAM_CODE_2)) } returns listOf(
         buildCase("X111111", STAFF_CODE_1, TEAM_CODE_1),
@@ -57,7 +57,7 @@ class CaseTotalsServiceTest {
         "X111122" to null, // Treated as 'MISSING'
       )
 
-      val totals = caseTotalsService.getTeamTotalsByTier(listOf(TEAM_CODE_1, TEAM_CODE_2))
+      val totals = caseTotalsService.getTeamPractitionerTotalsByTier(listOf(TEAM_CODE_1, TEAM_CODE_2))
 
       assertEquals(2, totals.size)
       assertEquals(TierCaseTotals(BigDecimal.valueOf(2), BigDecimal.valueOf(1), BigDecimal.valueOf(1), BigDecimal.valueOf(1), BigDecimal.valueOf(1), BigDecimal.valueOf(0), BigDecimal.valueOf(0), BigDecimal.valueOf(0), BigDecimal.valueOf(0)), totals["$TEAM_CODE_1-$STAFF_CODE_1"])

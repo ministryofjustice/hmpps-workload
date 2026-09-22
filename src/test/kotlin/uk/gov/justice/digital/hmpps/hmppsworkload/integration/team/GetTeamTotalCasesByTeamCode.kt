@@ -1,14 +1,22 @@
 package uk.gov.justice.digital.hmpps.hmppsworkload.integration.team
 
 import org.junit.jupiter.api.Test
+import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.TeamOverview
 import uk.gov.justice.digital.hmpps.hmppsworkload.integration.IntegrationTestBase
+import uk.gov.justice.digital.hmpps.hmppsworkload.integration.mockserver.HmppsProbationEstateApiExtension.Companion.hmppsProbationEstate
 
-class GetTeamWorkloadAndCasesByTeamCode : IntegrationTestBase() {
+class GetTeamTotalCasesByTeamCode : IntegrationTestBase() {
   val teamCode = "T1"
 
   @Test
-  fun `can get workload and cases by team code`() {
-    val wmtStaff = setupCurrentWmtStaff("STAFF1", teamCode)
+  fun `can get cases by team code`() {
+    setupCasesForTeamMember("OM1", teamCode)
+    setupCasesForTeamMember("OM2", teamCode)
+
+    setupReportData()
+
+    hmppsProbationEstate.getTeamsResponse(listOf(TeamOverview(teamCode, "Team 1")))
+
     webTestClient.get()
       .uri("/team/workloadcases?teams=$teamCode")
       .headers { it.authToken(roles = listOf("ROLE_WORKLOAD_MEASUREMENT")) }
@@ -18,10 +26,8 @@ class GetTeamWorkloadAndCasesByTeamCode : IntegrationTestBase() {
       .expectBody()
       .jsonPath("$.[0].teamCode")
       .isEqualTo("T1")
-      .jsonPath("$.[0].workload")
-      .isEqualTo(50.toDouble())
       .jsonPath("$.[0].totalCases")
-      .isEqualTo(wmtStaff.workload.totalFilteredCases)
+      .isEqualTo(7)
   }
 
   @Test

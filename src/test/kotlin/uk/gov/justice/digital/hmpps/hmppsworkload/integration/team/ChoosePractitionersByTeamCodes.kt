@@ -1,11 +1,13 @@
 package uk.gov.justice.digital.hmpps.hmppsworkload.integration.team
 
 import org.junit.jupiter.api.Test
+import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.TeamOverview
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.AllocationReason
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.CaseType
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.Tier
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.UpdatedCaseDetails
 import uk.gov.justice.digital.hmpps.hmppsworkload.integration.IntegrationTestBase
+import uk.gov.justice.digital.hmpps.hmppsworkload.integration.mockserver.HmppsProbationEstateApiExtension.Companion.hmppsProbationEstate
 import uk.gov.justice.digital.hmpps.hmppsworkload.integration.mockserver.TierApiExtension.Companion.hmppsTier
 import uk.gov.justice.digital.hmpps.hmppsworkload.integration.mockserver.WorkforceAllocationsToDeliusExtension.Companion.workforceAllocationsToDelius
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.entity.PersonManagerEntity
@@ -21,11 +23,9 @@ class ChoosePractitionersByTeamCodes : IntegrationTestBase() {
     casesDbService.insertCaseDetails(UpdatedCaseDetails("Don", "Cole", Tier.B, false, CaseType.CUSTODY, crn))
 
     workforceAllocationsToDelius.choosePractitionerByTeamCodesResponse(listOf(teamCode, teamCode2), crn)
-    val firstWmtStaff = setupCurrentWmtStaff("OM1", teamCode)
-    val secondWmtStaff = setupCurrentWmtStaff("OM2", teamCode2)
 
-    val firstOm = firstWmtStaff.offenderManager.code
-    val secondOm = secondWmtStaff.offenderManager.code
+    val firstOm = "OM1"
+    val secondOm = "OM2"
     val noWorkloadStaffCode = "NOWORKLOAD1"
 
     val storedPersonManager = PersonManagerEntity(crn = "CRN5", staffCode = firstOm, teamCode = teamCode, createdBy = "USER1", isActive = true, allocationReason = AllocationReason.INITIAL_ALLOCATION)
@@ -43,6 +43,7 @@ class ChoosePractitionersByTeamCodes : IntegrationTestBase() {
     setupCasesForTeamMember(firstOm, teamCode)
     setupTeamWithNoWorkCases()
 
+    hmppsProbationEstate.getTeamsResponse(listOf(TeamOverview(teamCode, "Team 1"), TeamOverview(teamCode2, "Team 2")))
     hmppsTier.bulkTierCalculationResponse(mapOf("CRN5" to "A"))
 
     setupReportData()
@@ -164,11 +165,9 @@ class ChoosePractitionersByTeamCodes : IntegrationTestBase() {
     casesDbService.insertCaseDetails(UpdatedCaseDetails("Don", "Cole", Tier.B, false, CaseType.CUSTODY, crn))
 
     workforceAllocationsToDelius.choosePractitionerByTeamCodesResponse(listOf(teamCode, teamCode2), crn)
-    val firstWmtStaff = setupCurrentWmtStaff("OM1", teamCode)
-    val secondWmtStaff = setupCurrentWmtStaff("OM2", teamCode2)
 
-    val firstOm = firstWmtStaff.offenderManager.code
-    val secondOm = secondWmtStaff.offenderManager.code
+    val firstOm = "OM1"
+    val secondOm = "OM2"
     val noWorkloadStaffCode = "NOWORKLOAD1"
 
     val storedPersonManager = PersonManagerEntity(crn = "CRN5", staffCode = firstOm, teamCode = teamCode, createdBy = "USER1", isActive = true, allocationReason = AllocationReason.INITIAL_ALLOCATION)
@@ -186,6 +185,7 @@ class ChoosePractitionersByTeamCodes : IntegrationTestBase() {
     setupCasesForTeamMember(firstOm, teamCode)
     setupTeamWithNoWorkCases()
 
+    hmppsProbationEstate.getTeamsResponse(listOf(TeamOverview(teamCode, "Team 1"), TeamOverview(teamCode2, "Team 2")))
     hmppsTier.bulkTierCalculationResponse(mapOf("CRN5" to "A"))
 
     setupReportData()
@@ -304,9 +304,8 @@ class ChoosePractitionersByTeamCodes : IntegrationTestBase() {
     val teamCode = "T1"
 
     workforceAllocationsToDelius.choosePractitionerByTeamCodesResponseNoPoP(listOf(teamCode))
-    val firstWmtStaff = setupCurrentWmtStaff("OM1", teamCode)
 
-    val firstOm = firstWmtStaff.offenderManager.code
+    val firstOm = "OM1"
 
     val storedPersonManager = PersonManagerEntity(crn = "CRN5", staffCode = firstOm, teamCode = teamCode, createdBy = "USER1", isActive = true, allocationReason = AllocationReason.INITIAL_ALLOCATION)
     personManagerRepository.save(storedPersonManager)
@@ -318,6 +317,7 @@ class ChoosePractitionersByTeamCodes : IntegrationTestBase() {
 
     setupTeamWithNoWorkCases()
 
+    hmppsProbationEstate.getTeamsResponse(listOf(TeamOverview(teamCode, "Team 1")))
     hmppsTier.bulkTierCalculationResponse(mapOf("CRN5" to "A"))
 
     setupReportData()
@@ -374,11 +374,9 @@ class ChoosePractitionersByTeamCodes : IntegrationTestBase() {
     val crn = "NOTFOUND"
 
     workforceAllocationsToDelius.choosePractitionerByTeamCodesResponse(listOf(teamCode, teamCode2), crn)
-    val firstWmtStaff = setupCurrentWmtStaff("OM1", teamCode)
-    val secondWmtStaff = setupCurrentWmtStaff("OM2", teamCode2)
 
-    val firstOm = firstWmtStaff.offenderManager.code
-    val secondOm = secondWmtStaff.offenderManager.code
+    val firstOm = "OM1"
+    val secondOm = "OM2"
     val noWorkloadStaffCode = "NOWORKLOAD1"
 
     val storedPersonManager = PersonManagerEntity(crn = "CRN5", staffCode = firstOm, teamCode = teamCode, createdBy = "USER1", isActive = true, allocationReason = AllocationReason.INITIAL_ALLOCATION)
@@ -393,6 +391,7 @@ class ChoosePractitionersByTeamCodes : IntegrationTestBase() {
     val personManagerWithNoWorkload = PersonManagerEntity(crn = "CRN4", staffCode = noWorkloadStaffCode, teamCode = "T1", createdBy = "USER2", createdDate = ZonedDateTime.now().minusDays(2L), isActive = true, allocationReason = AllocationReason.INITIAL_ALLOCATION)
     personManagerRepository.save(personManagerWithNoWorkload)
 
+    hmppsProbationEstate.getTeamsResponse(listOf(TeamOverview(teamCode, "Team 1"), TeamOverview(teamCode2, "Team 2")))
     hmppsTier.bulkTierCalculationResponse(mapOf("CRN5" to "A"))
 
     setupTeamWithNoWorkCases()
@@ -412,13 +411,12 @@ class ChoosePractitionersByTeamCodes : IntegrationTestBase() {
     val crn = "CRN1"
     casesDbService.insertCaseDetails(UpdatedCaseDetails("Don", "Cole", Tier.B, false, CaseType.CUSTODY, crn))
     workforceAllocationsToDelius.choosePractitionerByTeamCodesResponse(listOf(teamCode, teamCode2), crn)
-    val firstWmtStaff = setupCurrentWmtStaff("OM1", teamCode)
-    setupCurrentWmtStaff("OM2", teamCode2)
 
-    val firstOm = firstWmtStaff.offenderManager.code
+    val firstOm = "OM1"
     val noWorkloadStaffCode = "NOWORKLOAD1"
     setupTeamWithNoWorkCases()
 
+    hmppsProbationEstate.getTeamsResponse(listOf(TeamOverview(teamCode, "Team 1"), TeamOverview(teamCode2, "Team 2")))
     hmppsTier.bulkTierCalculationResponse(mapOf("CRN5" to "A"))
 
     webTestClient.get()
@@ -479,6 +477,8 @@ class ChoosePractitionersByTeamCodes : IntegrationTestBase() {
 
     setupTeamWithNoWorkCases()
 
+    hmppsProbationEstate.getTeamsResponse(listOf(TeamOverview(teamCode, "Team 1")))
+
     webTestClient.get()
       .uri("/team/choose-practitioner?crn=$crn&teamCodes=$teamCode")
       .headers { it.authToken(roles = listOf("ROLE_WORKLOAD_MEASUREMENT")) }
@@ -499,12 +499,11 @@ class ChoosePractitionersByTeamCodes : IntegrationTestBase() {
     val staffCode = "OM1"
 
     workforceAllocationsToDelius.choosePractitionerStaffInMultipleTeamsResponse(listOf(teamCode, teamCode2), crn)
-    val firstTeamWorkload = setupCurrentWmtStaff(staffCode, teamCode, 1)
-    val secondTeamWorkload = setupCurrentWmtStaff(staffCode, teamCode2, 1)
 
     setupCasesForTeamMember(staffCode, teamCode)
     setupCasesForTeamMember(staffCode, teamCode2)
 
+    hmppsProbationEstate.getTeamsResponse(listOf(TeamOverview(teamCode, "Team 1"), TeamOverview(teamCode2, "Team 2")))
     hmppsTier.bulkTierCalculationResponse(mapOf("CRN5" to "A"))
 
     webTestClient.get()
@@ -515,9 +514,9 @@ class ChoosePractitionersByTeamCodes : IntegrationTestBase() {
       .isOk
       .expectBody()
       .jsonPath("$.teams.$teamCode[?(@.code == '$staffCode')].custodyCases")
-      .isEqualTo(firstTeamWorkload.workload.totalFilteredCustodyCases)
+      .isEqualTo(1)
       .jsonPath("$.teams.$teamCode2[?(@.code == '$staffCode')].custodyCases")
-      .isEqualTo(secondTeamWorkload.workload.totalFilteredCustodyCases)
+      .isEqualTo(1)
   }
 
   @Test
@@ -527,15 +526,15 @@ class ChoosePractitionersByTeamCodes : IntegrationTestBase() {
     casesDbService.insertCaseDetails(UpdatedCaseDetails("Don", "Cole", Tier.B, false, CaseType.CUSTODY, crn))
 
     workforceAllocationsToDelius.choosePractitionerByTeamCodesResponse(listOf(teamCode), crn)
-    val firstWmtStaff = setupCurrentWmtStaff("OM3", teamCode)
 
-    val firstOm = firstWmtStaff.offenderManager.code
+    val firstOm = "OM3"
 
     val storedPersonManager = PersonManagerEntity(crn = "CRN1", staffCode = firstOm, teamCode = teamCode, createdBy = "USER1", isActive = true, allocationReason = AllocationReason.INITIAL_ALLOCATION)
     personManagerRepository.save(storedPersonManager)
 
     setupTeamWithNoWorkCases()
 
+    hmppsProbationEstate.getTeamsResponse(listOf(TeamOverview(teamCode, "Team 1")))
     hmppsTier.bulkTierCalculationResponse(mapOf("CRN5" to "A"))
 
     webTestClient.get()
@@ -569,6 +568,7 @@ class ChoosePractitionersByTeamCodes : IntegrationTestBase() {
 
     setupTeamWithNoWorkCases()
 
+    hmppsProbationEstate.getTeamsResponse(listOf(TeamOverview(teamCode, "Team 1")))
     hmppsTier.bulkTierCalculationResponse(mapOf("CRN5" to "A"))
 
     webTestClient.get()
@@ -604,6 +604,7 @@ class ChoosePractitionersByTeamCodes : IntegrationTestBase() {
 
     setupTeamWithNoWorkCases()
 
+    hmppsProbationEstate.getTeamsResponse(listOf(TeamOverview(teamCode, "Team 1")))
     hmppsTier.bulkTierCalculationResponse(mapOf("CRN5" to "A"))
 
     webTestClient.get()

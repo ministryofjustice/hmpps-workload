@@ -34,7 +34,9 @@ import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.StaffMember
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.CaseType
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.entity.EventManagerEntity
 
-const val DOWNSTREAM_500 = "Downstream 5xx:"
+private const val TIMEOUT_VALUE = 3000L
+private const val DOWNSTREAM_500 = "Downstream 5xx:"
+private const val OFFICER_VIEW_TIMEOUT_VALUE = 15000L
 
 @Suppress("SwallowedException", "TooManyFunctions", "LargeClass", "StringLiteralDuplication")
 class WorkforceAllocationsToDeliusApiClient(private val webClient: WebClient) {

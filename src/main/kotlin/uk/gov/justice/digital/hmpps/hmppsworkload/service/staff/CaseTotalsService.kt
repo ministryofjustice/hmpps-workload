@@ -34,7 +34,16 @@ class CaseTotalsService(
     .groupBy { it.staffCode }
     .mapValues { countEntry -> countEntry.value.size }
 
-  suspend fun getTeamTotalsByTier(teamCodes: List<String>): Map<String, TierCaseTotals> {
+  suspend fun getTeamTotals(teamCodes: List<String>): Map<String, Int> {
+    val cases = personManagerRepository.findByTeamCodeInAndIsActiveIsTrue(teamCodes)
+    val totals = cases
+      .groupBy { it.teamCode }
+      .mapValues { entry -> entry.value.size }
+
+    return totals
+  }
+
+  suspend fun getTeamPractitionerTotalsByTier(teamCodes: List<String>): Map<String, TierCaseTotals> {
     val cases = personManagerRepository.findByTeamCodeInAndIsActiveIsTrue(teamCodes)
     val tiers = getTiers(cases.map { it.crn })
     val totals = cases

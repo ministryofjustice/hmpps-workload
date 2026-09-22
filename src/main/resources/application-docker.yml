@@ -63,6 +63,9 @@ assess-risks-needs:
 workforce-allocations-to-delius:
   endpoint:
     url: http://localhost:8099
+hmpps-probation-estate-api:
+  endpoint:
+    url: http://localhost:8099
 ingress:
   url: localhost:8080
 spring:
