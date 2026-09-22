@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.AssessRisksNeedsApiClient
+import uk.gov.justice.digital.hmpps.hmppsworkload.client.TierWithStatus
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.WorkforceAllocationsToDeliusApiClient
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.AllReoffendingPredictor
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.CombinedSeriousReoffendingPredictor
@@ -425,6 +426,58 @@ class NotificationServiceTests {
   }
 
   @Test
+  fun `must add Tier and Tier Status, with valid tier and provisional false`() = runBlocking {
+    val allocationDetails = getAllocationDetails(allocateCase.crn)
+    val caseDetails1 = CaseDetailsEntity("", Tier.B, false, CaseType.CUSTODY, "Jane", "Doe")
+
+    val results = slot<NotificationEmail>()
+    notificationService.notifyAllocation(allocationDetails, allocateCase, caseDetails1)
+    coVerify(exactly = 1) { sqsSuccessPublisher.sendNotification(capture(results)) }
+
+    Assertions.assertEquals(Tier.B, results.captured.emailParameters["tier"])
+    Assertions.assertEquals("", results.captured.emailParameters["tier_status"])
+  }
+
+  @Test
+  fun `must add Tier and Tier Status, with missing tier and provisional false`() = runBlocking {
+    val allocationDetails = getAllocationDetails(allocateCase.crn)
+    val caseDetails = CaseDetailsEntity("", Tier.MISSING, false, CaseType.CUSTODY, "Jane", "Doe")
+
+    val results = slot<NotificationEmail>()
+    notificationService.notifyAllocation(allocationDetails, allocateCase, caseDetails)
+    coVerify(exactly = 1) { sqsSuccessPublisher.sendNotification(capture(results)) }
+
+    Assertions.assertEquals("Tier missing", results.captured.emailParameters["tier"])
+    Assertions.assertEquals("", results.captured.emailParameters["tier_status"])
+  }
+
+  @Test
+  fun `must add Tier and Tier Status, with valid tier and provisional true`() = runBlocking {
+    val allocationDetails = getAllocationDetails(allocateCase.crn)
+    val caseDetails = CaseDetailsEntity("", Tier.A, true, CaseType.CUSTODY, "Jane", "Doe")
+
+    val results = slot<NotificationEmail>()
+    notificationService.notifyAllocation(allocationDetails, allocateCase, caseDetails)
+    coVerify(exactly = 1) { sqsSuccessPublisher.sendNotification(capture(results)) }
+
+    Assertions.assertEquals(Tier.A, results.captured.emailParameters["tier"])
+    Assertions.assertEquals("provisional", results.captured.emailParameters["tier_status"])
+  }
+
+  @Test
+  fun `must add Tier and Tier Status, with missing tier and provisional true`() = runBlocking {
+    val allocationDetails = getAllocationDetails(allocateCase.crn)
+    val caseDetails = CaseDetailsEntity("", Tier.MISSING, true, CaseType.CUSTODY, "Jane", "Doe")
+
+    val results = slot<NotificationEmail>()
+    notificationService.notifyAllocation(allocationDetails, allocateCase, caseDetails)
+    coVerify(exactly = 1) { sqsSuccessPublisher.sendNotification(capture(results)) }
+
+    Assertions.assertEquals("Tier missing", results.captured.emailParameters["tier"])
+    Assertions.assertEquals("", results.captured.emailParameters["tier_status"])
+  }
+
+  @Test
   fun `must email all addresses supplied`() = runBlocking {
     val allocationDetails = getAllocationDetails(allocateCase.crn)
     val firstEmail = "first@email.com"
@@ -460,7 +513,7 @@ class NotificationServiceTests {
       laoCase = false, allocationReason = null, nextAppointmentDate = null, lastOasysAssessmentDate = null, failureToComply = null,
     )
     val reallocationDetails = ReallocationDetails("Laziness", "never", "tomorrow", "12", getManager(), ArrayList<Requirement>(), ArrayList<OffenceDetails>(), ArrayList<SentenceDetails>())
-    notificationService.notifyReallocation(allocationDetails, allocateCase, Tier.A.name, reallocationDetails)
+    notificationService.notifyReallocation(allocationDetails, allocateCase, TierWithStatus(Tier.A.name, false), reallocationDetails)
 
     val parameters = slot<NotificationEmail>()
     coVerify(exactly = 1) { sqsSuccessPublisher.sendNotification(capture(parameters)) }
@@ -482,7 +535,7 @@ class NotificationServiceTests {
       laoCase = false, allocationReason = null, nextAppointmentDate = null, lastOasysAssessmentDate = null, failureToComply = null,
     )
     val reallocationDetails = ReallocationDetails("Laziness", "never", "tomorrow", "12", getManager(), ArrayList<Requirement>(), ArrayList<OffenceDetails>(), ArrayList<SentenceDetails>())
-    notificationService.notifyReallocation(allocationDetails, allocateCase, Tier.A.name, reallocationDetails)
+    notificationService.notifyReallocation(allocationDetails, allocateCase, TierWithStatus(Tier.A.name, false), reallocationDetails)
 
     var parameters = mutableListOf<NotificationEmail>()
 
@@ -515,7 +568,7 @@ class NotificationServiceTests {
       laoCase = true, allocationReason = null, nextAppointmentDate = null, lastOasysAssessmentDate = null, failureToComply = null,
     )
     val reallocationDetails = ReallocationDetails("Laziness", "never", "tomorrow", "12", getManager(), ArrayList<Requirement>(), ArrayList<OffenceDetails>(), ArrayList<SentenceDetails>())
-    notificationService.notifyReallocation(allocationDetails, allocateCase, Tier.A.name, reallocationDetails)
+    notificationService.notifyReallocation(allocationDetails, allocateCase, TierWithStatus(Tier.A.name, false), reallocationDetails)
 
     var parameters = mutableListOf<NotificationEmail>()
 
