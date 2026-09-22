@@ -18,7 +18,7 @@ generic-service:
     INGRESS_URL: *ingressHost
     ASSESS_RISKS_NEEDS_ENDPOINT_URL: https://assess-risks-and-needs-dev.hmpps.service.justice.gov.uk
     WORKFORCE_ALLOCATIONS_TO_DELIUS_ENDPOINT_URL: https://workforce-allocations-to-delius-dev.hmpps.service.justice.gov.uk
-    HMPPS_PROBATION_ESTATE_ENDPOINT_URL: https://hmpps-probation-estate-api-dev.hmpps.service.justice.gov.uk
+    HMPPS_PROBATION_ESTATE_API_ENDPOINT_URL: https://hmpps-probation-estate-api-dev.hmpps.service.justice.gov.uk
 
   allowlist:
     delius-dev-1: 35.178.19.203/32
