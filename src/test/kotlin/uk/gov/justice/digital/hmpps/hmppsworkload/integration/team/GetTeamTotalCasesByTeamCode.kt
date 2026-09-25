@@ -4,17 +4,22 @@ import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.TeamOverview
 import uk.gov.justice.digital.hmpps.hmppsworkload.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.hmppsworkload.integration.mockserver.HmppsProbationEstateApiExtension.Companion.hmppsProbationEstate
+import uk.gov.justice.digital.hmpps.hmppsworkload.integration.mockserver.WorkforceAllocationsToDeliusExtension.Companion.workforceAllocationsToDelius
 
 class GetTeamTotalCasesByTeamCode : IntegrationTestBase() {
   val teamCode = "T1"
 
   @Test
   fun `can get cases by team code`() {
+    // Active team member
     setupCasesForTeamMember("OM1", teamCode)
+
+    // Inactive team member
     setupCasesForTeamMember("OM2", teamCode)
 
     setupReportData()
 
+    workforceAllocationsToDelius.choosePractitionerByTeamCodesResponseNoPoP(listOf(teamCode))
     hmppsProbationEstate.getTeamsResponse(listOf(TeamOverview(teamCode, "Team 1")))
 
     webTestClient.get()
@@ -27,7 +32,7 @@ class GetTeamTotalCasesByTeamCode : IntegrationTestBase() {
       .jsonPath("$.[0].teamCode")
       .isEqualTo("T1")
       .jsonPath("$.[0].totalCases")
-      .isEqualTo(7)
+      .isEqualTo(4)
   }
 
   @Test

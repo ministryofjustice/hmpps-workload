@@ -85,16 +85,20 @@ class TeamService(
   private fun teamStaffId(teamCode: String, staffCode: String) = "$teamCode-$staffCode"
 
   suspend fun getWorkloadCases(teams: List<String>): Flow<WorkloadCase> {
-    val activeTotals = caseTotalsService.getTeamTotals(teams)
+    val staffMembers = workforceAllocationsToDeliusApiClient.choosePractitioners(teams)?.teams
+
+    val activeTotals = caseTotalsService.getTeamPractitionerTotals(teams)
 
     val teamNames = hmppsProbationEstateApiClient.getTeams(teams).associate { it.code to it.name }
-    val suspendedTotals = reportDataService.getTeamContactSuspendedCases(teamNames.values.toList())
+    val suspendedTotals = reportDataService.getContactSuspendedCases(teamNames.values.toList())
 
-    val totals = teams.map {
-      val active = activeTotals.getOrDefault(it, 0)
-      val suspended = suspendedTotals.getOrDefault(teamNames[it].orEmpty(), 0)
+    val totals = teams.map { teamCode ->
+      val teamStaff = staffMembers?.get(teamCode) ?: listOf()
 
-      WorkloadCase(it, active + suspended)
+      val active = teamStaff.sumOf { activeTotals.getOrDefault(teamStaffId(teamCode, it.code), 0) }
+      val suspended = teamStaff.sumOf { suspendedTotals.getOrDefault(getReportPractitionerId(teamNames, teamCode, it), 0) }
+
+      WorkloadCase(teamCode, active + suspended)
     }
 
     return totals.asFlow()
