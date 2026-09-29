@@ -63,7 +63,7 @@ class WorkforceAllocationsToDeliusMockServer : ClientAndServer(MOCKSERVER_PORT) 
     )
   }
 
-  fun choosePractitionerByTeamCodesResponseNoPoP(teamCodes: List<String>) {
+  fun getTeamsResponse(teamCodes: List<String>) {
     val choosePractitionerRequest =
       HttpRequest.request()
         .withPath("/teams").withQueryStringParameter("teamCode", teamCodes.joinToString(separator = ","))
