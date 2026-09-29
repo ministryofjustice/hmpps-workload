@@ -36,12 +36,8 @@ class ReportDataService(
     .groupBy { ReportPractitionerId(it.team, it.probationPractitioner) }
     .mapValues { entry -> entry.value.size }
 
-  private fun getContactSuspendedCases(teamNames: List<String>): Map<ReportPractitionerId, Int> = resetReportRepository.findAllByTeamIn(teamNames)
+  fun getContactSuspendedCases(teamNames: List<String>): Map<ReportPractitionerId, Int> = resetReportRepository.findAllByTeamIn(teamNames)
     .groupBy { ReportPractitionerId(it.team, it.probationPractitioner) }
-    .mapValues { entry -> entry.value.size }
-
-  fun getTeamContactSuspendedCases(teamNames: List<String>): Map<String, Int> = resetReportRepository.findAllByTeamIn(teamNames)
-    .groupBy { it.team }
     .mapValues { entry -> entry.value.size }
 
   private fun getCustodyReleasesInNext7Days(teamNames: List<String>): Map<ReportPractitionerId, Int> = upcomingReleasesReportRepository.findAllByTeamInAndExpectedReleaseDateLessThanEqual(teamNames, LocalDate.now().plusDays(7))

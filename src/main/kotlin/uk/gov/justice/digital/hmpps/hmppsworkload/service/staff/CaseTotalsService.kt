@@ -34,10 +34,10 @@ class CaseTotalsService(
     .groupBy { it.staffCode }
     .mapValues { countEntry -> countEntry.value.size }
 
-  suspend fun getTeamTotals(teamCodes: List<String>): Map<String, Int> {
+  suspend fun getTeamPractitionerTotals(teamCodes: List<String>): Map<String, Int> {
     val cases = personManagerRepository.findByTeamCodeInAndIsActiveIsTrue(teamCodes)
     val totals = cases
-      .groupBy { it.teamCode }
+      .groupBy { teamStaffId(it.teamCode, it.staffCode) }
       .mapValues { entry -> entry.value.size }
 
     return totals
