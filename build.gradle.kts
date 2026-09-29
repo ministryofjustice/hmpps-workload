@@ -17,11 +17,6 @@ configurations {
   testImplementation { exclude(group = "org.junit.vintage") }
 }
 
-dependencyCheck {
-  suppressionFiles.add("suppressions.xml")
-  nvd.datafeedUrl = "file:///opt/vulnz/cache"
-}
-
 allOpen {
   annotations("javax.persistence.Entity")
 }
