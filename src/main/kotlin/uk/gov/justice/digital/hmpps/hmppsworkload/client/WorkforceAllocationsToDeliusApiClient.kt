@@ -1,8 +1,6 @@
 package uk.gov.justice.digital.hmpps.hmppsworkload.client
 
-import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.withTimeout
 import org.slf4j.LoggerFactory
@@ -31,6 +29,7 @@ import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.PersonSummary
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.ProbationStatus
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.StaffActiveCases
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.StaffMember
+import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.TeamsResponse
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.CaseType
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.entity.EventManagerEntity
 
@@ -70,24 +69,18 @@ class WorkforceAllocationsToDeliusApiClient(private val webClient: WebClient) {
   }
 
   suspend fun choosePractitioners(teamCodes: List<String>): ChoosePractitionerResponse? {
-    val teams = teamCodes.joinToString(separator = ",")
-    val responseString: String = getTeams(teams)
-    if (responseString.isNullOrBlank()) return null
-    val objectMapper = jacksonObjectMapper()
-    val teamDetails: Map<String, Map<String, List<StaffMember>>> =
-      objectMapper.readValue(
-        responseString,
-        object : TypeReference<Map<String, Map<String, List<StaffMember>>>>() {},
-      )
-    val teamDetail = teamDetails["teams"]?.values?.flatten() ?: emptyList()
+    val response = getTeams(teamCodes) ?: return null
+    val teamDetail = response.teams.values.flatten()
     return createPractitionersResponse(
-      teamDetails["teams"]?.keys?.first() ?: "",
+      response.teams.keys.first(),
       teamDetail.map { StaffMember(it.code, it.name, it.email, it.retrieveGrade()) },
     )
   }
 
-  suspend fun getTeams(teams: String): String {
+  suspend fun getTeams(teamCodes: List<String>): TeamsResponse? {
     try {
+      val teams = teamCodes.joinToString(separator = ",")
+
       return withTimeout(TIMEOUT_VALUE) {
         webClient
           .get()
@@ -99,7 +92,7 @@ class WorkforceAllocationsToDeliusApiClient(private val webClient: WebClient) {
               response.statusCode().is5xxServerError -> throw WorkloadFailedDependencyException("$DOWNSTREAM_500 ${response.statusCode()}")
               else -> throw response.createExceptionAndAwait()
             }
-          } ?: ""
+          }
       }
     } catch (e: TimeoutCancellationException) {
       throw WorkloadWebClientTimeoutException(e.message!!)

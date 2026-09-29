@@ -19,7 +19,7 @@ class GetTeamTotalCasesByTeamCode : IntegrationTestBase() {
 
     setupReportData()
 
-    workforceAllocationsToDelius.choosePractitionerByTeamCodesResponseNoPoP(listOf(teamCode))
+    workforceAllocationsToDelius.getTeamsResponse(listOf(teamCode))
     hmppsProbationEstate.getTeamsResponse(listOf(TeamOverview(teamCode, "Team 1")))
 
     webTestClient.get()

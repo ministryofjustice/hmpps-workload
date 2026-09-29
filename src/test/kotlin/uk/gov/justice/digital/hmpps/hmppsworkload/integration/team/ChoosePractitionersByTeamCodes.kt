@@ -303,7 +303,7 @@ class ChoosePractitionersByTeamCodes : IntegrationTestBase() {
   fun `can get choose practitioner response team code only`() {
     val teamCode = "T1"
 
-    workforceAllocationsToDelius.choosePractitionerByTeamCodesResponseNoPoP(listOf(teamCode))
+    workforceAllocationsToDelius.getTeamsResponse(listOf(teamCode))
 
     val firstOm = "OM1"
 

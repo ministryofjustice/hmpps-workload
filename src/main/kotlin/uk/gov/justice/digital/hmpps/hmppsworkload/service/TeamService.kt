@@ -85,7 +85,7 @@ class TeamService(
   private fun teamStaffId(teamCode: String, staffCode: String) = "$teamCode-$staffCode"
 
   suspend fun getWorkloadCases(teams: List<String>): Flow<WorkloadCase> {
-    val staffMembers = workforceAllocationsToDeliusApiClient.choosePractitioners(teams)?.teams
+    val staffMembers = workforceAllocationsToDeliusApiClient.getTeams(teams)?.teams
 
     val activeTotals = caseTotalsService.getTeamPractitionerTotals(teams)
 
