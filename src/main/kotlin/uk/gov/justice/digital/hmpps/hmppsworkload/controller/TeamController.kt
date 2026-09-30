@@ -29,7 +29,7 @@ class TeamController(
       ApiResponse(responseCode = "404", description = "Result Not Found"),
     ],
   )
-  @PreAuthorize("hasRole('ROLE_WORKLOAD_MEASUREMENT') or hasRole('ROLE_WORKLOAD_READ')")
+  @PreAuthorize("hasRole('ROLE_WORKLOAD_MEASUREMENT') or hasRole('ROLE_WORKLOAD_READ') or hasRole('ROLE_MANAGE_A_WORKFORCE_ALLOCATE')")
   @GetMapping("/team/choose-practitioner")
   suspend fun getPractitioners(
     @RequestParam teamCodes: List<String>,
@@ -54,11 +54,11 @@ class TeamController(
       ApiResponse(responseCode = "200", description = "OK"),
     ],
   )
-  @PreAuthorize("hasRole('ROLE_WORKLOAD_MEASUREMENT')")
+  @PreAuthorize("hasRole('ROLE_WORKLOAD_MEASUREMENT') or hasRole('ROLE_MANAGE_A_WORKFORCE_ALLOCATE')")
   @GetMapping("/team/practitioner-workloadcases")
   suspend fun getPractitionerWorkloadAndCaseCount(@RequestParam(required = true) teamCode: String): Map<String, Map<String, List<PractitionerWithRawWorkloadPoints>>> {
     val practitioners = teamService.getPractitioners(listOf(teamCode))
       ?: throw EntityNotFoundException("Choose practitioner not found for $teamCode")
-    return mapOf(teamCode to practitioners)
+    return mapOf(practitioners.keys.first() to mapOf("teams" to practitioners.values.first()))
   }
 }

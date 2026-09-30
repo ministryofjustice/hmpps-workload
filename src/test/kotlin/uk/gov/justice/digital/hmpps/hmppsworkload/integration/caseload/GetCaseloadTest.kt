@@ -7,7 +7,7 @@ import uk.gov.justice.digital.hmpps.hmppsworkload.domain.AllocationReason
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.Case
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.CaseType.LICENSE
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.StaffIdentifier
-import uk.gov.justice.digital.hmpps.hmppsworkload.domain.Tier.A1
+import uk.gov.justice.digital.hmpps.hmppsworkload.domain.Tier
 import uk.gov.justice.digital.hmpps.hmppsworkload.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.entity.CaseDetailsEntity
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.entity.PersonManagerEntity
@@ -32,7 +32,7 @@ class GetCaseloadTest : IntegrationTestBase() {
     val staffCode = "OM1"
     val teamCode = "T1"
 
-    val realtimeCase = Case(A1, LICENSE, false, "CRN1112")
+    val realtimeCase = Case(Tier.A, false, LICENSE, false, "CRN1112")
 
     personManagerRepository.save(
       PersonManagerEntity(
@@ -45,7 +45,7 @@ class GetCaseloadTest : IntegrationTestBase() {
       ),
     )
 
-    caseDetailsRepository.save(CaseDetailsEntity(realtimeCase.crn, realtimeCase.tier, realtimeCase.type, "Jane", "Doe"))
+    caseDetailsRepository.save(CaseDetailsEntity(realtimeCase.crn, realtimeCase.tier, realtimeCase.provisionalTier, realtimeCase.type, "Jane", "Doe"))
 
     val actualCases = getCaseLoad.getCases(StaffIdentifier("OM1", "T1"))
 

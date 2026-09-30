@@ -13,6 +13,7 @@ interface PersonManagerRepository : CrudRepository<PersonManagerEntity, Long> {
 
   fun findByTeamCodeInAndCreatedDateGreaterThanEqualAndIsActiveIsTrue(teamCodes: List<String>, createdDate: ZonedDateTime): List<PersonManagerEntity>
   fun findByStaffCodeAndTeamCodeAndIsActiveIsTrue(staffCode: String, teamCode: String): List<PersonManagerEntity>
+  fun findByTeamCodeInAndIsActiveIsTrue(teamCodes: List<String>): List<PersonManagerEntity>
 
   @Modifying
   @Query("update PersonManagerEntity p set p.isActive= false where p.crn = ?1")

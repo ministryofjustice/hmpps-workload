@@ -82,6 +82,9 @@ assess-risks-needs:
 workforce-allocations-to-delius:
   endpoint:
     url: http://localhost:8084
+hmpps-probation-estate-api:
+  endpoint:
+    url: http://localhost:8086
 
 application:
   notify:

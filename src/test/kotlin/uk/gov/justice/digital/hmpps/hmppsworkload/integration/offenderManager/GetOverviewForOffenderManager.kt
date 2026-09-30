@@ -2,16 +2,17 @@ package uk.gov.justice.digital.hmpps.hmppsworkload.integration.offenderManager
 
 import org.junit.jupiter.api.Test
 import org.springframework.data.repository.findByIdOrNull
+import uk.gov.justice.digital.hmpps.hmppsworkload.domain.AllocationReason
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.CaseType
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.Tier
 import uk.gov.justice.digital.hmpps.hmppsworkload.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.hmppsworkload.integration.jpa.entity.ReductionCategoryEntity
 import uk.gov.justice.digital.hmpps.hmppsworkload.integration.jpa.entity.ReductionReasonEntity
-import uk.gov.justice.digital.hmpps.hmppsworkload.integration.jpa.entity.TiersEntity
-import uk.gov.justice.digital.hmpps.hmppsworkload.integration.jpa.entity.WMTWorkloadEntity
+import uk.gov.justice.digital.hmpps.hmppsworkload.integration.mockserver.TierApiExtension.Companion.hmppsTier
 import uk.gov.justice.digital.hmpps.hmppsworkload.integration.mockserver.WorkforceAllocationsToDeliusExtension.Companion.workforceAllocationsToDelius
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.entity.CaseDetailsEntity
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.entity.EventManagerEntity
+import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.entity.PersonManagerEntity
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.entity.ReductionEntity
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.entity.ReductionStatus
 import java.math.BigDecimal
@@ -21,12 +22,6 @@ import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 
 class GetOverviewForOffenderManager : IntegrationTestBase() {
-
-  private fun setupWmtTierTotal(tier: Tier?, workload: WMTWorkloadEntity, total: Int = 6): TiersEntity {
-    val wmtTier = if (tier != null) setupWmtCaseCategoryTier(tier) else setupWmtUntiered()
-    return tiersRepository.save(TiersEntity(workload = workload, caseType = CaseType.CUSTODY, tierCategory = wmtTier, totalFilteredCases = total))
-  }
-
   @Test
   fun `can get overview for an offender manager`() {
     val teamCode = "T1"
@@ -34,8 +29,8 @@ class GetOverviewForOffenderManager : IntegrationTestBase() {
     workforceAllocationsToDelius.officerViewResponse(offenderManagerCode)
     val wmtStaff = setupCurrentWmtStaff(offenderManagerCode, teamCode)
 
-    setupWmtManagedCase(wmtStaff, Tier.A2, "CRN3333", CaseType.COMMUNITY)
-    setupWmtManagedCase(wmtStaff, Tier.D2, "CRN2222", CaseType.CUSTODY)
+    setupWmtManagedCase(wmtStaff, Tier.A, "CRN3333", CaseType.COMMUNITY)
+    setupWmtManagedCase(wmtStaff, Tier.D, "CRN2222", CaseType.CUSTODY)
 
     val reductionCategory = reductionCategoryRepository.save(ReductionCategoryEntity())
     val reductionReason = reductionReasonRepository.save(ReductionReasonEntity(reductionCategoryEntity = reductionCategory))
@@ -64,15 +59,42 @@ class GetOverviewForOffenderManager : IntegrationTestBase() {
       ),
     )
 
-    val aTierTotal = setupWmtTierTotal(Tier.A2, wmtStaff.workload)
-    val bTierTotal = setupWmtTierTotal(Tier.B2, wmtStaff.workload)
-    val cTierTotal = setupWmtTierTotal(Tier.C2, wmtStaff.workload)
-    val dTierTotal = setupWmtTierTotal(Tier.D2, wmtStaff.workload)
-    val aSTierTotal = setupWmtTierTotal(Tier.A2S, wmtStaff.workload)
-    val bSTierTotal = setupWmtTierTotal(Tier.B2S, wmtStaff.workload)
-    val cSTierTotal = setupWmtTierTotal(Tier.C2S, wmtStaff.workload)
-    val dSTierTotal = setupWmtTierTotal(Tier.D2S, wmtStaff.workload)
-    val untieredTotal = setupWmtTierTotal(null, wmtStaff.workload)
+    listOf(
+      "X111111",
+      "X111112",
+      "X111113",
+      "X111114",
+      "X111115",
+      "X111116",
+      "X111117",
+      "X111118",
+      "X111119",
+    ).forEach { crn ->
+      personManagerRepository.save(
+        PersonManagerEntity(
+          crn = crn,
+          staffCode = offenderManagerCode,
+          teamCode = teamCode,
+          createdBy = offenderManagerCode,
+          isActive = true,
+          allocationReason = AllocationReason.INITIAL_ALLOCATION,
+        ),
+      )
+    }
+
+    hmppsTier.bulkTierCalculationResponse(
+      mapOf(
+        "X111111" to "A",
+        "X111112" to "B",
+        "X111113" to "C",
+        "X111114" to "D",
+        "X111115" to "E",
+        "X111116" to "F",
+        "X111117" to "G",
+        "X111118" to "MISSING",
+        "X111119" to "NOT_SUPERVISED",
+      ),
+    )
 
     webTestClient.get()
       .uri("/team/$teamCode/offenderManagers/$offenderManagerCode")
@@ -120,15 +142,23 @@ class GetOverviewForOffenderManager : IntegrationTestBase() {
         ),
       )
       .jsonPath("$.caseTotals.a")
-      .isEqualTo(aTierTotal.totalFilteredCases)
+      .isEqualTo(1)
       .jsonPath("$.caseTotals.b")
-      .isEqualTo(bTierTotal.totalFilteredCases)
+      .isEqualTo(1)
       .jsonPath("$.caseTotals.c")
-      .isEqualTo(cTierTotal.totalFilteredCases)
+      .isEqualTo(1)
       .jsonPath("$.caseTotals.d")
-      .isEqualTo(dTierTotal.totalFilteredCases)
-      .jsonPath("$.caseTotals.untiered")
-      .isEqualTo(untieredTotal.totalFilteredCases)
+      .isEqualTo(1)
+      .jsonPath("$.caseTotals.e")
+      .isEqualTo(1)
+      .jsonPath("$.caseTotals.f")
+      .isEqualTo(1)
+      .jsonPath("$.caseTotals.g")
+      .isEqualTo(1)
+      .jsonPath("$.caseTotals.missing")
+      .isEqualTo(1)
+      .jsonPath("$.caseTotals.notSupervised")
+      .isEqualTo(1)
       .jsonPath("$.paroleReportsDue")
       .isEqualTo(wmtStaff.workload.institutionalReportsDueInNextThirtyDays)
       .jsonPath("$.caseEndDue")
@@ -207,7 +237,15 @@ class GetOverviewForOffenderManager : IntegrationTestBase() {
       .isEqualTo(0)
       .jsonPath("$.caseTotals.d")
       .isEqualTo(0)
-      .jsonPath("$.caseTotals.untiered")
+      .jsonPath("$.caseTotals.e")
+      .isEqualTo(0)
+      .jsonPath("$.caseTotals.f")
+      .isEqualTo(0)
+      .jsonPath("$.caseTotals.g")
+      .isEqualTo(0)
+      .jsonPath("$.caseTotals.missing")
+      .isEqualTo(0)
+      .jsonPath("$.caseTotals.notSupervised")
       .isEqualTo(0)
   }
 
@@ -252,7 +290,7 @@ class GetOverviewForOffenderManager : IntegrationTestBase() {
       ),
     )
     val storedEventManager = eventManagerRepository.findByIdOrNull(eventManager.id!!)!!
-    val caseDetails = caseDetailsRepository.save(CaseDetailsEntity(storedEventManager.crn, Tier.C3, CaseType.COMMUNITY, "Jane", "Doe"))
+    val caseDetails = caseDetailsRepository.save(CaseDetailsEntity(storedEventManager.crn, Tier.C, false, CaseType.COMMUNITY, "Jane", "Doe"))
     webTestClient.get()
       .uri("/team/$teamCode/offenderManagers/$offenderManagerCode")
       .headers {

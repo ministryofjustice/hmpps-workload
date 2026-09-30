@@ -17,10 +17,19 @@ import org.springframework.test.web.reactive.server.WebTestClient
 import software.amazon.awssdk.services.sqs.model.DeleteMessageRequest
 import software.amazon.awssdk.services.sqs.model.PurgeQueueRequest
 import software.amazon.awssdk.services.sqs.model.ReceiveMessageRequest
+import uk.gov.justice.digital.hmpps.hmppsworkload.domain.AllocationReason
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.CaseType
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.Tier
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.event.HmppsAllocationMessage
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.event.HmppsMessage
+import uk.gov.justice.digital.hmpps.hmppsworkload.domain.powerbi.HDCROTLReportEntity
+import uk.gov.justice.digital.hmpps.hmppsworkload.domain.powerbi.InitialSentencePlanReportEntity
+import uk.gov.justice.digital.hmpps.hmppsworkload.domain.powerbi.ParoleReportEntity
+import uk.gov.justice.digital.hmpps.hmppsworkload.domain.powerbi.PartBReportEntity
+import uk.gov.justice.digital.hmpps.hmppsworkload.domain.powerbi.PartCReportEntity
+import uk.gov.justice.digital.hmpps.hmppsworkload.domain.powerbi.ResetReportEntity
+import uk.gov.justice.digital.hmpps.hmppsworkload.domain.powerbi.UpcomingReleasesReportEntity
+import uk.gov.justice.digital.hmpps.hmppsworkload.integration.domain.ActiveCasesIntegration
 import uk.gov.justice.digital.hmpps.hmppsworkload.integration.domain.WMTPointsWeightings
 import uk.gov.justice.digital.hmpps.hmppsworkload.integration.domain.WMTStaff
 import uk.gov.justice.digital.hmpps.hmppsworkload.integration.jpa.entity.CaseCategoryEntity
@@ -40,10 +49,14 @@ import uk.gov.justice.digital.hmpps.hmppsworkload.integration.jpa.repository.Wor
 import uk.gov.justice.digital.hmpps.hmppsworkload.integration.jpa.repository.WorkloadReportRepository
 import uk.gov.justice.digital.hmpps.hmppsworkload.integration.mockserver.AssessRisksNeedsApiExtension
 import uk.gov.justice.digital.hmpps.hmppsworkload.integration.mockserver.HmppsAuthApiExtension
+import uk.gov.justice.digital.hmpps.hmppsworkload.integration.mockserver.HmppsProbationEstateApiExtension
 import uk.gov.justice.digital.hmpps.hmppsworkload.integration.mockserver.TierApiExtension
 import uk.gov.justice.digital.hmpps.hmppsworkload.integration.mockserver.WorkforceAllocationsToDeliusExtension
+import uk.gov.justice.digital.hmpps.hmppsworkload.integration.mockserver.WorkforceAllocationsToDeliusExtension.Companion.workforceAllocationsToDelius
+import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.entity.CaseDetailsEntity
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.entity.OffenderManagerEntity
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.entity.PduEntity
+import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.entity.PersonManagerEntity
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.entity.RegionEntity
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.entity.TeamEntity
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.entity.WMTWorkloadOwnerEntity
@@ -61,18 +74,29 @@ import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.WMTCourtReports
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.WMTWorkloadOwnerRepository
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.WorkloadCalculationRepository
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.WorkloadPointsRepository
+import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.powerbi.HDCROTLReportRepository
+import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.powerbi.InitialSentencePlanReportRepository
+import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.powerbi.ParoleReportRepository
+import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.powerbi.PartBReportRepository
+import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.powerbi.PartCReportRepository
+import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.powerbi.ResetReportRepository
+import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.powerbi.UpcomingReleasesReportRepository
 import uk.gov.justice.digital.hmpps.hmppsworkload.listener.HmppsOffenderEvent
 import uk.gov.justice.digital.hmpps.hmppsworkload.service.AuditMessage
 import uk.gov.justice.digital.hmpps.hmppsworkload.service.SaveCasesDbService
+import uk.gov.justice.digital.hmpps.hmppsworkload.service.staff.CaseTotalsService
 import uk.gov.justice.hmpps.sqs.HmppsQueueService
 import uk.gov.justice.hmpps.sqs.MissingQueueException
 import java.math.BigDecimal
+import java.sql.Date
+import java.time.LocalDate
 
 @ExtendWith(
   AssessRisksNeedsApiExtension::class,
   TierApiExtension::class,
   WorkforceAllocationsToDeliusExtension::class,
   HmppsAuthApiExtension::class,
+  HmppsProbationEstateApiExtension::class,
 )
 @SpringBootTest(webEnvironment = RANDOM_PORT)
 @ActiveProfiles("test")
@@ -218,6 +242,9 @@ abstract class IntegrationTestBase {
   protected lateinit var hmppsQueueService: HmppsQueueService
 
   @Autowired
+  protected lateinit var caseTotalsService: CaseTotalsService
+
+  @Autowired
   protected lateinit var tiersRepository: TiersRepository
 
   @Autowired
@@ -255,6 +282,27 @@ abstract class IntegrationTestBase {
 
   @Autowired
   protected lateinit var eventManagerAuditRepository: EventManagerAuditRepository
+
+  @Autowired
+  protected lateinit var initialSentencePlanReportRepository: InitialSentencePlanReportRepository
+
+  @Autowired
+  protected lateinit var resetReportRepository: ResetReportRepository
+
+  @Autowired
+  protected lateinit var upcomingReleasesReportRepository: UpcomingReleasesReportRepository
+
+  @Autowired
+  protected lateinit var paroleReportRepository: ParoleReportRepository
+
+  @Autowired
+  protected lateinit var hdcrotlReportRepository: HDCROTLReportRepository
+
+  @Autowired
+  protected lateinit var partBReportRepository: PartBReportRepository
+
+  @Autowired
+  protected lateinit var partCReportRepository: PartCReportRepository
 
   @BeforeEach
   fun setupDependentServices() {
@@ -301,6 +349,13 @@ abstract class IntegrationTestBase {
     reductionsRepository.deleteAll()
     adjustmentReasonRepository.deleteAll()
     workloadCalculationRepository.deleteAll()
+    initialSentencePlanReportRepository.deleteAll()
+    resetReportRepository.deleteAll()
+    upcomingReleasesReportRepository.deleteAll()
+    paroleReportRepository.deleteAll()
+    hdcrotlReportRepository.deleteAll()
+    partBReportRepository.deleteAll()
+    partCReportRepository.deleteAll()
   }
 
   fun clearWMT() {
@@ -319,6 +374,13 @@ abstract class IntegrationTestBase {
     teamRepository.deleteAll()
     pduRepository.deleteAll()
     regionRepository.deleteAll()
+    initialSentencePlanReportRepository.deleteAll()
+    resetReportRepository.deleteAll()
+    upcomingReleasesReportRepository.deleteAll()
+    paroleReportRepository.deleteAll()
+    hdcrotlReportRepository.deleteAll()
+    partBReportRepository.deleteAll()
+    partCReportRepository.deleteAll()
   }
 
   protected fun setupCurrentWmtStaff(staffCode: String, teamCode: String, totalFilteredCustodyCases: Int = 20): WMTStaff {
@@ -402,6 +464,72 @@ abstract class IntegrationTestBase {
 
   protected fun setupWmtUntiered(): CaseCategoryEntity = caseCategoryRepository.findByCategoryName("Untiered")
     ?: caseCategoryRepository.save(CaseCategoryEntity(categoryName = "Untiered", categoryId = 0))
+
+  protected fun setupReportData() {
+    val team = "Team 1"
+    val practitioner = "Doe, Jane"
+
+    val ispReportAtThreshold = InitialSentencePlanReportEntity(targetDate = Date.valueOf(LocalDate.now().plusDays(14)), team = team, probationPractitioner = practitioner)
+    val ispReportAfterThreshold = ispReportAtThreshold.copy(targetDate = Date.valueOf(LocalDate.now().plusDays(15)))
+    initialSentencePlanReportRepository.saveAll(listOf(ispReportAtThreshold, ispReportAfterThreshold))
+
+    val resetReport = ResetReportEntity(team = team, probationPractitioner = practitioner)
+    resetReportRepository.save(resetReport)
+
+    val custodyReleaseAtThreshold = UpcomingReleasesReportEntity(expectedReleaseDate = Date.valueOf(LocalDate.now().plusDays(7)), team = team, probationPractitioner = practitioner)
+    val custodyReleaseAfterThreshold = custodyReleaseAtThreshold.copy(expectedReleaseDate = Date.valueOf(LocalDate.now().plusDays(8)))
+    upcomingReleasesReportRepository.saveAll(listOf(custodyReleaseAtThreshold, custodyReleaseAfterThreshold))
+
+    val paroleReportAtThreshold = ParoleReportEntity(targetDate = Date.valueOf(LocalDate.now().plusDays(28)), team = team, probationPractitioner = practitioner)
+    val paroleReportAfterThreshold = paroleReportAtThreshold.copy(targetDate = Date.valueOf(LocalDate.now().plusDays(29)))
+    paroleReportRepository.saveAll(listOf(paroleReportAtThreshold, paroleReportAfterThreshold))
+
+    val hdcrotlReportAtThreshold = HDCROTLReportEntity(targetDate = Date.valueOf(LocalDate.now().plusDays(14)), team = team, probationPractitioner = practitioner)
+    val hdcrotlReportAfterThreshold = hdcrotlReportAtThreshold.copy(targetDate = Date.valueOf(LocalDate.now().plusDays(15)))
+    hdcrotlReportRepository.saveAll(listOf(hdcrotlReportAtThreshold, hdcrotlReportAfterThreshold))
+
+    val partBReportAtThreshold = PartBReportEntity(targetDate = Date.valueOf(LocalDate.now().plusDays(14)), team = team, probationPractitioner = practitioner)
+    val partBReportAfterThreshold = partBReportAtThreshold.copy(targetDate = Date.valueOf(LocalDate.now().plusDays(15)))
+    partBReportRepository.saveAll(listOf(partBReportAtThreshold, partBReportAfterThreshold))
+
+    val partCReportAtThreshold = PartCReportEntity(targetDate = Date.valueOf(LocalDate.now().plusDays(14)), team = team, probationPractitioner = practitioner)
+    val partCReportAfterThreshold = partCReportAtThreshold.copy(targetDate = Date.valueOf(LocalDate.now().plusDays(15)))
+    partCReportRepository.saveAll(listOf(partCReportAtThreshold, partCReportAfterThreshold))
+  }
+
+  protected fun setupTeamWithNoWorkCases() {
+    workforceAllocationsToDelius.staffActiveCasesResponse("OM1")
+    workforceAllocationsToDelius.staffActiveCasesResponse("OM2")
+    workforceAllocationsToDelius.staffActiveCasesResponse("OM3")
+    workforceAllocationsToDelius.staffActiveCasesResponse("NOWORKLOAD1")
+  }
+
+  protected fun setupCasesForTeamMember(staffCode: String, teamCode: String) {
+    workforceAllocationsToDelius.staffActiveCasesResponse(
+      staffCode,
+      activeCases = listOf(
+        ActiveCasesIntegration("CRN1", "Sally", "Smith", "CUSTODY"),
+        ActiveCasesIntegration("CRN2", "John", "Williams", "COMMUNITY"),
+        ActiveCasesIntegration("CRN3", "John", "Doe", "LICENSE"),
+      ),
+    )
+
+    caseDetailsRepository.saveAll(
+      listOf(
+        CaseDetailsEntity("CRN1", Tier.B, false, CaseType.CUSTODY, "Sally", "Smith"),
+        CaseDetailsEntity("CRN2", Tier.C, false, CaseType.COMMUNITY, "John", "Williams"),
+        CaseDetailsEntity("CRN3", Tier.C, false, CaseType.LICENSE, "John", "Doe"),
+      ),
+    )
+
+    personManagerRepository.saveAll(
+      listOf(
+        PersonManagerEntity(crn = "CRN1", teamCode = teamCode, staffCode = staffCode, createdBy = "USER.NAME", isActive = true, allocationReason = AllocationReason.INITIAL_ALLOCATION),
+        PersonManagerEntity(crn = "CRN2", teamCode = teamCode, staffCode = staffCode, createdBy = "USER.NAME", isActive = true, allocationReason = AllocationReason.INITIAL_ALLOCATION),
+        PersonManagerEntity(crn = "CRN3", teamCode = teamCode, staffCode = staffCode, createdBy = "USER.NAME", isActive = true, allocationReason = AllocationReason.INITIAL_ALLOCATION),
+      ),
+    )
+  }
 
   protected fun getWmtWorkloadWeightings(): WMTPointsWeightings = WMTPointsWeightings(
     workloadPointsRepository.findFirstByIsT2AAndEffectiveToIsNullOrderByEffectiveFromDesc(true),

@@ -30,11 +30,12 @@ data class CreatedAllocationDetail(
   val name: Name,
   val staff: StaffMember,
   val tier: Tier,
+  val provisionalTier: Boolean,
   val allocatedOn: ZonedDateTime,
   val allocatingSpo: String,
   val teamCode: String,
 ) {
   companion object {
-    fun from(allocationDetail: AllocationDetail, caseDetail: CaseDetailsEntity, eventManagerEntity: EventManagerEntity): CreatedAllocationDetail = CreatedAllocationDetail(eventManagerEntity.crn, allocationDetail.name, allocationDetail.staff, caseDetail.tier, eventManagerEntity.createdDate!!, eventManagerEntity.spoName!!, eventManagerEntity.teamCode)
+    fun from(allocationDetail: AllocationDetail, caseDetail: CaseDetailsEntity, eventManagerEntity: EventManagerEntity): CreatedAllocationDetail = CreatedAllocationDetail(eventManagerEntity.crn, allocationDetail.name, allocationDetail.staff, caseDetail.tier, caseDetail.provisionalTier, eventManagerEntity.createdDate!!, eventManagerEntity.spoName!!, eventManagerEntity.teamCode)
   }
 }

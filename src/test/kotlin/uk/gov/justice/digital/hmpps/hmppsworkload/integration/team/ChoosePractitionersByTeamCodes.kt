@@ -1,10 +1,14 @@
 package uk.gov.justice.digital.hmpps.hmppsworkload.integration.team
 
 import org.junit.jupiter.api.Test
+import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.TeamOverview
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.AllocationReason
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.CaseType
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.Tier
+import uk.gov.justice.digital.hmpps.hmppsworkload.domain.UpdatedCaseDetails
 import uk.gov.justice.digital.hmpps.hmppsworkload.integration.IntegrationTestBase
+import uk.gov.justice.digital.hmpps.hmppsworkload.integration.mockserver.HmppsProbationEstateApiExtension.Companion.hmppsProbationEstate
+import uk.gov.justice.digital.hmpps.hmppsworkload.integration.mockserver.TierApiExtension.Companion.hmppsTier
 import uk.gov.justice.digital.hmpps.hmppsworkload.integration.mockserver.WorkforceAllocationsToDeliusExtension.Companion.workforceAllocationsToDelius
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.entity.PersonManagerEntity
 import java.time.ZonedDateTime
@@ -16,14 +20,12 @@ class ChoosePractitionersByTeamCodes : IntegrationTestBase() {
     val teamCode = "T1"
     val teamCode2 = "T2"
     val crn = "CRN1"
-    casesDbService.insertCaseDetails("Don", "Cole", Tier.B3, CaseType.CUSTODY, crn)
+    casesDbService.insertCaseDetails(UpdatedCaseDetails("Don", "Cole", Tier.B, false, CaseType.CUSTODY, crn))
 
     workforceAllocationsToDelius.choosePractitionerByTeamCodesResponse(listOf(teamCode, teamCode2), crn)
-    val firstWmtStaff = setupCurrentWmtStaff("OM1", teamCode)
-    val secondWmtStaff = setupCurrentWmtStaff("OM2", teamCode2)
 
-    val firstOm = firstWmtStaff.offenderManager.code
-    val secondOm = secondWmtStaff.offenderManager.code
+    val firstOm = "OM1"
+    val secondOm = "OM2"
     val noWorkloadStaffCode = "NOWORKLOAD1"
 
     val storedPersonManager = PersonManagerEntity(crn = "CRN5", staffCode = firstOm, teamCode = teamCode, createdBy = "USER1", isActive = true, allocationReason = AllocationReason.INITIAL_ALLOCATION)
@@ -37,6 +39,14 @@ class ChoosePractitionersByTeamCodes : IntegrationTestBase() {
 
     val personManagerWithNoWorkload = PersonManagerEntity(crn = "CRN4", staffCode = noWorkloadStaffCode, teamCode = "T1", createdBy = "USER2", createdDate = ZonedDateTime.now().minusDays(2L), isActive = true, allocationReason = AllocationReason.INITIAL_ALLOCATION)
     personManagerRepository.save(personManagerWithNoWorkload)
+
+    setupCasesForTeamMember(firstOm, teamCode)
+    setupTeamWithNoWorkCases()
+
+    hmppsProbationEstate.getTeamsResponse(listOf(TeamOverview(teamCode, "Team 1"), TeamOverview(teamCode2, "Team 2")))
+    hmppsTier.bulkTierCalculationResponse(mapOf("CRN5" to "A"))
+
+    setupReportData()
 
     webTestClient.get()
       .uri("/team/choose-practitioner?crn=$crn&teamCodes=$teamCode,$teamCode2")
@@ -54,7 +64,7 @@ class ChoosePractitionersByTeamCodes : IntegrationTestBase() {
       .jsonPath("$.name.surname")
       .isEqualTo("Cole")
       .jsonPath("$.tier")
-      .isEqualTo(Tier.B3.name)
+      .isEqualTo(Tier.B.name)
       .jsonPath("$.probationStatus.status")
       .isEqualTo("PREVIOUSLY_MANAGED")
       .jsonPath("$.probationStatus.description")
@@ -77,27 +87,65 @@ class ChoosePractitionersByTeamCodes : IntegrationTestBase() {
       .isEqualTo("j.doe@email.co.uk")
       .jsonPath("$.teams.$teamCode[?(@.code == '$firstOm')].grade")
       .isEqualTo("PO")
-      .jsonPath("$.teams.$teamCode[?(@.code == '$firstOm')].workload")
-      .isEqualTo(50.toDouble())
       .jsonPath("$.teams.$teamCode[?(@.code == '$firstOm')].casesPastWeek")
-      .isEqualTo(1)
+      .isEqualTo(4)
+      .jsonPath("$.teams.$teamCode[?(@.code == '$firstOm')].allocatedCasesPastWeek")
+      .isEqualTo(4)
+      .jsonPath("$.teams.$teamCode[?(@.code == '$firstOm')].reallocatedCasesPastWeek")
+      .isEqualTo(0)
+      .jsonPath("$.teams.$teamCode[?(@.code == '$firstOm')].totalCases")
+      .isEqualTo(4)
       .jsonPath("$.teams.$teamCode[?(@.code == '$firstOm')].communityCases")
-      .isEqualTo(15)
+      .isEqualTo(1)
+      .jsonPath("$.teams.$teamCode[?(@.code == '$firstOm')].licenseCases")
+      .isEqualTo(1)
       .jsonPath("$.teams.$teamCode[?(@.code == '$firstOm')].custodyCases")
-      .isEqualTo(20)
+      .isEqualTo(1)
+      .jsonPath("$.teams.$teamCode[?(@.code == '$firstOm')].ispsDueInNext14Days")
+      .isEqualTo(1)
+      .jsonPath("$.teams.$teamCode[?(@.code == '$firstOm')].activeCases")
+      .isEqualTo(3)
+      .jsonPath("$.teams.$teamCode[?(@.code == '$firstOm')].contactSuspendedCases")
+      .isEqualTo(1)
+      .jsonPath("$.teams.$teamCode[?(@.code == '$firstOm')].custodyReleasesInNext7Days")
+      .isEqualTo(1)
+      .jsonPath("$.teams.$teamCode[?(@.code == '$firstOm')].paroleReportsInNext28Days")
+      .isEqualTo(1)
+      .jsonPath("$.teams.$teamCode[?(@.code == '$firstOm')].otherReportsInNext14Days")
+      .isEqualTo(3)
+      .jsonPath("$.teams.$teamCode[?(@.code == '$firstOm')].tierCaseTotals.a")
+      .isEqualTo(1)
       .jsonPath("$.teams.$teamCode[?(@.code == '$noWorkloadStaffCode')].name.forename")
       .isEqualTo("No")
       .jsonPath("$.teams.$teamCode[?(@.code == '$noWorkloadStaffCode')].name.surname")
       .isEqualTo("Workload")
       .jsonPath("$.teams.$teamCode[?(@.code == '$noWorkloadStaffCode')].email")
       .isEqualTo("no.workload.email@co.uk")
-      .jsonPath("$.teams.$teamCode[?(@.code == '$noWorkloadStaffCode')].workload")
-      .isEqualTo(0)
       .jsonPath("$.teams.$teamCode[?(@.code == '$noWorkloadStaffCode')].casesPastWeek")
       .isEqualTo(1)
+      .jsonPath("$.teams.$teamCode[?(@.code == '$noWorkloadStaffCode')].allocatedCasesPastWeek")
+      .isEqualTo(1)
+      .jsonPath("$.teams.$teamCode[?(@.code == '$noWorkloadStaffCode')].reallocatedCasesPastWeek")
+      .isEqualTo(0)
+      .jsonPath("$.teams.$teamCode[?(@.code == '$noWorkloadStaffCode')].totalCases")
+      .isEqualTo(0)
       .jsonPath("$.teams.$teamCode[?(@.code == '$noWorkloadStaffCode')].communityCases")
       .isEqualTo(0)
       .jsonPath("$.teams.$teamCode[?(@.code == '$noWorkloadStaffCode')].custodyCases")
+      .isEqualTo(0)
+      .jsonPath("$.teams.$teamCode[?(@.code == '$noWorkloadStaffCode')].ispsDueInNext14Days")
+      .isEqualTo(0)
+      .jsonPath("$.teams.$teamCode[?(@.code == '$noWorkloadStaffCode')].activeCases")
+      .isEqualTo(0)
+      .jsonPath("$.teams.$teamCode[?(@.code == '$noWorkloadStaffCode')].contactSuspendedCases")
+      .isEqualTo(0)
+      .jsonPath("$.teams.$teamCode[?(@.code == '$noWorkloadStaffCode')].custodyReleasesInNext7Days")
+      .isEqualTo(0)
+      .jsonPath("$.teams.$teamCode[?(@.code == '$noWorkloadStaffCode')].paroleReportsInNext28Days")
+      .isEqualTo(0)
+      .jsonPath("$.teams.$teamCode[?(@.code == '$noWorkloadStaffCode')].otherReportsInNext14Days")
+      .isEqualTo(0)
+      .jsonPath("$.teams.$teamCode[?(@.code == '$noWorkloadStaffCode')].tierCaseTotals.a")
       .isEqualTo(0)
       .jsonPath("$.teams.$teamCode2[?(@.code == '$secondOm')].name.forename")
       .isEqualTo("Mark")
@@ -114,14 +162,12 @@ class ChoosePractitionersByTeamCodes : IntegrationTestBase() {
     val teamCode = "T1"
     val teamCode2 = "T2"
     val crn = "CRN1"
-    casesDbService.insertCaseDetails("Don", "Cole", Tier.B3, CaseType.CUSTODY, crn)
+    casesDbService.insertCaseDetails(UpdatedCaseDetails("Don", "Cole", Tier.B, false, CaseType.CUSTODY, crn))
 
     workforceAllocationsToDelius.choosePractitionerByTeamCodesResponse(listOf(teamCode, teamCode2), crn)
-    val firstWmtStaff = setupCurrentWmtStaff("OM1", teamCode)
-    val secondWmtStaff = setupCurrentWmtStaff("OM2", teamCode2)
 
-    val firstOm = firstWmtStaff.offenderManager.code
-    val secondOm = secondWmtStaff.offenderManager.code
+    val firstOm = "OM1"
+    val secondOm = "OM2"
     val noWorkloadStaffCode = "NOWORKLOAD1"
 
     val storedPersonManager = PersonManagerEntity(crn = "CRN5", staffCode = firstOm, teamCode = teamCode, createdBy = "USER1", isActive = true, allocationReason = AllocationReason.INITIAL_ALLOCATION)
@@ -135,6 +181,14 @@ class ChoosePractitionersByTeamCodes : IntegrationTestBase() {
 
     val personManagerWithNoWorkload = PersonManagerEntity(crn = "CRN4", staffCode = noWorkloadStaffCode, teamCode = "T1", createdBy = "USER2", createdDate = ZonedDateTime.now().minusDays(2L), isActive = true, allocationReason = AllocationReason.INITIAL_ALLOCATION)
     personManagerRepository.save(personManagerWithNoWorkload)
+
+    setupCasesForTeamMember(firstOm, teamCode)
+    setupTeamWithNoWorkCases()
+
+    hmppsProbationEstate.getTeamsResponse(listOf(TeamOverview(teamCode, "Team 1"), TeamOverview(teamCode2, "Team 2")))
+    hmppsTier.bulkTierCalculationResponse(mapOf("CRN5" to "A"))
+
+    setupReportData()
 
     webTestClient.get()
       .uri("/team/choose-practitioner?&teamCodes=$teamCode,$teamCode2&crn=$crn")
@@ -152,7 +206,7 @@ class ChoosePractitionersByTeamCodes : IntegrationTestBase() {
       .jsonPath("$.name.surname")
       .isEqualTo("Cole")
       .jsonPath("$.tier")
-      .isEqualTo(Tier.B3.name)
+      .isEqualTo(Tier.B.name)
       .jsonPath("$.probationStatus.status")
       .isEqualTo("PREVIOUSLY_MANAGED")
       .jsonPath("$.probationStatus.description")
@@ -175,27 +229,65 @@ class ChoosePractitionersByTeamCodes : IntegrationTestBase() {
       .isEqualTo("j.doe@email.co.uk")
       .jsonPath("$.teams.$teamCode[?(@.code == '$firstOm')].grade")
       .isEqualTo("PO")
-      .jsonPath("$.teams.$teamCode[?(@.code == '$firstOm')].workload")
-      .isEqualTo(50.toDouble())
       .jsonPath("$.teams.$teamCode[?(@.code == '$firstOm')].casesPastWeek")
-      .isEqualTo(1)
+      .isEqualTo(4)
+      .jsonPath("$.teams.$teamCode[?(@.code == '$firstOm')].allocatedCasesPastWeek")
+      .isEqualTo(4)
+      .jsonPath("$.teams.$teamCode[?(@.code == '$firstOm')].reallocatedCasesPastWeek")
+      .isEqualTo(0)
+      .jsonPath("$.teams.$teamCode[?(@.code == '$firstOm')].totalCases")
+      .isEqualTo(4)
       .jsonPath("$.teams.$teamCode[?(@.code == '$firstOm')].communityCases")
-      .isEqualTo(15)
+      .isEqualTo(1)
+      .jsonPath("$.teams.$teamCode[?(@.code == '$firstOm')].licenseCases")
+      .isEqualTo(1)
       .jsonPath("$.teams.$teamCode[?(@.code == '$firstOm')].custodyCases")
-      .isEqualTo(20)
+      .isEqualTo(1)
+      .jsonPath("$.teams.$teamCode[?(@.code == '$firstOm')].ispsDueInNext14Days")
+      .isEqualTo(1)
+      .jsonPath("$.teams.$teamCode[?(@.code == '$firstOm')].activeCases")
+      .isEqualTo(3)
+      .jsonPath("$.teams.$teamCode[?(@.code == '$firstOm')].contactSuspendedCases")
+      .isEqualTo(1)
+      .jsonPath("$.teams.$teamCode[?(@.code == '$firstOm')].custodyReleasesInNext7Days")
+      .isEqualTo(1)
+      .jsonPath("$.teams.$teamCode[?(@.code == '$firstOm')].paroleReportsInNext28Days")
+      .isEqualTo(1)
+      .jsonPath("$.teams.$teamCode[?(@.code == '$firstOm')].otherReportsInNext14Days")
+      .isEqualTo(3)
+      .jsonPath("$.teams.$teamCode[?(@.code == '$firstOm')].tierCaseTotals.a")
+      .isEqualTo(1)
       .jsonPath("$.teams.$teamCode[?(@.code == '$noWorkloadStaffCode')].name.forename")
       .isEqualTo("No")
       .jsonPath("$.teams.$teamCode[?(@.code == '$noWorkloadStaffCode')].name.surname")
       .isEqualTo("Workload")
       .jsonPath("$.teams.$teamCode[?(@.code == '$noWorkloadStaffCode')].email")
       .isEqualTo("no.workload.email@co.uk")
-      .jsonPath("$.teams.$teamCode[?(@.code == '$noWorkloadStaffCode')].workload")
-      .isEqualTo(0)
       .jsonPath("$.teams.$teamCode[?(@.code == '$noWorkloadStaffCode')].casesPastWeek")
       .isEqualTo(1)
+      .jsonPath("$.teams.$teamCode[?(@.code == '$noWorkloadStaffCode')].allocatedCasesPastWeek")
+      .isEqualTo(1)
+      .jsonPath("$.teams.$teamCode[?(@.code == '$noWorkloadStaffCode')].reallocatedCasesPastWeek")
+      .isEqualTo(0)
+      .jsonPath("$.teams.$teamCode[?(@.code == '$noWorkloadStaffCode')].totalCases")
+      .isEqualTo(0)
       .jsonPath("$.teams.$teamCode[?(@.code == '$noWorkloadStaffCode')].communityCases")
       .isEqualTo(0)
       .jsonPath("$.teams.$teamCode[?(@.code == '$noWorkloadStaffCode')].custodyCases")
+      .isEqualTo(0)
+      .jsonPath("$.teams.$teamCode[?(@.code == '$noWorkloadStaffCode')].ispsDueInNext14Days")
+      .isEqualTo(0)
+      .jsonPath("$.teams.$teamCode[?(@.code == '$noWorkloadStaffCode')].activeCases")
+      .isEqualTo(0)
+      .jsonPath("$.teams.$teamCode[?(@.code == '$noWorkloadStaffCode')].contactSuspendedCases")
+      .isEqualTo(0)
+      .jsonPath("$.teams.$teamCode[?(@.code == '$noWorkloadStaffCode')].custodyReleasesInNext7Days")
+      .isEqualTo(0)
+      .jsonPath("$.teams.$teamCode[?(@.code == '$noWorkloadStaffCode')].paroleReportsInNext28Days")
+      .isEqualTo(0)
+      .jsonPath("$.teams.$teamCode[?(@.code == '$noWorkloadStaffCode')].otherReportsInNext14Days")
+      .isEqualTo(0)
+      .jsonPath("$.teams.$teamCode[?(@.code == '$noWorkloadStaffCode')].tierCaseTotals.a")
       .isEqualTo(0)
       .jsonPath("$.teams.$teamCode2[?(@.code == '$secondOm')].name.forename")
       .isEqualTo("Mark")
@@ -211,16 +303,24 @@ class ChoosePractitionersByTeamCodes : IntegrationTestBase() {
   fun `can get choose practitioner response team code only`() {
     val teamCode = "T1"
 
-    workforceAllocationsToDelius.choosePractitionerByTeamCodesResponseNoPoP(listOf(teamCode))
-    val firstWmtStaff = setupCurrentWmtStaff("OM1", teamCode)
+    workforceAllocationsToDelius.getTeamsResponse(listOf(teamCode))
 
-    val firstOm = firstWmtStaff.offenderManager.code
+    val firstOm = "OM1"
 
     val storedPersonManager = PersonManagerEntity(crn = "CRN5", staffCode = firstOm, teamCode = teamCode, createdBy = "USER1", isActive = true, allocationReason = AllocationReason.INITIAL_ALLOCATION)
     personManagerRepository.save(storedPersonManager)
 
     val movedPersonManager = PersonManagerEntity(crn = "CRN3", staffCode = firstOm, teamCode = teamCode, createdBy = "USER1", createdDate = ZonedDateTime.now().minusDays(5L), isActive = false, allocationReason = AllocationReason.INITIAL_ALLOCATION)
     personManagerRepository.save(movedPersonManager)
+
+    setupCasesForTeamMember(firstOm, teamCode)
+
+    setupTeamWithNoWorkCases()
+
+    hmppsProbationEstate.getTeamsResponse(listOf(TeamOverview(teamCode, "Team 1")))
+    hmppsTier.bulkTierCalculationResponse(mapOf("CRN5" to "A"))
+
+    setupReportData()
 
     webTestClient.get()
       .uri("/team/practitioner-workloadcases?teamCode=$teamCode")
@@ -237,14 +337,34 @@ class ChoosePractitionersByTeamCodes : IntegrationTestBase() {
       .isEqualTo("j.doe@email.co.uk")
       .jsonPath("$.$teamCode.teams[?(@.code == '$firstOm')].grade")
       .isEqualTo("PO")
-      .jsonPath("$.$teamCode.teams[?(@.code == '$firstOm')].workload")
-      .isEqualTo(50.toDouble())
       .jsonPath("$.$teamCode.teams[?(@.code == '$firstOm')].casesPastWeek")
-      .isEqualTo(1)
+      .isEqualTo(4)
+      .jsonPath("$.$teamCode.teams[?(@.code == '$firstOm')].allocatedCasesPastWeek")
+      .isEqualTo(4)
+      .jsonPath("$.$teamCode.teams[?(@.code == '$firstOm')].reallocatedCasesPastWeek")
+      .isEqualTo(0)
+      .jsonPath("$.$teamCode.teams[?(@.code == '$firstOm')].totalCases")
+      .isEqualTo(4)
       .jsonPath("$.$teamCode.teams[?(@.code == '$firstOm')].communityCases")
-      .isEqualTo(15)
+      .isEqualTo(1)
+      .jsonPath("$.$teamCode.teams[?(@.code == '$firstOm')].licenseCases")
+      .isEqualTo(1)
       .jsonPath("$.$teamCode.teams[?(@.code == '$firstOm')].custodyCases")
-      .isEqualTo(20)
+      .isEqualTo(1)
+      .jsonPath("$.$teamCode.teams[?(@.code == '$firstOm')].ispsDueInNext14Days")
+      .isEqualTo(1)
+      .jsonPath("$.$teamCode.teams[?(@.code == '$firstOm')].activeCases")
+      .isEqualTo(3)
+      .jsonPath("$.$teamCode.teams[?(@.code == '$firstOm')].contactSuspendedCases")
+      .isEqualTo(1)
+      .jsonPath("$.$teamCode.teams[?(@.code == '$firstOm')].custodyReleasesInNext7Days")
+      .isEqualTo(1)
+      .jsonPath("$.$teamCode.teams[?(@.code == '$firstOm')].paroleReportsInNext28Days")
+      .isEqualTo(1)
+      .jsonPath("$.$teamCode.teams[?(@.code == '$firstOm')].otherReportsInNext14Days")
+      .isEqualTo(3)
+      .jsonPath("$.$teamCode.teams[?(@.code == '$firstOm')].tierCaseTotals.a")
+      .isEqualTo(1)
   }
 
   @Test
@@ -254,11 +374,9 @@ class ChoosePractitionersByTeamCodes : IntegrationTestBase() {
     val crn = "NOTFOUND"
 
     workforceAllocationsToDelius.choosePractitionerByTeamCodesResponse(listOf(teamCode, teamCode2), crn)
-    val firstWmtStaff = setupCurrentWmtStaff("OM1", teamCode)
-    val secondWmtStaff = setupCurrentWmtStaff("OM2", teamCode2)
 
-    val firstOm = firstWmtStaff.offenderManager.code
-    val secondOm = secondWmtStaff.offenderManager.code
+    val firstOm = "OM1"
+    val secondOm = "OM2"
     val noWorkloadStaffCode = "NOWORKLOAD1"
 
     val storedPersonManager = PersonManagerEntity(crn = "CRN5", staffCode = firstOm, teamCode = teamCode, createdBy = "USER1", isActive = true, allocationReason = AllocationReason.INITIAL_ALLOCATION)
@@ -273,6 +391,11 @@ class ChoosePractitionersByTeamCodes : IntegrationTestBase() {
     val personManagerWithNoWorkload = PersonManagerEntity(crn = "CRN4", staffCode = noWorkloadStaffCode, teamCode = "T1", createdBy = "USER2", createdDate = ZonedDateTime.now().minusDays(2L), isActive = true, allocationReason = AllocationReason.INITIAL_ALLOCATION)
     personManagerRepository.save(personManagerWithNoWorkload)
 
+    hmppsProbationEstate.getTeamsResponse(listOf(TeamOverview(teamCode, "Team 1"), TeamOverview(teamCode2, "Team 2")))
+    hmppsTier.bulkTierCalculationResponse(mapOf("CRN5" to "A"))
+
+    setupTeamWithNoWorkCases()
+
     webTestClient.get()
       .uri("/team/choose-practitioner?crn=$crn&teamCodes=$teamCode,$teamCode2")
       .headers { it.authToken(roles = listOf("ROLE_WORKLOAD_MEASUREMENT")) }
@@ -286,13 +409,15 @@ class ChoosePractitionersByTeamCodes : IntegrationTestBase() {
     val teamCode = "T1"
     val teamCode2 = "T2"
     val crn = "CRN1"
-    casesDbService.insertCaseDetails("Don", "Cole", Tier.B3, CaseType.CUSTODY, crn)
+    casesDbService.insertCaseDetails(UpdatedCaseDetails("Don", "Cole", Tier.B, false, CaseType.CUSTODY, crn))
     workforceAllocationsToDelius.choosePractitionerByTeamCodesResponse(listOf(teamCode, teamCode2), crn)
-    val firstWmtStaff = setupCurrentWmtStaff("OM1", teamCode)
-    setupCurrentWmtStaff("OM2", teamCode2)
 
-    val firstOm = firstWmtStaff.offenderManager.code
+    val firstOm = "OM1"
     val noWorkloadStaffCode = "NOWORKLOAD1"
+    setupTeamWithNoWorkCases()
+
+    hmppsProbationEstate.getTeamsResponse(listOf(TeamOverview(teamCode, "Team 1"), TeamOverview(teamCode2, "Team 2")))
+    hmppsTier.bulkTierCalculationResponse(mapOf("CRN5" to "A"))
 
     webTestClient.get()
       .uri("/team/choose-practitioner?crn=$crn&teamCodes=$teamCode,$teamCode2&grades=PO,PQiP")
@@ -341,7 +466,7 @@ class ChoosePractitionersByTeamCodes : IntegrationTestBase() {
     val teamCode = "T1"
     val staffCode = "OM1"
     val crn = "CRN1"
-    casesDbService.insertCaseDetails("Don", "Cole", Tier.B3, CaseType.CUSTODY, crn)
+    casesDbService.insertCaseDetails(UpdatedCaseDetails("Don", "Cole", Tier.B, false, CaseType.CUSTODY, crn))
     workforceAllocationsToDelius.choosePractitionerByTeamCodesResponse(listOf(teamCode), crn)
 
     val movedPersonManager = PersonManagerEntity(crn = "CRN3", staffCode = staffCode, teamCode = teamCode, createdBy = "USER1", isActive = false, allocationReason = AllocationReason.INITIAL_ALLOCATION)
@@ -350,6 +475,10 @@ class ChoosePractitionersByTeamCodes : IntegrationTestBase() {
     val newPersonManager = PersonManagerEntity(crn = "CRN3", staffCode = "STAFF2", teamCode = "TEAM2", createdBy = "USER2", isActive = true, allocationReason = AllocationReason.INITIAL_ALLOCATION)
     personManagerRepository.save(newPersonManager)
 
+    setupTeamWithNoWorkCases()
+
+    hmppsProbationEstate.getTeamsResponse(listOf(TeamOverview(teamCode, "Team 1")))
+
     webTestClient.get()
       .uri("/team/choose-practitioner?crn=$crn&teamCodes=$teamCode")
       .headers { it.authToken(roles = listOf("ROLE_WORKLOAD_MEASUREMENT")) }
@@ -357,7 +486,7 @@ class ChoosePractitionersByTeamCodes : IntegrationTestBase() {
       .expectStatus()
       .isOk
       .expectBody()
-      .jsonPath("$.teams.$teamCode[?(@.code == '$staffCode')].casesPastWeek")
+      .jsonPath("$.teams.$teamCode[?(@.code == '$staffCode')].allocatedCasesPastWeek")
       .isEqualTo(0)
   }
 
@@ -366,12 +495,16 @@ class ChoosePractitionersByTeamCodes : IntegrationTestBase() {
     val teamCode = "T1"
     val teamCode2 = "T2"
     val crn = "CRN1"
-    casesDbService.insertCaseDetails("Don", "Cole", Tier.B3, CaseType.CUSTODY, crn)
+    casesDbService.insertCaseDetails(UpdatedCaseDetails("Don", "Cole", Tier.B, false, CaseType.CUSTODY, crn))
     val staffCode = "OM1"
 
     workforceAllocationsToDelius.choosePractitionerStaffInMultipleTeamsResponse(listOf(teamCode, teamCode2), crn)
-    val firstTeamWorkload = setupCurrentWmtStaff(staffCode, teamCode, 20)
-    val secondTeamWorkload = setupCurrentWmtStaff(staffCode, teamCode2, 50)
+
+    setupCasesForTeamMember(staffCode, teamCode)
+    setupCasesForTeamMember(staffCode, teamCode2)
+
+    hmppsProbationEstate.getTeamsResponse(listOf(TeamOverview(teamCode, "Team 1"), TeamOverview(teamCode2, "Team 2")))
+    hmppsTier.bulkTierCalculationResponse(mapOf("CRN5" to "A"))
 
     webTestClient.get()
       .uri("/team/choose-practitioner?crn=$crn&teamCodes=$teamCode,$teamCode2")
@@ -381,24 +514,28 @@ class ChoosePractitionersByTeamCodes : IntegrationTestBase() {
       .isOk
       .expectBody()
       .jsonPath("$.teams.$teamCode[?(@.code == '$staffCode')].custodyCases")
-      .isEqualTo(firstTeamWorkload.workload.totalFilteredCustodyCases)
+      .isEqualTo(1)
       .jsonPath("$.teams.$teamCode2[?(@.code == '$staffCode')].custodyCases")
-      .isEqualTo(secondTeamWorkload.workload.totalFilteredCustodyCases)
+      .isEqualTo(1)
   }
 
   @Test
   fun `can get choose practitioner response when practitioner does not have an email field`() {
     val teamCode = "T2"
     val crn = "CRN1"
-    casesDbService.insertCaseDetails("Don", "Cole", Tier.B3, CaseType.CUSTODY, crn)
+    casesDbService.insertCaseDetails(UpdatedCaseDetails("Don", "Cole", Tier.B, false, CaseType.CUSTODY, crn))
 
     workforceAllocationsToDelius.choosePractitionerByTeamCodesResponse(listOf(teamCode), crn)
-    val firstWmtStaff = setupCurrentWmtStaff("OM3", teamCode)
 
-    val firstOm = firstWmtStaff.offenderManager.code
+    val firstOm = "OM3"
 
     val storedPersonManager = PersonManagerEntity(crn = "CRN1", staffCode = firstOm, teamCode = teamCode, createdBy = "USER1", isActive = true, allocationReason = AllocationReason.INITIAL_ALLOCATION)
     personManagerRepository.save(storedPersonManager)
+
+    setupTeamWithNoWorkCases()
+
+    hmppsProbationEstate.getTeamsResponse(listOf(TeamOverview(teamCode, "Team 1")))
+    hmppsTier.bulkTierCalculationResponse(mapOf("CRN5" to "A"))
 
     webTestClient.get()
       .uri("/team/choose-practitioner?crn=$crn&teamCodes=$teamCode")
@@ -419,7 +556,7 @@ class ChoosePractitionersByTeamCodes : IntegrationTestBase() {
   fun `can get choose practitioner response when there is no community person manager`() {
     val teamCode = "T2"
     val crn = "CRN1"
-    casesDbService.insertCaseDetails("Don", "Cole", Tier.B3, CaseType.CUSTODY, crn)
+    casesDbService.insertCaseDetails(UpdatedCaseDetails("Don", "Cole", Tier.B, false, CaseType.CUSTODY, crn))
 
     workforceAllocationsToDelius.choosePractitionerByTeamCodesResponseNoCommunityPersonManager(listOf(teamCode), crn)
     val firstWmtStaff = setupCurrentWmtStaff("OM3", teamCode)
@@ -428,6 +565,11 @@ class ChoosePractitionersByTeamCodes : IntegrationTestBase() {
 
     val storedPersonManager = PersonManagerEntity(crn = "CRN1", staffCode = firstOm, teamCode = teamCode, createdBy = "USER1", isActive = true, allocationReason = AllocationReason.INITIAL_ALLOCATION)
     personManagerRepository.save(storedPersonManager)
+
+    setupTeamWithNoWorkCases()
+
+    hmppsProbationEstate.getTeamsResponse(listOf(TeamOverview(teamCode, "Team 1")))
+    hmppsTier.bulkTierCalculationResponse(mapOf("CRN5" to "A"))
 
     webTestClient.get()
       .uri("/team/choose-practitioner?crn=$crn&teamCodes=$teamCode")
@@ -450,7 +592,7 @@ class ChoosePractitionersByTeamCodes : IntegrationTestBase() {
   fun `can get choose practitioner response when unallocated case`() {
     val teamCode = "T2"
     val crn = "CRN1"
-    casesDbService.insertCaseDetails("Don", "Cole", Tier.B3, CaseType.CUSTODY, crn)
+    casesDbService.insertCaseDetails(UpdatedCaseDetails("Don", "Cole", Tier.B, false, CaseType.CUSTODY, crn))
 
     workforceAllocationsToDelius.choosePractitionerByTeamCodesResponseUnallocated(listOf(teamCode), crn)
     val firstWmtStaff = setupCurrentWmtStaff("OM3", teamCode)
@@ -459,6 +601,11 @@ class ChoosePractitionersByTeamCodes : IntegrationTestBase() {
 
     val storedPersonManager = PersonManagerEntity(crn = "CRN1", staffCode = firstOm, teamCode = teamCode, createdBy = "USER1", isActive = true, allocationReason = AllocationReason.INITIAL_ALLOCATION)
     personManagerRepository.save(storedPersonManager)
+
+    setupTeamWithNoWorkCases()
+
+    hmppsProbationEstate.getTeamsResponse(listOf(TeamOverview(teamCode, "Team 1")))
+    hmppsTier.bulkTierCalculationResponse(mapOf("CRN5" to "A"))
 
     webTestClient.get()
       .uri("/team/choose-practitioner?crn=$crn&teamCodes=$teamCode")

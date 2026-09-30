@@ -152,7 +152,7 @@ class DefaultSaveWorkloadService(
 
     var allocationData = workforceAllocationsToDeliusApiClient.allocationDetails(allocateCase.crn, firstEvent, allocatedStaffId.staffCode, loggedInUser)
 
-    val personManagerSaveResult = savePersonManager(allocatedStaffId, allocationData.staff, loggedInUser, allocateCase.allocationReason, allocateCase.crn, "", tier)
+    val personManagerSaveResult = savePersonManager(allocatedStaffId, allocationData.staff, loggedInUser, allocateCase.allocationReason, allocateCase.crn, "", tier?.tierScore)
     val allUnallocatedRequirements = arrayListOf<Requirement>()
     val allOffences = arrayListOf<OffenceDetails>()
     val allOrders = arrayListOf<SentenceDetails>()

@@ -1,3 +1,3 @@
 package uk.gov.justice.digital.hmpps.hmppsworkload.domain
 
-data class WorkloadCase(val teamCode: String, val totalCases: Int, val workload: Double)
+data class WorkloadCase(val teamCode: String, val totalCases: Int)

@@ -121,7 +121,7 @@ internal class WorkloadCalculationServiceTest : IntegrationTestBase() {
 
     personManagerRepository.save(PersonManagerEntity(crn = "CRN1", staffCode = staffCode, teamCode = teamCode, createdBy = "USER", isActive = true, allocationReason = AllocationReason.INITIAL_ALLOCATION))
 
-    caseDetailsRepository.save(CaseDetailsEntity("CRN1", Tier.B2, CaseType.COMMUNITY, "Jane", "Doe"))
+    caseDetailsRepository.save(CaseDetailsEntity("CRN1", Tier.B, false, CaseType.COMMUNITY, "Jane", "Doe"))
 
     workloadCalculation.saveWorkloadCalculation(StaffIdentifier(staffCode, teamCode), staffGrade)
 

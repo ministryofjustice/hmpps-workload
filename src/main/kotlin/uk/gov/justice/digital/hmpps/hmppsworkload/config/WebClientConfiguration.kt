@@ -13,14 +13,17 @@ import org.springframework.security.oauth2.client.web.reactive.function.client.S
 import org.springframework.web.reactive.function.client.WebClient
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.AssessRisksNeedsApiClient
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.FeatureFlagClient
+import uk.gov.justice.digital.hmpps.hmppsworkload.client.HmppsProbationEstateApiClient
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.HmppsTierApiClient
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.WorkforceAllocationsToDeliusApiClient
 
 @Configuration
+@SuppressWarnings("TooManyFunctions")
 class WebClientConfiguration(
   @Value("\${hmpps-tier.endpoint.url}") private val hmppsTierApiRootUri: String,
   @Value("\${workforce-allocations-to-delius.endpoint.url}") private val workforceAllocationsToDeliusApiRootUri: String,
   @Value("\${assess-risks-needs.endpoint.url}") private val assessRisksNeedsApiRootUri: String,
+  @Value("\${hmpps-probation-estate-api.endpoint.url}") private val hmppsProbationEstateApiRootUri: String,
   @Value("\${FLIPT_API_URL:http://someurl:8089}") private val featureFlagApiRootUri: String,
   @Value("\${FLIPT_API_KEY:someTestToken}") private val featureFlagApiKey: String,
 ) {
@@ -65,6 +68,15 @@ class WebClientConfiguration(
 
   @Bean
   fun hmppsTierApiClient(@Qualifier("hmppsTierWebClientAppScope") webClient: WebClient): HmppsTierApiClient = HmppsTierApiClient(webClient)
+
+  @Bean
+  fun hmppsProbationEstateApiWebClientAppScope(
+    @Qualifier(value = "authorizedClientManagerAppScope") authorizedClientManager: ReactiveOAuth2AuthorizedClientManager,
+    builder: WebClient.Builder,
+  ): WebClient = getOAuthWebClient(authorizedClientManager, builder, hmppsProbationEstateApiRootUri, "hmpps-probation-estate-api")
+
+  @Bean
+  fun hmppsProbationEstateApiClient(@Qualifier("hmppsProbationEstateApiWebClientAppScope") webClient: WebClient): HmppsProbationEstateApiClient = HmppsProbationEstateApiClient(webClient)
 
   @Bean
   fun featureFlagClient(builder: WebClient.Builder): FeatureFlagClient = FeatureFlagClient(getFliptWebClient(builder))

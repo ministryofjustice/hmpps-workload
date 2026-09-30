@@ -36,5 +36,6 @@ class FeatureFlagService(
   @Scheduled(cron = "0 */10 * * * *")
   @CacheEvict(value = ["featureFlags"], allEntries = true)
   fun evictFeatureFlagsCache() {
+    // functionality provided by @CacheEvict annotation
   }
 }

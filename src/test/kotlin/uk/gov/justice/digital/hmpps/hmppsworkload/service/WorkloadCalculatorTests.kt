@@ -2,15 +2,9 @@ package uk.gov.justice.digital.hmpps.hmppsworkload.service
 
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
-import uk.gov.justice.digital.hmpps.hmppsworkload.domain.Case
-import uk.gov.justice.digital.hmpps.hmppsworkload.domain.CaseType
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.Contact
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.CourtReport
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.CourtReportType
-import uk.gov.justice.digital.hmpps.hmppsworkload.domain.Tier
-import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.entity.CommunityTierPoints
-import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.entity.CustodyTierPoints
-import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.entity.LicenseTierPoints
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.entity.WorkloadPointsEntity
 import java.math.BigDecimal
 import java.math.BigInteger
@@ -18,30 +12,6 @@ import java.time.ZonedDateTime
 
 class WorkloadCalculatorTests {
   private val workloadCalculator = WorkloadCalculator()
-
-  @Test
-  fun `must sum all cases depending on their tier, category and whether they are T2A or not`() {
-    val t2aWorkloadPoints = mockWorkloadPoints(isT2A = true)
-    val workloadPoints = mockWorkloadPoints(isT2A = false)
-    val numberOfT2aCases = 10
-    val numberOfCases = 5
-    val t2aCases = (1..numberOfT2aCases).map { Case(Tier.B2, CaseType.COMMUNITY, true, "CRNCOM$it") }
-    val cases = (1..numberOfCases).map { Case(Tier.C1, CaseType.CUSTODY, false, "CRNCUST$it") }
-    val result = workloadCalculator.getWorkloadPoints(
-      WorkloadPointsElements(
-        t2aCases + cases,
-        emptyList(),
-        emptyList(),
-        emptyList(),
-        emptyMap(),
-        t2aWorkloadPoints,
-        workloadPoints,
-      ),
-    )
-    val t2aExpectedWorkloadPoints = t2aWorkloadPoints.communityTierPoints.B2Points.multiply(numberOfT2aCases.toBigInteger())
-    val casesExpectedWorkloadPoints = workloadPoints.custodyTierPoints.C1Points.multiply(numberOfCases.toBigInteger())
-    Assertions.assertEquals(t2aExpectedWorkloadPoints.add(casesExpectedWorkloadPoints), result)
-  }
 
   @Test
   fun `must sum all court reports`() {
@@ -152,9 +122,6 @@ class WorkloadCalculatorTests {
   }
 
   private fun mockWorkloadPoints(
-    communityTierPoints: CommunityTierPoints = generateCommunityTierPoints(),
-    licenseTierPoints: LicenseTierPoints = generateLicenseTierPoints(),
-    custodyTierPoints: CustodyTierPoints = generateCustodyTierPoints(),
     standardCourtReportWeighting: BigInteger = BigInteger.ZERO,
     fastCourtReportWeighting: BigInteger = BigInteger.ZERO,
     isT2A: Boolean = false,
@@ -165,9 +132,6 @@ class WorkloadCalculatorTests {
   ): WorkloadPointsEntity {
     val workloadPoints = WorkloadPointsEntity(
       null,
-      communityTierPoints,
-      licenseTierPoints,
-      custodyTierPoints,
       ZonedDateTime.now(),
       ZonedDateTime.now(),
       isT2A,
@@ -186,8 +150,4 @@ class WorkloadCalculatorTests {
 
     return workloadPoints
   }
-
-  private fun generateCommunityTierPoints() = CommunityTierPoints(BigInteger.TEN, BigInteger.TEN, BigInteger.TEN, BigInteger.TEN, BigInteger.TEN, BigInteger.TEN, BigInteger.TEN, BigInteger.TEN, BigInteger.TEN, BigInteger.TEN, BigInteger.TEN, BigInteger.TEN, BigInteger.TEN, BigInteger.TEN, BigInteger.TEN, BigInteger.TEN, BigInteger.ONE, BigInteger.ONE, BigInteger.ONE, BigInteger.ONE, BigInteger.ONE, BigInteger.ONE, BigInteger.ONE, BigInteger.ONE, BigInteger.ONE, BigInteger.ONE, BigInteger.ONE, BigInteger.ONE, BigInteger.ONE, BigInteger.ONE, BigInteger.ONE, BigInteger.ONE)
-  private fun generateLicenseTierPoints() = LicenseTierPoints(BigInteger.ONE, BigInteger.ONE, BigInteger.ONE, BigInteger.ONE, BigInteger.ONE, BigInteger.ONE, BigInteger.ONE, BigInteger.ONE, BigInteger.ONE, BigInteger.ONE, BigInteger.ONE, BigInteger.ONE, BigInteger.ONE, BigInteger.ONE, BigInteger.ONE, BigInteger.ONE, BigInteger.ONE, BigInteger.ONE, BigInteger.ONE, BigInteger.ONE, BigInteger.ONE, BigInteger.ONE, BigInteger.ONE, BigInteger.ONE, BigInteger.ONE, BigInteger.ONE, BigInteger.ONE, BigInteger.ONE, BigInteger.ONE, BigInteger.ONE, BigInteger.ONE, BigInteger.ONE)
-  private fun generateCustodyTierPoints() = CustodyTierPoints(BigInteger.TWO, BigInteger.TWO, BigInteger.TWO, BigInteger.TWO, BigInteger.TWO, BigInteger.TWO, BigInteger.TWO, BigInteger.TWO, BigInteger.TWO, BigInteger.TWO, BigInteger.TWO, BigInteger.TWO, BigInteger.TWO, BigInteger.TWO, BigInteger.TWO, BigInteger.TWO, BigInteger.ONE, BigInteger.ONE, BigInteger.ONE, BigInteger.ONE, BigInteger.ONE, BigInteger.ONE, BigInteger.ONE, BigInteger.ONE, BigInteger.ONE, BigInteger.ONE, BigInteger.ONE, BigInteger.ONE, BigInteger.ONE, BigInteger.ONE, BigInteger.ONE, BigInteger.ONE)
 }
