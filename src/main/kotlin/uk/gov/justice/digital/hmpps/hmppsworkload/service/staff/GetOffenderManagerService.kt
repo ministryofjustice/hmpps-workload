@@ -12,7 +12,6 @@ import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.entity.CaseDetailsEntity
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.mapping.OverviewOffenderManager
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.CaseDetailsRepository
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.OffenderManagerRepository
-import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.PersonManagerRepository
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.WorkloadPointsRepository
 import uk.gov.justice.digital.hmpps.hmppsworkload.service.GetWeeklyHours
 import uk.gov.justice.digital.hmpps.hmppsworkload.service.calculateCapacity
@@ -23,7 +22,6 @@ import java.time.LocalDateTime
 @Service
 @Suppress("LongParameterList")
 class GetOffenderManagerService(
-  private val personManagerRepository: PersonManagerRepository,
   private val offenderManagerRepository: OffenderManagerRepository,
   private val getReductionService: GetReductionService,
   private val workloadPointsRepository: WorkloadPointsRepository,
@@ -80,10 +78,12 @@ class GetOffenderManagerService(
     it
   } ?: getDefaultOffenderManagerOverview(staffIdentifier.staffCode, grade)
 
-  suspend fun getCases(staffIdentifier: StaffIdentifier): OffenderManagerCases? = personManagerRepository.findByStaffCodeAndTeamCodeAndIsActiveIsTrue(staffIdentifier.staffCode, staffIdentifier.teamCode).let { cases ->
-    val crnDetails = getCrnToCaseDetails(cases.map { it.crn })
-    val staffActiveCases = workforceAllocationsToDeliusApiClient.staffActiveCases(staffIdentifier.staffCode, crnDetails.keys)
-    OffenderManagerCases.from(staffActiveCases, crnDetails)
+  suspend fun getCases(staffIdentifier: StaffIdentifier): OffenderManagerCases? = workforceAllocationsToDeliusApiClient.staffActiveCases(staffIdentifier.staffCode).let { staffActiveCases ->
+    return if (staffActiveCases.cases.isEmpty()) {
+      OffenderManagerCases.from(staffActiveCases)
+    } else {
+      OffenderManagerCases.from(staffActiveCases, getCrnToCaseDetails(staffActiveCases.cases.map { it.crn }))
+    }
   }
 
   private fun getCrnToCaseDetails(crns: List<String>): Map<String, CaseDetailsEntity> = if (crns.isEmpty()) emptyMap() else caseDetailsRepository.findAllById(crns).associateBy { it.crn }

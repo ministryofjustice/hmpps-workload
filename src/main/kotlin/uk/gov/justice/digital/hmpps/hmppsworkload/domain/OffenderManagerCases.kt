@@ -21,6 +21,7 @@ data class OffenderManagerCases @JsonCreator constructor(
 ) {
   companion object {
     fun from(staffActiveCases: StaffActiveCases, offenderDetails: Map<String, CaseDetailsEntity>): OffenderManagerCases = OffenderManagerCases(staffActiveCases.name, staffActiveCases.getGrade(), staffActiveCases.code, staffActiveCases.cases.map { OffenderManagerActiveCase.from(it, offenderDetails[it.crn]!!) }, staffActiveCases.email)
+    fun from(staffActiveCases: StaffActiveCases): OffenderManagerCases = OffenderManagerCases(staffActiveCases.name, staffActiveCases.getGrade(), staffActiveCases.code, emptyList(), staffActiveCases.email)
   }
 }
 
