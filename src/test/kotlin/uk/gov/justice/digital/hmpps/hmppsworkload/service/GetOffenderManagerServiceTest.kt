@@ -174,7 +174,7 @@ class GetOffenderManagerServiceTest {
 
     val now = LocalDate.now()
 
-    coEvery { workforceAllocationsToDeliusApiClient.staffActiveCases(staffIdentifier.staffCode, any()) } returns StaffActiveCases("002", name, OFFICER_GRADE, OFFICER_EMAIL, listOf(ActiveCase(crn, name, "CUSTODY", now)))
+    coEvery { workforceAllocationsToDeliusApiClient.staffActiveCases(staffIdentifier.staffCode) } returns StaffActiveCases("002", name, OFFICER_GRADE, OFFICER_EMAIL, listOf(ActiveCase(crn, name, "CUSTODY", now)))
 
     val caseDetailsEntity = CaseDetailsEntity(crn, Tier.A, false, CaseType.CUSTODY, "John", "Smith")
     coEvery { caseDetailsRepository.findAllById(listOf(crn)) } returns listOf(caseDetailsEntity)

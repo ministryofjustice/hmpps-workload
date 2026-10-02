@@ -80,10 +80,8 @@ class GetOffenderManagerService(
     it
   } ?: getDefaultOffenderManagerOverview(staffIdentifier.staffCode, grade)
 
-  suspend fun getCases(staffIdentifier: StaffIdentifier): OffenderManagerCases? = personManagerRepository.findByStaffCodeAndTeamCodeAndIsActiveIsTrue(staffIdentifier.staffCode, staffIdentifier.teamCode).let { cases ->
-    val crnDetails = getCrnToCaseDetails(cases.map { it.crn })
-    val staffActiveCases = workforceAllocationsToDeliusApiClient.staffActiveCases(staffIdentifier.staffCode, crnDetails.keys)
-    OffenderManagerCases.from(staffActiveCases, crnDetails)
+  suspend fun getCases(staffIdentifier: StaffIdentifier): OffenderManagerCases? = workforceAllocationsToDeliusApiClient.staffActiveCases(staffIdentifier.staffCode).let { staffActiveCases ->
+    return OffenderManagerCases.from(staffActiveCases, getCrnToCaseDetails(staffActiveCases.cases.map { it.crn }))
   }
 
   private fun getCrnToCaseDetails(crns: List<String>): Map<String, CaseDetailsEntity> = if (crns.isEmpty()) emptyMap() else caseDetailsRepository.findAllById(crns).associateBy { it.crn }

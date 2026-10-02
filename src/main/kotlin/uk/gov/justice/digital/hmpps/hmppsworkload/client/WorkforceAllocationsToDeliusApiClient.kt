@@ -243,7 +243,7 @@ class WorkforceAllocationsToDeliusApiClient(private val webClient: WebClient) {
     }
   }
 
-  suspend fun staffActiveCases(staffCode: String, crns: Collection<String>): StaffActiveCases {
+  suspend fun staffActiveCasesLegacy(staffCode: String, crns: Collection<String>): StaffActiveCases {
     val requestType = object : ParameterizedTypeReference<Collection<String>>() {}
     try {
       return withTimeout(TIMEOUT_VALUE) {
@@ -251,6 +251,24 @@ class WorkforceAllocationsToDeliusApiClient(private val webClient: WebClient) {
           .post()
           .uri("/staff/{staffCode}/active-cases", staffCode)
           .body(Mono.just(crns), requestType)
+          .retrieve()
+          .onStatus({ it.is5xxServerError }) { response ->
+            response.createException().flatMap { Mono.error(WorkloadFailedDependencyException(it.message!!)) }
+          }
+          .awaitBody()
+      }
+    } catch (e: TimeoutCancellationException) {
+      throw WorkloadWebClientTimeoutException(e.message!!)
+    }
+  }
+
+  suspend fun staffActiveCases(staffCode: String): StaffActiveCases {
+    val requestType = object : ParameterizedTypeReference<Collection<String>>() {}
+    try {
+      return withTimeout(TIMEOUT_VALUE) {
+        webClient
+          .get()
+          .uri("/staff/{staffCode}/active-cases", staffCode)
           .retrieve()
           .onStatus({ it.is5xxServerError }) { response ->
             response.createException().flatMap { Mono.error(WorkloadFailedDependencyException(it.message!!)) }

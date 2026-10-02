@@ -285,7 +285,7 @@ class WorkforceAllocationsToDeliusApiClientTest {
       .build()
 
     val result = WorkforceAllocationsToDeliusApiClient(webClient)
-      .staffActiveCases("SM00234", listOf("X999999"))
+      .staffActiveCases("SM00234")
 
     assertEquals("SM00234", result.code)
     assertEquals("Jones", result.name.surname)
