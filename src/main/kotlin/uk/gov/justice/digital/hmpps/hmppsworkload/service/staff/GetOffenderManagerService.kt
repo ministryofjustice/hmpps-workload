@@ -12,7 +12,6 @@ import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.entity.CaseDetailsEntity
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.mapping.OverviewOffenderManager
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.CaseDetailsRepository
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.OffenderManagerRepository
-import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.PersonManagerRepository
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.WorkloadPointsRepository
 import uk.gov.justice.digital.hmpps.hmppsworkload.service.GetWeeklyHours
 import uk.gov.justice.digital.hmpps.hmppsworkload.service.calculateCapacity
@@ -23,7 +22,6 @@ import java.time.LocalDateTime
 @Service
 @Suppress("LongParameterList")
 class GetOffenderManagerService(
-  private val personManagerRepository: PersonManagerRepository,
   private val offenderManagerRepository: OffenderManagerRepository,
   private val getReductionService: GetReductionService,
   private val workloadPointsRepository: WorkloadPointsRepository,
