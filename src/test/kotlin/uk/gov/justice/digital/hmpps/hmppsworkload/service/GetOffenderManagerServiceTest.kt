@@ -55,7 +55,6 @@ class GetOffenderManagerServiceTest {
   private val personManagerRepository = mockk<PersonManagerRepository>()
 
   private val offenderManagerService = GetOffenderManagerService(
-    personManagerRepository,
     offenderManagerRepository,
     getReductionService,
     workloadPointsRepository,
