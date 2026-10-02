@@ -81,7 +81,11 @@ class GetOffenderManagerService(
   } ?: getDefaultOffenderManagerOverview(staffIdentifier.staffCode, grade)
 
   suspend fun getCases(staffIdentifier: StaffIdentifier): OffenderManagerCases? = workforceAllocationsToDeliusApiClient.staffActiveCases(staffIdentifier.staffCode).let { staffActiveCases ->
-    return OffenderManagerCases.from(staffActiveCases, getCrnToCaseDetails(staffActiveCases.cases.map { it.crn }))
+    return if (staffActiveCases.cases.isEmpty()) {
+      OffenderManagerCases.from(staffActiveCases)
+    } else {
+      OffenderManagerCases.from(staffActiveCases, getCrnToCaseDetails(staffActiveCases.cases.map { it.crn }))
+    }
   }
 
   private fun getCrnToCaseDetails(crns: List<String>): Map<String, CaseDetailsEntity> = if (crns.isEmpty()) emptyMap() else caseDetailsRepository.findAllById(crns).associateBy { it.crn }
