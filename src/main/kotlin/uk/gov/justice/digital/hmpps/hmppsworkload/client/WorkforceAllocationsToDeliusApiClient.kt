@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.withTimeout
 import org.slf4j.LoggerFactory
-import org.springframework.core.ParameterizedTypeReference
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.web.reactive.function.client.ClientResponse
@@ -35,7 +34,7 @@ import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.entity.EventManagerEntity
 
 private const val TIMEOUT_VALUE = 3000L
 private const val DOWNSTREAM_500 = "Downstream 5xx:"
-private const val OFFICER_VIEW_TIMEOUT_VALUE = 15000L
+private const val EXTENDED_TIMEOUT_VALUE = 15000L
 
 @Suppress("SwallowedException", "TooManyFunctions", "LargeClass", "StringLiteralDuplication")
 class WorkforceAllocationsToDeliusApiClient(private val webClient: WebClient) {
@@ -155,7 +154,7 @@ class WorkforceAllocationsToDeliusApiClient(private val webClient: WebClient) {
 
   suspend fun getOfficerView(staffCode: String): OfficerView {
     try {
-      return withTimeout(OFFICER_VIEW_TIMEOUT_VALUE) {
+      return withTimeout(EXTENDED_TIMEOUT_VALUE) {
         webClient
           .get()
           .uri("/staff/{staffCode}/officer-view", staffCode)
@@ -172,7 +171,7 @@ class WorkforceAllocationsToDeliusApiClient(private val webClient: WebClient) {
 
   suspend fun getCrnDetails(crn: String): CrnDetails {
     try {
-      return withTimeout(OFFICER_VIEW_TIMEOUT_VALUE) {
+      return withTimeout(EXTENDED_TIMEOUT_VALUE) {
         webClient
           .get()
           .uri("/person/{crn}/reallocation-details", crn)
@@ -189,7 +188,7 @@ class WorkforceAllocationsToDeliusApiClient(private val webClient: WebClient) {
 
   suspend fun getAllocatedCaseView(crn: String): AllocatedCaseView {
     try {
-      return withTimeout(OFFICER_VIEW_TIMEOUT_VALUE) {
+      return withTimeout(EXTENDED_TIMEOUT_VALUE) {
         webClient
           .get()
           .uri("/reallocation/{crn}/case-view", crn)
@@ -244,9 +243,8 @@ class WorkforceAllocationsToDeliusApiClient(private val webClient: WebClient) {
   }
 
   suspend fun staffActiveCases(staffCode: String): StaffActiveCases {
-    val requestType = object : ParameterizedTypeReference<Collection<String>>() {}
     try {
-      return withTimeout(TIMEOUT_VALUE) {
+      return withTimeout(EXTENDED_TIMEOUT_VALUE) {
         webClient
           .get()
           .uri("/staff/{staffCode}/active-cases", staffCode)
