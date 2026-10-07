@@ -187,4 +187,29 @@ class GetOffenderManagerServiceTest {
     assertEquals(cases?.grade, "SPO")
     assertEquals(cases?.activeCases, listOf(OffenderManagerActiveCase(crn, Tier.A.toString(), false, name, "CUSTODY", now)))
   }
+
+  @Test
+  fun `gets cases correctly when delius returns extra cases`() = runBlocking {
+    val crn1 = "1234"
+    val crn2 = "2345"
+    val name = Name("Jim", "A", "Bond")
+
+    val staffIdentifier = StaffIdentifier(STAFF_CODE, STAFF_TEAM_CODE)
+
+    val now = LocalDate.now()
+
+    coEvery { workforceAllocationsToDeliusApiClient.staffActiveCases(staffIdentifier.staffCode) } returns StaffActiveCases("002", name, OFFICER_GRADE, OFFICER_EMAIL, listOf(ActiveCase(crn1, name, "CUSTODY", now), ActiveCase(crn2, name, "CUSTODY", now)))
+
+    val caseDetailsEntity = CaseDetailsEntity(crn1, Tier.A, false, CaseType.CUSTODY, "John", "Smith")
+    coEvery { caseDetailsRepository.findAllById(listOf(crn1, crn2)) } returns listOf(caseDetailsEntity)
+
+    val personManagerEntity = PersonManagerEntity(crn = crn1, teamCode = STAFF_TEAM_CODE, staffCode = STAFF_CODE, createdBy = "USER.NAME", isActive = true, allocationReason = AllocationReason.INITIAL_ALLOCATION)
+    coEvery { personManagerRepository.findByStaffCodeAndTeamCodeAndIsActiveIsTrue(STAFF_CODE, STAFF_TEAM_CODE) } returns listOf(personManagerEntity)
+
+    val cases = offenderManagerService.getCases(staffIdentifier)
+    assertEquals(cases?.name, name)
+    assertEquals(cases?.code, "002")
+    assertEquals(cases?.grade, "SPO")
+    assertEquals(cases?.activeCases, listOf(OffenderManagerActiveCase(crn1, Tier.A.toString(), false, name, "CUSTODY", now)))
+  }
 }
