@@ -20,7 +20,16 @@ data class OffenderManagerCases @JsonCreator constructor(
   val email: String?,
 ) {
   companion object {
-    fun from(staffActiveCases: StaffActiveCases, offenderDetails: Map<String, CaseDetailsEntity>): OffenderManagerCases = OffenderManagerCases(staffActiveCases.name, staffActiveCases.getGrade(), staffActiveCases.code, staffActiveCases.cases.map { OffenderManagerActiveCase.from(it, offenderDetails[it.crn]!!) }, staffActiveCases.email)
+    fun from(staffActiveCases: StaffActiveCases, offenderDetails: Map<String, CaseDetailsEntity>): OffenderManagerCases {
+      val matchedActiveCases = staffActiveCases.cases.mapNotNull { case ->
+        offenderDetails[case.crn]?.let {
+          OffenderManagerActiveCase.from(case, it)
+        }
+      }
+
+      return OffenderManagerCases(staffActiveCases.name, staffActiveCases.getGrade(), staffActiveCases.code, matchedActiveCases, staffActiveCases.email)
+    }
+
     fun from(staffActiveCases: StaffActiveCases): OffenderManagerCases = OffenderManagerCases(staffActiveCases.name, staffActiveCases.getGrade(), staffActiveCases.code, emptyList(), staffActiveCases.email)
   }
 }
