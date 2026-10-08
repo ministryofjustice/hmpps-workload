@@ -15,5 +15,6 @@ data class ActiveCase(
   val crn: String,
   val name: Name,
   val type: String,
+  val tier: String,
   val initialAllocationDate: LocalDate?,
 )

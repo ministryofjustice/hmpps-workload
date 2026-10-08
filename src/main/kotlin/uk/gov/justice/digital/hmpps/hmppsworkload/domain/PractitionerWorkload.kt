@@ -76,7 +76,7 @@ data class PractitionerWithRawWorkloadPoints(
       practitionerStats.custodyReleasesInNext7Days,
       practitionerStats.paroleReportsInNext28Days,
       practitionerStats.hdcrotlReportsInNext14Days + practitionerStats.partBReportsInNext14Days + practitionerStats.partCReportsInNext14Days,
-      practitionerStats.tierCaseTotals,
+      getTierCaseTotals(practitionerCases.activeCases),
     )
   }
 }
@@ -120,16 +120,21 @@ data class Practitioner constructor(
       practitionerStats.custodyReleasesInNext7Days,
       practitionerStats.paroleReportsInNext28Days,
       practitionerStats.hdcrotlReportsInNext14Days + practitionerStats.partBReportsInNext14Days + practitionerStats.partCReportsInNext14Days,
-      practitionerStats.tierCaseTotals,
+      getTierCaseTotals(practitionerCases.activeCases),
     )
   }
 }
 
-private fun getActiveCases(communityCases: Int, licenseCases: Int, custodyCases: Int, contactSuspendedCases: Int): Int {
-  val activeCases = communityCases + licenseCases + custodyCases - contactSuspendedCases
-  return if (activeCases < 0) {
-    0
-  } else {
-    activeCases
-  }
+private fun getTierCaseTotals(activeCases: List<OffenderManagerActiveCase>): TierCaseTotals {
+  return TierCaseTotals(
+    activeCases.filter { it.tier == "A" }.size.toBigDecimal(),
+    activeCases.filter { it.tier == "B" }.size.toBigDecimal(),
+    activeCases.filter { it.tier == "C" }.size.toBigDecimal(),
+    activeCases.filter { it.tier == "D" }.size.toBigDecimal(),
+    activeCases.filter { it.tier == "E" }.size.toBigDecimal(),
+    activeCases.filter { it.tier == "F" }.size.toBigDecimal(),
+    activeCases.filter { it.tier == "G" }.size.toBigDecimal(),
+    activeCases.filter { it.tier == "MISSING" }.size.toBigDecimal(),
+    activeCases.filter { it.tier == "NOTSUPERVISED" }.size.toBigDecimal(),
+  )
 }
