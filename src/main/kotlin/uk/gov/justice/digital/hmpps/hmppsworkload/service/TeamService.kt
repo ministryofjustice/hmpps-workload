@@ -56,27 +56,30 @@ class TeamService(
       val reportPractitionerData = reportDataService.getPractitionerData(teamNames.values.toList())
       val teamTierTotals = caseTotalsService.getTeamPractitionerTotalsByTier(teamCodes)
 
-      val enrichedTeams = choosePractitionerResponse.teams.mapValues { team ->
-        val filteredStaff = team.value
+      val filteredStaff = choosePractitionerResponse.teams.mapValues { team ->
+        team.value.filter { grades == null || grades.contains(it.getGrade()) }
+      }
+
+      val teamCases = getTeamPractitionerCases(filteredStaff)
+
+      val enrichedTeams = filteredStaff.mapValues { team ->
+        team.value
           .filter { grades == null || grades.contains(it.getGrade()) }
+          .map {
+            val teamStaffId = teamStaffId(team.key, it.code)
+            val practitionerCases = teamCases[StaffIdentifier(it.code, team.key)]!!
+            val reportPractitionerId = getReportPractitionerId(teamNames, team.key, it)
+            val practitionerStats = getPractitionerStats(
+              practitionerAllocationCaseCounts,
+              practitionerReallocationCaseCounts,
+              reportPractitionerData,
+              teamStaffId,
+              reportPractitionerId,
+              teamTierTotals[teamStaffId],
+            )
 
-        val teamCases = getTeamPractitionerCases(team.key, filteredStaff)
-
-        filteredStaff.map {
-          val teamStaffId = teamStaffId(team.key, it.code)
-          val practitionerCases = teamCases[StaffIdentifier(it.code, team.key)]!!
-          val reportPractitionerId = getReportPractitionerId(teamNames, team.key, it)
-          val practitionerStats = getPractitionerStats(
-            practitionerAllocationCaseCounts,
-            practitionerReallocationCaseCounts,
-            reportPractitionerData,
-            teamStaffId,
-            reportPractitionerId,
-            teamTierTotals[teamStaffId],
-          )
-
-          Practitioner.from(it, practitionerCases, practitionerStats)
-        }
+            Practitioner.from(it, practitionerCases, practitionerStats)
+          }
       }
 
       return caseDetailsRepository.findByIdOrNull(crn)?.let {
@@ -121,13 +124,12 @@ class TeamService(
       val teamNames = hmppsProbationEstateApiClient.getTeams(teamCodes).associate { it.code to it.name }
       val reportPractitionerData = reportDataService.getPractitionerData(teamNames.values.toList())
       val teamTierTotals = caseTotalsService.getTeamPractitionerTotalsByTier(teamCodes)
+      val teamCases = getTeamPractitionerCases(choosePractitionerResponse.teams)
 
       log.info("Practitioner Allocation Case Counts: $practitionerAllocationCaseCounts")
       log.info("Practitioner Reallocation Case Counts: $practitionerReallocationCaseCounts")
 
       return choosePractitionerResponse.teams.mapValues { team ->
-        val teamCases = getTeamPractitionerCases(team.key, team.value)
-
         team.value.map {
           val teamStaffId = it.code
           log.info("StaffId to get workload: $teamStaffId")
@@ -172,12 +174,12 @@ class TeamService(
     tierCaseTotals ?: TierCaseTotals(),
   )
 
-  private suspend fun getTeamPractitionerCases(teamCode: String, staffMembers: List<StaffMember>): Map<StaffIdentifier, OffenderManagerCases> {
+  private suspend fun getTeamPractitionerCases(teams: Map<String, List<StaffMember>>): Map<StaffIdentifier, OffenderManagerCases> {
     val concurrencyLimit = Semaphore(5)
 
     return coroutineScope {
-      staffMembers
-        .map { StaffIdentifier(it.code, teamCode) }
+      teams
+        .flatMap { team -> team.value.map { StaffIdentifier(it.code, team.key) } }
         .map {
           async {
             concurrencyLimit.withPermit { Pair(it, offenderManagerService.getCases(it)!!) }
