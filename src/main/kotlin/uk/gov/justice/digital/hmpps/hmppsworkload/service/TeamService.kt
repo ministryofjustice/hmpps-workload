@@ -1,13 +1,19 @@
 package uk.gov.justice.digital.hmpps.hmppsworkload.service
 
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.asFlow
+import kotlinx.coroutines.sync.Semaphore
+import kotlinx.coroutines.sync.withPermit
 import org.slf4j.LoggerFactory
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.HmppsProbationEstateApiClient
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.WorkforceAllocationsToDeliusApiClient
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.StaffMember
+import uk.gov.justice.digital.hmpps.hmppsworkload.domain.OffenderManagerCases
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.Practitioner
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.PractitionerStats
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.PractitionerWithRawWorkloadPoints
@@ -51,24 +57,26 @@ class TeamService(
       val teamTierTotals = caseTotalsService.getTeamPractitionerTotalsByTier(teamCodes)
 
       val enrichedTeams = choosePractitionerResponse.teams.mapValues { team ->
-        team.value
+        val filteredStaff = team.value
           .filter { grades == null || grades.contains(it.getGrade()) }
-          .map {
-            val teamStaffId = teamStaffId(team.key, it.code)
-            val practitionerCases = offenderManagerService.getCases(StaffIdentifier(it.code, team.key))!!
 
-            val reportPractitionerId = getReportPractitionerId(teamNames, team.key, it)
-            val practitionerStats = getPractitionerStats(
-              practitionerAllocationCaseCounts,
-              practitionerReallocationCaseCounts,
-              reportPractitionerData,
-              teamStaffId,
-              reportPractitionerId,
-              teamTierTotals[teamStaffId],
-            )
+        val teamCases = getTeamPractitionerCases(team.key, filteredStaff)
 
-            Practitioner.from(it, practitionerCases, practitionerStats)
-          }
+        filteredStaff.map {
+          val teamStaffId = teamStaffId(team.key, it.code)
+          val practitionerCases = teamCases[StaffIdentifier(it.code, team.key)]!!
+          val reportPractitionerId = getReportPractitionerId(teamNames, team.key, it)
+          val practitionerStats = getPractitionerStats(
+            practitionerAllocationCaseCounts,
+            practitionerReallocationCaseCounts,
+            reportPractitionerData,
+            teamStaffId,
+            reportPractitionerId,
+            teamTierTotals[teamStaffId],
+          )
+
+          Practitioner.from(it, practitionerCases, practitionerStats)
+        }
       }
 
       return caseDetailsRepository.findByIdOrNull(crn)?.let {
@@ -118,11 +126,12 @@ class TeamService(
       log.info("Practitioner Reallocation Case Counts: $practitionerReallocationCaseCounts")
 
       return choosePractitionerResponse.teams.mapValues { team ->
+        val teamCases = getTeamPractitionerCases(team.key, team.value)
+
         team.value.map {
           val teamStaffId = it.code
           log.info("StaffId to get workload: $teamStaffId")
-          val practitionerCases = offenderManagerService.getCases(StaffIdentifier(it.code, team.key))!!
-
+          val practitionerCases = teamCases[StaffIdentifier(it.code, team.key)]!!
           val reportPractitionerId = getReportPractitionerId(teamNames, team.key, it)
           val practitionerStats = getPractitionerStats(practitionerAllocationCaseCounts, practitionerReallocationCaseCounts, reportPractitionerData, teamStaffId, reportPractitionerId, teamTierTotals[teamStaffId(team.key, it.code)])
 
@@ -162,4 +171,20 @@ class TeamService(
     reportPractitionerData.partCReportsInNext14Days.getOrDefault(reportPractitionerId, 0),
     tierCaseTotals ?: TierCaseTotals(),
   )
+
+  private suspend fun getTeamPractitionerCases(teamCode: String, staffMembers: List<StaffMember>): Map<StaffIdentifier, OffenderManagerCases> {
+    val concurrencyLimit = Semaphore(5)
+
+    return coroutineScope {
+      staffMembers
+        .map { StaffIdentifier(it.code, teamCode) }
+        .map {
+          async {
+            concurrencyLimit.withPermit { Pair(it, offenderManagerService.getCases(it)!!) }
+          }
+        }
+        .awaitAll()
+        .toMap()
+    }
+  }
 }
