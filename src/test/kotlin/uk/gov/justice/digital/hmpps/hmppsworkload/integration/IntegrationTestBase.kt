@@ -30,6 +30,7 @@ import uk.gov.justice.digital.hmpps.hmppsworkload.domain.powerbi.PartCReportEnti
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.powerbi.ResetReportEntity
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.powerbi.UpcomingReleasesReportEntity
 import uk.gov.justice.digital.hmpps.hmppsworkload.integration.domain.ActiveCasesIntegration
+import uk.gov.justice.digital.hmpps.hmppsworkload.integration.domain.StaffActiveCasesIntegration
 import uk.gov.justice.digital.hmpps.hmppsworkload.integration.domain.WMTPointsWeightings
 import uk.gov.justice.digital.hmpps.hmppsworkload.integration.domain.WMTStaff
 import uk.gov.justice.digital.hmpps.hmppsworkload.integration.jpa.entity.CaseCategoryEntity
@@ -497,11 +498,77 @@ abstract class IntegrationTestBase {
     partCReportRepository.saveAll(listOf(partCReportAtThreshold, partCReportAfterThreshold))
   }
 
+  protected fun setupCasesForTeams() {
+    workforceAllocationsToDelius.teamActiveCasesResponse(
+      "T1",
+      listOf(
+        StaffActiveCasesIntegration(
+          "OM1",
+          activeCases = listOf(
+            ActiveCasesIntegration("CRN1", "Sally", "Smith", "CUSTODY"),
+            ActiveCasesIntegration("CRN2", "John", "Williams", "COMMUNITY"),
+            ActiveCasesIntegration("CRN3", "John", "Doe", "LICENSE"),
+          ),
+        ),
+        StaffActiveCasesIntegration("NOWORKLOAD1"),
+      ),
+    )
+
+    workforceAllocationsToDelius.teamActiveCasesResponse(
+      "T2",
+      listOf(
+        StaffActiveCasesIntegration(
+          "OM1",
+          activeCases = listOf(
+            ActiveCasesIntegration("CRN1", "Sally", "Smith", "CUSTODY"),
+            ActiveCasesIntegration("CRN2", "John", "Williams", "COMMUNITY"),
+            ActiveCasesIntegration("CRN3", "John", "Doe", "LICENSE"),
+          ),
+        ),
+        StaffActiveCasesIntegration("OM2"),
+        StaffActiveCasesIntegration("OM3"),
+      ),
+    )
+
+    caseDetailsRepository.saveAll(
+      listOf(
+        CaseDetailsEntity("CRN1", Tier.B, false, CaseType.CUSTODY, "Sally", "Smith"),
+        CaseDetailsEntity("CRN2", Tier.C, false, CaseType.COMMUNITY, "John", "Williams"),
+        CaseDetailsEntity("CRN3", Tier.C, false, CaseType.LICENSE, "John", "Doe"),
+        CaseDetailsEntity("CRN4", Tier.B, false, CaseType.CUSTODY, "Jane", "Doe"),
+        CaseDetailsEntity("CRN5", Tier.C, false, CaseType.COMMUNITY, "Joe", "Bloggs"),
+        CaseDetailsEntity("CRN6", Tier.C, false, CaseType.LICENSE, "Alan", "Smithee"),
+      ),
+    )
+
+    personManagerRepository.saveAll(
+      listOf(
+        PersonManagerEntity(crn = "CRN1", teamCode = "T1", staffCode = "OM1", createdBy = "USER.NAME", isActive = true, allocationReason = AllocationReason.INITIAL_ALLOCATION),
+        PersonManagerEntity(crn = "CRN2", teamCode = "T1", staffCode = "OM1", createdBy = "USER.NAME", isActive = true, allocationReason = AllocationReason.INITIAL_ALLOCATION),
+        PersonManagerEntity(crn = "CRN3", teamCode = "T1", staffCode = "OM1", createdBy = "USER.NAME", isActive = true, allocationReason = AllocationReason.INITIAL_ALLOCATION),
+        PersonManagerEntity(crn = "CRN4", teamCode = "T2", staffCode = "OM1", createdBy = "USER.NAME", isActive = true, allocationReason = AllocationReason.INITIAL_ALLOCATION),
+        PersonManagerEntity(crn = "CRN5", teamCode = "T2", staffCode = "OM1", createdBy = "USER.NAME", isActive = true, allocationReason = AllocationReason.INITIAL_ALLOCATION),
+        PersonManagerEntity(crn = "CRN6", teamCode = "T2", staffCode = "OM1", createdBy = "USER.NAME", isActive = true, allocationReason = AllocationReason.INITIAL_ALLOCATION),
+      ),
+    )
+  }
+
   protected fun setupTeamWithNoWorkCases() {
-    workforceAllocationsToDelius.staffActiveCasesResponse("OM1")
-    workforceAllocationsToDelius.staffActiveCasesResponse("OM2")
-    workforceAllocationsToDelius.staffActiveCasesResponse("OM3")
-    workforceAllocationsToDelius.staffActiveCasesResponse("NOWORKLOAD1")
+    workforceAllocationsToDelius.teamActiveCasesResponse(
+      "T1",
+      listOf(
+        StaffActiveCasesIntegration("OM1"),
+        StaffActiveCasesIntegration("NOWORKLOAD1"),
+      ),
+    )
+
+    workforceAllocationsToDelius.teamActiveCasesResponse(
+      "T2",
+      listOf(
+        StaffActiveCasesIntegration("OM2"),
+        StaffActiveCasesIntegration("OM3"),
+      ),
+    )
   }
 
   protected fun setupCasesForTeamMember(staffCode: String, teamCode: String) {
