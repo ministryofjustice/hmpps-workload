@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.hmppsworkload.service.staff
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.WorkforceAllocationsToDeliusApiClient
+import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.StaffActiveCases
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.Case
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.OffenderManagerCases
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.OffenderManagerOverview
@@ -78,12 +79,20 @@ class GetOffenderManagerService(
     it
   } ?: getDefaultOffenderManagerOverview(staffIdentifier.staffCode, grade)
 
-  suspend fun getCases(staffIdentifier: StaffIdentifier): OffenderManagerCases? = workforceAllocationsToDeliusApiClient.staffActiveCases(staffIdentifier.staffCode).let { staffActiveCases ->
-    return if (staffActiveCases.cases.isEmpty()) {
-      OffenderManagerCases.from(staffActiveCases)
-    } else {
-      OffenderManagerCases.from(staffActiveCases, getCrnToCaseDetails(staffActiveCases.cases.map { it.crn }))
-    }
+  suspend fun getCases(staffIdentifier: StaffIdentifier): OffenderManagerCases? = mapDeliusCasesToCaseDetails(
+    workforceAllocationsToDeliusApiClient.staffActiveCases(staffIdentifier.staffCode),
+  )
+
+  suspend fun getTeamCases(teamCode: String): Map<StaffIdentifier, OffenderManagerCases?> = workforceAllocationsToDeliusApiClient.teamActiveCases(teamCode).let { teamActiveCases ->
+    teamActiveCases.staff
+      .map { mapDeliusCasesToCaseDetails(it) }
+      .associateBy { StaffIdentifier(it.code, teamCode) }
+  }
+
+  private fun mapDeliusCasesToCaseDetails(staffActiveCases: StaffActiveCases): OffenderManagerCases = if (staffActiveCases.cases.isEmpty()) {
+    OffenderManagerCases.from(staffActiveCases)
+  } else {
+    OffenderManagerCases.from(staffActiveCases, getCrnToCaseDetails(staffActiveCases.cases.map { it.crn }))
   }
 
   private fun getCrnToCaseDetails(crns: List<String>): Map<String, CaseDetailsEntity> = if (crns.isEmpty()) emptyMap() else caseDetailsRepository.findAllById(crns).associateBy { it.crn }

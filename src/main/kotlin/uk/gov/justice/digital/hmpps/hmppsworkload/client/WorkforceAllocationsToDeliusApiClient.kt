@@ -28,6 +28,7 @@ import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.PersonSummary
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.ProbationStatus
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.StaffActiveCases
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.StaffMember
+import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.TeamActiveCases
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.TeamsResponse
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.CaseType
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.entity.EventManagerEntity
@@ -248,6 +249,23 @@ class WorkforceAllocationsToDeliusApiClient(private val webClient: WebClient) {
         webClient
           .get()
           .uri("/staff/{staffCode}/active-cases", staffCode)
+          .retrieve()
+          .onStatus({ it.is5xxServerError }) { response ->
+            response.createException().flatMap { Mono.error(WorkloadFailedDependencyException(it.message!!)) }
+          }
+          .awaitBody()
+      }
+    } catch (e: TimeoutCancellationException) {
+      throw WorkloadWebClientTimeoutException(e.message!!)
+    }
+  }
+
+  suspend fun teamActiveCases(teamCode: String): TeamActiveCases {
+    try {
+      return withTimeout(EXTENDED_TIMEOUT_VALUE) {
+        webClient
+          .get()
+          .uri("/team/{teamCode}/active-cases", teamCode)
           .retrieve()
           .onStatus({ it.is5xxServerError }) { response ->
             response.createException().flatMap { Mono.error(WorkloadFailedDependencyException(it.message!!)) }

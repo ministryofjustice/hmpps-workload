@@ -13,6 +13,7 @@ import org.springframework.http.HttpMethod
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.CaseType
 import uk.gov.justice.digital.hmpps.hmppsworkload.integration.domain.ActiveCasesIntegration
 import uk.gov.justice.digital.hmpps.hmppsworkload.integration.domain.AllocationDetailIntegration
+import uk.gov.justice.digital.hmpps.hmppsworkload.integration.domain.StaffActiveCasesIntegration
 import uk.gov.justice.digital.hmpps.hmppsworkload.integration.mockserver.WorkforceAllocationsToDeliusExtension.Companion.workforceAllocationsToDelius
 import uk.gov.justice.digital.hmpps.hmppsworkload.integration.responses.workforceAllocationsToDelius.allocationCompleteResponse
 import uk.gov.justice.digital.hmpps.hmppsworkload.integration.responses.workforceAllocationsToDelius.choosePractitionerByTeamCodeResponseNoPoP
@@ -23,6 +24,7 @@ import uk.gov.justice.digital.hmpps.hmppsworkload.integration.responses.workforc
 import uk.gov.justice.digital.hmpps.hmppsworkload.integration.responses.workforceAllocationsToDelius.deliusAllocationRequirementsResponse
 import uk.gov.justice.digital.hmpps.hmppsworkload.integration.responses.workforceAllocationsToDelius.deliusAllocationResponse
 import uk.gov.justice.digital.hmpps.hmppsworkload.integration.responses.workforceAllocationsToDelius.deliusStaffActiveCasesResponse
+import uk.gov.justice.digital.hmpps.hmppsworkload.integration.responses.workforceAllocationsToDelius.deliusTeamActiveCasesResponse
 import uk.gov.justice.digital.hmpps.hmppsworkload.integration.responses.workforceAllocationsToDelius.getTeamCodesResponse
 import uk.gov.justice.digital.hmpps.hmppsworkload.integration.responses.workforceAllocationsToDelius.impactResponse
 import uk.gov.justice.digital.hmpps.hmppsworkload.integration.responses.workforceAllocationsToDelius.officerOverviewResponse
@@ -161,6 +163,16 @@ class WorkforceAllocationsToDeliusMockServer : ClientAndServer(MOCKSERVER_PORT) 
     workforceAllocationsToDelius.`when`(request, Times.exactly(1)).respond(
       HttpResponse.response()
         .withContentType(MediaType.APPLICATION_JSON).withBody(deliusStaffActiveCasesResponse(staffCode, staffGrade, email, activeCases)),
+    )
+  }
+
+  fun teamActiveCasesResponse(teamCode: String, staff: List<StaffActiveCasesIntegration>) {
+    val request =
+      HttpRequest.request()
+        .withPath("/team/$teamCode/active-cases")
+    workforceAllocationsToDelius.`when`(request, Times.exactly(1)).respond(
+      HttpResponse.response()
+        .withContentType(MediaType.APPLICATION_JSON).withBody(deliusTeamActiveCasesResponse(teamCode, staff)),
     )
   }
 
