@@ -40,8 +40,7 @@ class ChoosePractitionersByTeamCodes : IntegrationTestBase() {
     val personManagerWithNoWorkload = PersonManagerEntity(crn = "CRN4", staffCode = noWorkloadStaffCode, teamCode = "T1", createdBy = "USER2", createdDate = ZonedDateTime.now().minusDays(2L), isActive = true, allocationReason = AllocationReason.INITIAL_ALLOCATION)
     personManagerRepository.save(personManagerWithNoWorkload)
 
-    setupCasesForTeamMember(firstOm, teamCode)
-    setupTeamWithNoWorkCases()
+    setupCasesForTeams()
 
     hmppsProbationEstate.getTeamsResponse(listOf(TeamOverview(teamCode, "Team 1"), TeamOverview(teamCode2, "Team 2")))
     hmppsTier.bulkTierCalculationResponse(mapOf("CRN5" to "A"))
@@ -182,8 +181,7 @@ class ChoosePractitionersByTeamCodes : IntegrationTestBase() {
     val personManagerWithNoWorkload = PersonManagerEntity(crn = "CRN4", staffCode = noWorkloadStaffCode, teamCode = "T1", createdBy = "USER2", createdDate = ZonedDateTime.now().minusDays(2L), isActive = true, allocationReason = AllocationReason.INITIAL_ALLOCATION)
     personManagerRepository.save(personManagerWithNoWorkload)
 
-    setupCasesForTeamMember(firstOm, teamCode)
-    setupTeamWithNoWorkCases()
+    setupCasesForTeams()
 
     hmppsProbationEstate.getTeamsResponse(listOf(TeamOverview(teamCode, "Team 1"), TeamOverview(teamCode2, "Team 2")))
     hmppsTier.bulkTierCalculationResponse(mapOf("CRN5" to "A"))
@@ -313,9 +311,7 @@ class ChoosePractitionersByTeamCodes : IntegrationTestBase() {
     val movedPersonManager = PersonManagerEntity(crn = "CRN3", staffCode = firstOm, teamCode = teamCode, createdBy = "USER1", createdDate = ZonedDateTime.now().minusDays(5L), isActive = false, allocationReason = AllocationReason.INITIAL_ALLOCATION)
     personManagerRepository.save(movedPersonManager)
 
-    setupCasesForTeamMember(firstOm, teamCode)
-
-    setupTeamWithNoWorkCases()
+    setupCasesForTeams()
 
     hmppsProbationEstate.getTeamsResponse(listOf(TeamOverview(teamCode, "Team 1")))
     hmppsTier.bulkTierCalculationResponse(mapOf("CRN5" to "A"))
@@ -500,8 +496,7 @@ class ChoosePractitionersByTeamCodes : IntegrationTestBase() {
 
     workforceAllocationsToDelius.choosePractitionerStaffInMultipleTeamsResponse(listOf(teamCode, teamCode2), crn)
 
-    setupCasesForTeamMember(staffCode, teamCode)
-    setupCasesForTeamMember(staffCode, teamCode2)
+    setupCasesForTeams()
 
     hmppsProbationEstate.getTeamsResponse(listOf(TeamOverview(teamCode, "Team 1"), TeamOverview(teamCode2, "Team 2")))
     hmppsTier.bulkTierCalculationResponse(mapOf("CRN5" to "A"))

@@ -55,14 +55,9 @@ class TeamService(
       val teamNames = hmppsProbationEstateApiClient.getTeams(teamCodes).associate { it.code to it.name }
       val reportPractitionerData = reportDataService.getPractitionerData(teamNames.values.toList())
       val teamTierTotals = caseTotalsService.getTeamPractitionerTotalsByTier(teamCodes)
+      val teamCases = getTeamPractitionerCases(choosePractitionerResponse.teams.keys)
 
-      val filteredStaff = choosePractitionerResponse.teams.mapValues { team ->
-        team.value.filter { grades == null || grades.contains(it.getGrade()) }
-      }
-
-      val teamCases = getTeamPractitionerCases(filteredStaff)
-
-      val enrichedTeams = filteredStaff.mapValues { team ->
+      val enrichedTeams = choosePractitionerResponse.teams.mapValues { team ->
         team.value
           .filter { grades == null || grades.contains(it.getGrade()) }
           .map {
@@ -124,7 +119,7 @@ class TeamService(
       val teamNames = hmppsProbationEstateApiClient.getTeams(teamCodes).associate { it.code to it.name }
       val reportPractitionerData = reportDataService.getPractitionerData(teamNames.values.toList())
       val teamTierTotals = caseTotalsService.getTeamPractitionerTotalsByTier(teamCodes)
-      val teamCases = getTeamPractitionerCases(choosePractitionerResponse.teams)
+      val teamCases = getTeamPractitionerCases(choosePractitionerResponse.teams.keys)
 
       log.info("Practitioner Allocation Case Counts: $practitionerAllocationCaseCounts")
       log.info("Practitioner Reallocation Case Counts: $practitionerReallocationCaseCounts")
@@ -174,19 +169,19 @@ class TeamService(
     tierCaseTotals ?: TierCaseTotals(),
   )
 
-  private suspend fun getTeamPractitionerCases(teams: Map<String, List<StaffMember>>): Map<StaffIdentifier, OffenderManagerCases> {
-    val concurrencyLimit = Semaphore(5)
+  private suspend fun getTeamPractitionerCases(teams: Set<String>): Map<StaffIdentifier, OffenderManagerCases?> {
+    val concurrencyLimit = Semaphore(3)
 
     return coroutineScope {
       teams
-        .flatMap { team -> team.value.map { StaffIdentifier(it.code, team.key) } }
         .map {
           async {
-            concurrencyLimit.withPermit { Pair(it, offenderManagerService.getCases(it)!!) }
+            concurrencyLimit.withPermit { offenderManagerService.getTeamCases(it) }
           }
         }
         .awaitAll()
-        .toMap()
+        .flatMap { it.entries }
+        .associate { it.key to it.value }
     }
   }
 }
