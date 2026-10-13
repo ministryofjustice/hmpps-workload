@@ -5,7 +5,7 @@ plugins {
   kotlin("plugin.jpa") version "2.2.21"
   kotlin("jvm") version "2.2.21"
   id("io.gitlab.arturbosch.detekt").version("1.23.8")
-  id("org.owasp.dependencycheck") version "12.1.9"
+  id("org.owasp.dependencycheck") version "13.0.0"
   kotlin("plugin.allopen").version("2.2.21")
 }
 
