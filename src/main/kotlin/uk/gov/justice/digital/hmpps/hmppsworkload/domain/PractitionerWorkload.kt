@@ -124,12 +124,3 @@ data class Practitioner constructor(
     )
   }
 }
-
-private fun getActiveCases(communityCases: Int, licenseCases: Int, custodyCases: Int, contactSuspendedCases: Int): Int {
-  val activeCases = communityCases + licenseCases + custodyCases - contactSuspendedCases
-  return if (activeCases < 0) {
-    0
-  } else {
-    activeCases
-  }
-}

@@ -68,7 +68,8 @@ class GetOffenderManagerService(
       overview.nextReductionChange = getReductionService.findNextReductionChange(staffIdentifier)
       overview.reductionHours = getReductionService.findReductionHours(staffIdentifier)
       overview.contractedHours = getWeeklyHours.findWeeklyHours(staffIdentifier, officerView.getGrade())
-      overview.tierCaseTotals = caseTotalsService.getPractitionerTotalsByTier(staffIdentifier.staffCode, staffIdentifier.teamCode)
+      val practitionerCases = workforceAllocationsToDeliusApiClient.staffActiveCases(staffIdentifier.staffCode)
+      overview.tierCaseTotals = caseTotalsService.getPractitionerTotalsByTier(practitionerCases.cases)
     }
     return OffenderManagerOverview.from(overview, officerView)
   }

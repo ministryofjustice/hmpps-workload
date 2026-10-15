@@ -54,8 +54,8 @@ class TeamService(
 
       val teamNames = hmppsProbationEstateApiClient.getTeams(teamCodes).associate { it.code to it.name }
       val reportPractitionerData = reportDataService.getPractitionerData(teamNames.values.toList())
-      val teamTierTotals = caseTotalsService.getTeamPractitionerTotalsByTier(teamCodes)
       val teamCases = getTeamPractitionerCases(choosePractitionerResponse.teams.keys)
+      val teamTierCaseTotals = caseTotalsService.getTeamPractitionerTotalsByTier(teamCases)
 
       val enrichedTeams = choosePractitionerResponse.teams.mapValues { team ->
         team.value
@@ -70,7 +70,7 @@ class TeamService(
               reportPractitionerData,
               teamStaffId,
               reportPractitionerId,
-              teamTierTotals[teamStaffId],
+              teamTierCaseTotals[it.code],
             )
 
             Practitioner.from(it, practitionerCases, practitionerStats)
@@ -118,8 +118,8 @@ class TeamService(
 
       val teamNames = hmppsProbationEstateApiClient.getTeams(teamCodes).associate { it.code to it.name }
       val reportPractitionerData = reportDataService.getPractitionerData(teamNames.values.toList())
-      val teamTierTotals = caseTotalsService.getTeamPractitionerTotalsByTier(teamCodes)
       val teamCases = getTeamPractitionerCases(choosePractitionerResponse.teams.keys)
+      val tierCaseTotals = caseTotalsService.getTeamPractitionerTotalsByTier(teamCases)
 
       log.info("Practitioner Allocation Case Counts: $practitionerAllocationCaseCounts")
       log.info("Practitioner Reallocation Case Counts: $practitionerReallocationCaseCounts")
@@ -130,7 +130,7 @@ class TeamService(
           log.info("StaffId to get workload: $teamStaffId")
           val practitionerCases = teamCases[StaffIdentifier(it.code, team.key)]!!
           val reportPractitionerId = getReportPractitionerId(teamNames, team.key, it)
-          val practitionerStats = getPractitionerStats(practitionerAllocationCaseCounts, practitionerReallocationCaseCounts, reportPractitionerData, teamStaffId, reportPractitionerId, teamTierTotals[teamStaffId(team.key, it.code)])
+          val practitionerStats = getPractitionerStats(practitionerAllocationCaseCounts, practitionerReallocationCaseCounts, reportPractitionerData, teamStaffId, reportPractitionerId, tierCaseTotals[it.code])
 
           PractitionerWithRawWorkloadPoints.from(it, practitionerCases, practitionerStats)
         }
