@@ -43,7 +43,7 @@ class ChoosePractitionersByTeamCodes : IntegrationTestBase() {
     setupCasesForTeams()
 
     hmppsProbationEstate.getTeamsResponse(listOf(TeamOverview(teamCode, "Team 1"), TeamOverview(teamCode2, "Team 2")))
-    hmppsTier.bulkTierCalculationResponse(mapOf("CRN5" to "A"))
+    hmppsTier.bulkTierCalculationResponse(mapOf("CRN1" to "A"))
 
     setupReportData()
 
@@ -184,7 +184,7 @@ class ChoosePractitionersByTeamCodes : IntegrationTestBase() {
     setupCasesForTeams()
 
     hmppsProbationEstate.getTeamsResponse(listOf(TeamOverview(teamCode, "Team 1"), TeamOverview(teamCode2, "Team 2")))
-    hmppsTier.bulkTierCalculationResponse(mapOf("CRN5" to "A"))
+    hmppsTier.bulkTierCalculationResponse(mapOf("CRN1" to "A"))
 
     setupReportData()
 
@@ -314,7 +314,7 @@ class ChoosePractitionersByTeamCodes : IntegrationTestBase() {
     setupCasesForTeams()
 
     hmppsProbationEstate.getTeamsResponse(listOf(TeamOverview(teamCode, "Team 1")))
-    hmppsTier.bulkTierCalculationResponse(mapOf("CRN5" to "A"))
+    hmppsTier.bulkTierCalculationResponse(mapOf("CRN1" to "A"))
 
     setupReportData()
 
