@@ -140,6 +140,7 @@ class GetOffenderManagerServiceTest {
     coEvery { getReductionService.findNextReductionChange(staffIdentifier) } returns ZonedDateTime.now().plusDays(1)
     coEvery { getReductionService.findReductionHours(staffIdentifier) } returns reductionHours
     coEvery { getWeeklyHours.findWeeklyHours(staffIdentifier, OFFICER_GRADE) } returns workWeekHours
+    coEvery { workforceAllocationsToDeliusApiClient.staffActiveCases(staffIdentifier.staffCode) } returns StaffActiveCases("",Name("","",""),"","",emptyList())
     coEvery { caseTotalsService.getPractitionerTotalsByTier(any()) } returns TierCaseTotals(BigDecimal.valueOf(120), BigDecimal.valueOf(122), BigDecimal.valueOf(124), BigDecimal.valueOf(126), BigDecimal.valueOf(128), BigDecimal.valueOf(130), BigDecimal.valueOf(132), BigDecimal.valueOf(134), BigDecimal.valueOf(25))
 
     val overview = offenderManagerService.getOverview(staffIdentifier)
