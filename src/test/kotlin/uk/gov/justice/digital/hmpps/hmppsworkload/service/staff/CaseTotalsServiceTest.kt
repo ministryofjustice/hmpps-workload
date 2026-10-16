@@ -47,29 +47,38 @@ class CaseTotalsServiceTest {
         "X111122" to null, // Treated as 'MISSING'
       )
 
-      val totals = caseTotalsService.getTeamPractitionerTotalsByTier(mapOf(StaffIdentifier(STAFF_CODE_1,TEAM_CODE_1) to OffenderManagerCases(
-        Name("test", "", "tester"), "PO", STAFF_CODE_1,
-        listOf(
-          buildActiveCase("X111111"),
-          buildActiveCase("X111112"),
-          buildActiveCase("X111113"),
-          buildActiveCase("X111114"),
-          buildActiveCase("X111115"),
-          buildActiveCase("X111116"),
+      val totals = caseTotalsService.getTeamPractitionerTotalsByTier(
+        mapOf(
+          StaffIdentifier(STAFF_CODE_1, TEAM_CODE_1) to OffenderManagerCases(
+            Name("test", "", "tester"),
+            "PO",
+            STAFF_CODE_1,
+            listOf(
+              buildActiveCase("X111111"),
+              buildActiveCase("X111112"),
+              buildActiveCase("X111113"),
+              buildActiveCase("X111114"),
+              buildActiveCase("X111115"),
+              buildActiveCase("X111116"),
+            ),
+            "test@justice.gov.uk",
+          ),
+          StaffIdentifier(STAFF_CODE_2, TEAM_CODE_2) to OffenderManagerCases(
+            Name("test2", "", "tester2"),
+            "PO",
+            STAFF_CODE_2,
+            listOf(
+              buildActiveCase("X111117"),
+              buildActiveCase("X111118"),
+              buildActiveCase("X111119"),
+              buildActiveCase("X111120"),
+              buildActiveCase("X111121"),
+              buildActiveCase("X111122"),
+            ),
+            "test2@justice.gov.uk",
+          ),
         ),
-        "test@justice.gov.uk"
-      ), StaffIdentifier(STAFF_CODE_2,TEAM_CODE_2) to OffenderManagerCases(
-        Name("test2", "", "tester2"), "PO", STAFF_CODE_2,
-        listOf(
-          buildActiveCase("X111117"),
-          buildActiveCase("X111118"),
-          buildActiveCase("X111119"),
-          buildActiveCase("X111120"),
-          buildActiveCase("X111121"),
-          buildActiveCase("X111122"),
-        ),
-        "test@justice.gov.uk"
-      )))
+      )
 
       assertEquals(2, totals.size)
       println(totals.toString())
@@ -96,24 +105,30 @@ class CaseTotalsServiceTest {
         "X111122" to null, // Treated as 'MISSING'
       )
 
-      val totals = caseTotalsService.getTeamPractitionerTotalsByTier(mapOf(StaffIdentifier(STAFF_CODE_1,TEAM_CODE_1) to OffenderManagerCases(
-        Name("test", "", "tester"), "PO", STAFF_CODE_1,
-        listOf(
-          buildActiveCase("X111111"),
-          buildActiveCase("X111112"),
-          buildActiveCase("X111113"),
-          buildActiveCase("X111114"),
-          buildActiveCase("X111115"),
-          buildActiveCase("X111116"),
-          buildActiveCase("X111117"),
-          buildActiveCase("X111118"),
-          buildActiveCase("X111119"),
-          buildActiveCase("X111120"),
-          buildActiveCase("X111121"),
-          buildActiveCase("X111122"),
+      val totals = caseTotalsService.getTeamPractitionerTotalsByTier(
+        mapOf(
+          StaffIdentifier(STAFF_CODE_1, TEAM_CODE_1) to OffenderManagerCases(
+            Name("test", "", "tester"),
+            "PO",
+            STAFF_CODE_1,
+            listOf(
+              buildActiveCase("X111111"),
+              buildActiveCase("X111112"),
+              buildActiveCase("X111113"),
+              buildActiveCase("X111114"),
+              buildActiveCase("X111115"),
+              buildActiveCase("X111116"),
+              buildActiveCase("X111117"),
+              buildActiveCase("X111118"),
+              buildActiveCase("X111119"),
+              buildActiveCase("X111120"),
+              buildActiveCase("X111121"),
+              buildActiveCase("X111122"),
+            ),
+            "test@justice.gov.uk",
+          ),
         ),
-        "test@justice.gov.uk"
-      )))
+      )
 
       assertEquals(TierCaseTotals(BigDecimal.valueOf(2), BigDecimal.valueOf(1), BigDecimal.valueOf(1), BigDecimal.valueOf(1), BigDecimal.valueOf(1), BigDecimal.valueOf(1), BigDecimal.valueOf(1), BigDecimal.valueOf(3), BigDecimal.valueOf(1)), totals[STAFF_CODE_1])
     }
