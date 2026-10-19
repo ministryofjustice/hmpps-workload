@@ -33,7 +33,6 @@ dependencies {
   implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
   implementation("org.springframework.boot:spring-boot-starter-oauth2-client")
   testImplementation("org.springframework.boot:spring-boot-starter-test")
-  testImplementation("org.springframework.boot:spring-boot-starter-webflux")
   testImplementation("org.springframework.boot:spring-boot-starter-web")
 
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
@@ -41,7 +40,7 @@ dependencies {
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:1.10.2")
 
   // go to open telemetry, when upgrading to spring boot 3 these can be removed
-  implementation("io.opentelemetry:opentelemetry-api:1.57.0")
+  implementation("io.opentelemetry:opentelemetry-api:1.62.0")
   implementation("com.microsoft.azure:applicationinsights-core:3.7.6")
   agentDeps("com.microsoft.azure:applicationinsights-agent:3.7.6")
 
@@ -51,11 +50,11 @@ dependencies {
   runtimeOnly("com.zaxxer:HikariCP")
   implementation("org.flywaydb:flyway-core")
   implementation("org.flywaydb:flyway-database-postgresql")
-  runtimeOnly("org.postgresql:postgresql:42.7.8")
+  runtimeOnly("org.postgresql:postgresql:42.7.14")
 
   testImplementation("io.jsonwebtoken:jjwt-impl:0.13.0")
   testImplementation("io.jsonwebtoken:jjwt-jackson:0.13.0")
-  testImplementation("org.mock-server:mockserver-netty:5.15.0")
+  testImplementation("org.mock-server:mockserver-netty-no-dependencies:9.0.0")
   testImplementation("org.awaitility:awaitility-kotlin:4.3.0")
   testImplementation("io.mockk:mockk:1.14.7")
   testImplementation("com.ninja-squad:springmockk:4.0.2")
