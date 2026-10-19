@@ -5,9 +5,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Primary
-import org.springframework.security.core.Authentication
 import org.springframework.security.core.context.ReactiveSecurityContextHolder
-import org.springframework.security.core.context.SecurityContext
 import org.springframework.security.oauth2.client.AuthorizedClientServiceReactiveOAuth2AuthorizedClientManager
 import org.springframework.security.oauth2.client.InMemoryReactiveOAuth2AuthorizedClientService
 import org.springframework.security.oauth2.client.ReactiveOAuth2AuthorizedClientManager
@@ -57,7 +55,7 @@ class WebClientUserEnhancementConfiguration(
   @Bean
   fun hmppsTierApiClientUserEnhanced(@Qualifier("hmppsTierWebClientUserEnhancedAppScope") webClient: WebClient): HmppsTierApiClient = HmppsTierApiClient(webClient)
 
-  private fun authorizedClientManagerUserEnhanced(clients: ReactiveClientRegistrationRepository?, builder: WebClient.Builder): ReactiveOAuth2AuthorizedClientManager {
+  private fun authorizedClientManagerUserEnhanced(clients: ReactiveClientRegistrationRepository, builder: WebClient.Builder): ReactiveOAuth2AuthorizedClientManager {
     val service: ReactiveOAuth2AuthorizedClientService = InMemoryReactiveOAuth2AuthorizedClientService(clients)
     val manager = AuthorizedClientServiceReactiveOAuth2AuthorizedClientManager(clients, service)
     val reactiveClientCredentialsTokenResponseClient = WebClientReactiveClientCredentialsTokenResponseClient()
@@ -76,12 +74,11 @@ class WebClientUserEnhancementConfiguration(
 
   fun userEnhancedTokenRequestProcessor(): ExchangeFilterFunction = ExchangeFilterFunction.ofRequestProcessor { request ->
     ReactiveSecurityContextHolder.getContext()
-      .map(SecurityContext::getAuthentication)
-      .map(Authentication::getName)
-      .map { username ->
+      .map { context ->
+        val username = context.authentication?.name
         val builder = ClientRequest.from(request)
         val body = request.body()
-        if (body is BodyInserters.FormInserter<*>) {
+        if (!username.isNullOrEmpty() && body is BodyInserters.FormInserter<*>) {
           @Suppress("UNCHECKED_CAST")
           builder.body((body as BodyInserters.FormInserter<String>).with("username", username))
         }

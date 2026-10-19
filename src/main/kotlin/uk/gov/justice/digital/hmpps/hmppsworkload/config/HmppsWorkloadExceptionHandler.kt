@@ -84,7 +84,7 @@ class HmppsWorkloadExceptionHandler {
     )
 
   @ExceptionHandler(java.lang.Exception::class)
-  suspend fun handleException(e: java.lang.Exception): ResponseEntity<ErrorResponse?>? {
+  suspend fun handleException(e: java.lang.Exception): ResponseEntity<ErrorResponse> {
     log.error("Unexpected exception", e)
     return ResponseEntity
       .status(INTERNAL_SERVER_ERROR)

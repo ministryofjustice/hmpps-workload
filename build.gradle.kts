@@ -1,6 +1,6 @@
 plugins {
   id("com.gorylenko.gradle-git-properties") version "2.5.4"
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "9.7.0"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "11.0.11"
   kotlin("plugin.spring") version "2.2.21"
   kotlin("plugin.jpa") version "2.2.21"
   kotlin("jvm") version "2.2.21"
@@ -25,13 +25,16 @@ dependencies {
   implementation(kotlin("stdlib"))
   implementation("org.springframework.boot:spring-boot-starter-webflux")
   implementation("org.springframework.boot:spring-boot-starter-data-jpa")
-  implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:5.6.3")
+  implementation("org.springframework.boot:spring-boot-starter-flyway")
+  implementation("org.springframework.boot:spring-boot-starter-webclient")
+  implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:7.4.1")
 
-  implementation("org.springdoc:springdoc-openapi-starter-webflux-ui:2.8.14")
+  implementation("org.springdoc:springdoc-openapi-starter-webflux-ui:3.1.1")
 
   implementation("org.springframework.boot:spring-boot-starter-security")
   implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
   implementation("org.springframework.boot:spring-boot-starter-oauth2-client")
+  implementation("org.springframework.security:spring-security-access")
   testImplementation("org.springframework.boot:spring-boot-starter-test")
   testImplementation("org.springframework.boot:spring-boot-starter-web")
 
@@ -45,7 +48,7 @@ dependencies {
   agentDeps("com.microsoft.azure:applicationinsights-agent:3.7.6")
 
   implementation("uk.gov.service.notify:notifications-java-client:5.2.1-RELEASE")
-  implementation("io.hypersistence:hypersistence-utils-hibernate-63:3.13.3")
+  implementation("io.hypersistence:hypersistence-utils-hibernate-73:3.16.0")
 
   runtimeOnly("com.zaxxer:HikariCP")
   implementation("org.flywaydb:flyway-core")
@@ -58,8 +61,8 @@ dependencies {
   testImplementation("org.awaitility:awaitility-kotlin:4.3.0")
   testImplementation("io.mockk:mockk:1.14.7")
   testImplementation("com.ninja-squad:springmockk:4.0.2")
-
   testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.10.2")
+  testImplementation("org.springframework.boot:spring-boot-webtestclient")
 }
 repositories {
   mavenCentral()

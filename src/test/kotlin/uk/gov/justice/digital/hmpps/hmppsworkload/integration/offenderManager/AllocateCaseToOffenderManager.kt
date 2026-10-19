@@ -486,7 +486,7 @@ class AllocateCaseToOffenderManager : IntegrationTestBase() {
       .returnResult()
       .responseBody
 
-    val storedEventManager = eventManagerRepository.findByUuid(response.eventManagerId)!!
+    val storedEventManager = eventManagerRepository.findByUuid(response!!.eventManagerId)!!
     val eventManagerAllocatedEvent = expectWorkloadAllocationCompleteMessages(crn)["event.manager.allocated"]!!
 
     webTestClient.get()
@@ -526,7 +526,7 @@ class AllocateCaseToOffenderManager : IntegrationTestBase() {
       .returnResult()
       .responseBody
 
-    val storedRequirementManager = requirementManagerRepository.findByUuid(response.requirementManagerIds[0])!!
+    val storedRequirementManager = requirementManagerRepository.findByUuid(response!!.requirementManagerIds[0])!!
     val requirementManagerAllocatedEvent = expectWorkloadAllocationCompleteMessages(crn)["requirement.manager.allocated"]!!
     webTestClient.get()
       .uri(requirementManagerAllocatedEvent.detailUrl.replace("https://localhost:8080", ""))
@@ -569,7 +569,7 @@ class AllocateCaseToOffenderManager : IntegrationTestBase() {
       .returnResult()
       .responseBody
 
-    val eventManager = eventManagerRepository.findByUuid(response.eventManagerId)
+    val eventManager = eventManagerRepository.findByUuid(response!!.eventManagerId)
     val eventManagerAudit = eventManagerAuditRepository.findByEventManager(eventManager!!)
 
     Assertions.assertEquals(1, eventManagerAudit.size)
@@ -627,7 +627,7 @@ class AllocateCaseToOffenderManager : IntegrationTestBase() {
       .returnResult()
       .responseBody
 
-    val eventManager = eventManagerRepository.findByUuid(response.eventManagerId)
+    val eventManager = eventManagerRepository.findByUuid(response!!.eventManagerId)
 
     assertTrue(eventManager!!.createdDate!!.isAfter(createdDateToTest))
     assertTrue(eventManager!!.createdDate!!.isAfter(nowTimeCheck))
@@ -680,7 +680,7 @@ class AllocateCaseToOffenderManager : IntegrationTestBase() {
       .returnResult()
       .responseBody
 
-    val eventManager = eventManagerRepository.findByUuid(response.eventManagerId)
+    val eventManager = eventManagerRepository.findByUuid(response!!.eventManagerId)
     assertEquals(createdDateToTest.hour, eventManager!!.createdDate!!.hour)
     assertEquals(createdDateToTest.minute, eventManager!!.createdDate!!.minute)
     assertEquals(createdDateToTest.second, eventManager!!.createdDate!!.second)
@@ -705,7 +705,7 @@ class AllocateCaseToOffenderManager : IntegrationTestBase() {
       .returnResult()
       .responseBody
 
-    val eventManager = eventManagerRepository.findByUuid(response.eventManagerId)
+    val eventManager = eventManagerRepository.findByUuid(response!!.eventManagerId)
     val eventManagerAudit = eventManagerAuditRepository.findByEventManager(eventManager!!)
 
     Assertions.assertEquals(1, eventManagerAudit.size)

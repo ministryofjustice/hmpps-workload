@@ -24,15 +24,15 @@ class AssessRisksNeedsApiExtension :
     lateinit var assessRisksNeedsApi: AssessRisksNeedsMockServer
   }
 
-  override fun beforeAll(context: ExtensionContext?) {
+  override fun beforeAll(context: ExtensionContext) {
     assessRisksNeedsApi = AssessRisksNeedsMockServer()
   }
 
-  override fun beforeEach(context: ExtensionContext?) {
+  override fun beforeEach(context: ExtensionContext) {
     assessRisksNeedsApi.reset()
   }
 
-  override fun afterAll(context: ExtensionContext?) {
+  override fun afterAll(context: ExtensionContext) {
     assessRisksNeedsApi.stop()
   }
 }
