@@ -12,8 +12,6 @@ import kotlinx.coroutines.runBlocking
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.matches
 import org.awaitility.kotlin.untilCallTo
-import org.hamcrest.core.IsNot
-import org.hamcrest.text.MatchesPattern
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -106,11 +104,11 @@ class AllocateCaseToOffenderManager : IntegrationTestBase() {
       .isOk
       .expectBody()
       .jsonPath("$.personManagerId")
-      .value(MatchesPattern.matchesPattern("([a-f0-9]{8}(-[a-f0-9]{4}){4}[a-f0-9]{8})"))
+      .value(String::class.java) { it.matches("([a-f0-9]{8}(-[a-f0-9]{4}){4}[a-f0-9]{8})".toRegex()) }
       .jsonPath("$.eventManagerId")
-      .value(MatchesPattern.matchesPattern("([a-f0-9]{8}(-[a-f0-9]{4}){4}[a-f0-9]{8})"))
+      .value(String::class.java) { it.matches("([a-f0-9]{8}(-[a-f0-9]{4}){4}[a-f0-9]{8})".toRegex()) }
       .jsonPath("$.requirementManagerIds[0]")
-      .value(MatchesPattern.matchesPattern("([a-f0-9]{8}(-[a-f0-9]{4}){4}[a-f0-9]{8})"))
+      .value(String::class.java) { it.matches("([a-f0-9]{8}(-[a-f0-9]{4}){4}[a-f0-9]{8})".toRegex()) }
 
     expectWorkloadAllocationCompleteMessages(crn)
 
@@ -250,9 +248,9 @@ class AllocateCaseToOffenderManager : IntegrationTestBase() {
       .isOk
       .expectBody()
       .jsonPath("$.personManagerId")
-      .value(MatchesPattern.matchesPattern("([a-f0-9]{8}(-[a-f0-9]{4}){4}[a-f0-9]{8})"))
+      .value(String::class.java) { it.matches("([a-f0-9]{8}(-[a-f0-9]{4}){4}[a-f0-9]{8})".toRegex()) }
       .jsonPath("$.personManagerId")
-      .value(IsNot.not(storedPersonManager.uuid.toString()))
+      .value(String::class.java) { it != storedPersonManager.uuid.toString() }
 
     await untilCallTo {
       workloadCalculationRepository.count()
@@ -431,11 +429,11 @@ class AllocateCaseToOffenderManager : IntegrationTestBase() {
       .isOk
       .expectBody()
       .jsonPath("$.personManagerId")
-      .value(MatchesPattern.matchesPattern("([a-f0-9]{8}(-[a-f0-9]{4}){4}[a-f0-9]{8})"))
+      .value(String::class.java) { it.matches("([a-f0-9]{8}(-[a-f0-9]{4}){4}[a-f0-9]{8})".toRegex()) }
       .jsonPath("$.eventManagerId")
-      .value(MatchesPattern.matchesPattern("([a-f0-9]{8}(-[a-f0-9]{4}){4}[a-f0-9]{8})"))
+      .value(String::class.java) { it.matches("([a-f0-9]{8}(-[a-f0-9]{4}){4}[a-f0-9]{8})".toRegex()) }
       .jsonPath("$.requirementManagerIds[0]")
-      .value(MatchesPattern.matchesPattern("([a-f0-9]{8}(-[a-f0-9]{4}){4}[a-f0-9]{8})"))
+      .value(String::class.java) { it.matches("([a-f0-9]{8}(-[a-f0-9]{4}){4}[a-f0-9]{8})".toRegex()) }
 
     expectWorkloadAllocationCompleteMessages(crn)
 
