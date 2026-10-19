@@ -2,17 +2,16 @@ package uk.gov.justice.digital.hmpps.hmppsworkload.integration.offenderManager
 
 import org.junit.jupiter.api.Test
 import org.springframework.data.repository.findByIdOrNull
-import uk.gov.justice.digital.hmpps.hmppsworkload.domain.AllocationReason
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.CaseType
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.Tier
 import uk.gov.justice.digital.hmpps.hmppsworkload.integration.IntegrationTestBase
+import uk.gov.justice.digital.hmpps.hmppsworkload.integration.domain.ActiveCasesIntegration
 import uk.gov.justice.digital.hmpps.hmppsworkload.integration.jpa.entity.ReductionCategoryEntity
 import uk.gov.justice.digital.hmpps.hmppsworkload.integration.jpa.entity.ReductionReasonEntity
 import uk.gov.justice.digital.hmpps.hmppsworkload.integration.mockserver.TierApiExtension.Companion.hmppsTier
 import uk.gov.justice.digital.hmpps.hmppsworkload.integration.mockserver.WorkforceAllocationsToDeliusExtension.Companion.workforceAllocationsToDelius
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.entity.CaseDetailsEntity
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.entity.EventManagerEntity
-import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.entity.PersonManagerEntity
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.entity.ReductionEntity
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.entity.ReductionStatus
 import java.math.BigDecimal
@@ -27,6 +26,21 @@ class GetOverviewForOffenderManager : IntegrationTestBase() {
     val teamCode = "T1"
     val offenderManagerCode = "OM1"
     workforceAllocationsToDelius.officerViewResponse(offenderManagerCode)
+    workforceAllocationsToDelius.staffActiveCasesResponse(
+      offenderManagerCode,
+      activeCases = listOf(
+        buildActiveCase("X111111"),
+        buildActiveCase("X111112"),
+        buildActiveCase("X111113"),
+        buildActiveCase("X111114"),
+        buildActiveCase("X111115"),
+        buildActiveCase("X111116"),
+        buildActiveCase("X111117"),
+        buildActiveCase("X111118"),
+        buildActiveCase("X111119"),
+      ),
+    )
+
     val wmtStaff = setupCurrentWmtStaff(offenderManagerCode, teamCode)
 
     setupWmtManagedCase(wmtStaff, Tier.A, "CRN3333", CaseType.COMMUNITY)
@@ -58,29 +72,6 @@ class GetOverviewForOffenderManager : IntegrationTestBase() {
         reductionReasonId = reductionReason.id,
       ),
     )
-
-    listOf(
-      "X111111",
-      "X111112",
-      "X111113",
-      "X111114",
-      "X111115",
-      "X111116",
-      "X111117",
-      "X111118",
-      "X111119",
-    ).forEach { crn ->
-      personManagerRepository.save(
-        PersonManagerEntity(
-          crn = crn,
-          staffCode = offenderManagerCode,
-          teamCode = teamCode,
-          createdBy = offenderManagerCode,
-          isActive = true,
-          allocationReason = AllocationReason.INITIAL_ALLOCATION,
-        ),
-      )
-    }
 
     hmppsTier.bulkTierCalculationResponse(
       mapOf(
@@ -175,6 +166,7 @@ class GetOverviewForOffenderManager : IntegrationTestBase() {
     val offenderManagerCode = "OM2"
     setupCurrentWmtStaff(offenderManagerCode, teamCode)
     workforceAllocationsToDelius.officerViewResponse(offenderManagerCode)
+    workforceAllocationsToDelius.staffActiveCasesResponse(offenderManagerCode)
     webTestClient.get()
       .uri("/team/$teamCode/offenderManagers/$offenderManagerCode")
       .headers {
@@ -311,4 +303,6 @@ class GetOverviewForOffenderManager : IntegrationTestBase() {
       .jsonPath("$.lastAllocatedEvent.sentenceType")
       .isEqualTo(caseDetails.type.name)
   }
+
+  private fun buildActiveCase(crn: String): ActiveCasesIntegration = ActiveCasesIntegration(crn, "", "", "")
 }

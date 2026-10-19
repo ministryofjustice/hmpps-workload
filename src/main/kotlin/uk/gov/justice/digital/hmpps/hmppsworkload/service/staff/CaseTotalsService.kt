@@ -2,9 +2,11 @@ package uk.gov.justice.digital.hmpps.hmppsworkload.service.staff
 
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.HmppsTierApiClient
+import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.ActiveCase
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.AllocationReason
+import uk.gov.justice.digital.hmpps.hmppsworkload.domain.OffenderManagerCases
+import uk.gov.justice.digital.hmpps.hmppsworkload.domain.StaffIdentifier
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.TierCaseTotals
-import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.entity.PersonManagerEntity
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.PersonManagerRepository
 import java.math.BigDecimal
 import java.time.ZonedDateTime
@@ -43,20 +45,23 @@ class CaseTotalsService(
     return totals
   }
 
-  suspend fun getTeamPractitionerTotalsByTier(teamCodes: List<String>): Map<String, TierCaseTotals> {
-    val cases = personManagerRepository.findByTeamCodeInAndIsActiveIsTrue(teamCodes)
-    val tiers = getTiers(cases.map { it.crn })
-    val totals = cases
-      .groupBy { teamStaffId(it.teamCode, it.staffCode) }
-      .mapValues { teamStaffEntry -> calculateTotals(teamStaffEntry.value, tiers) }
-
-    return totals
+  suspend fun getTeamPractitionerTotalsByTier(cases: Map<StaffIdentifier, OffenderManagerCases?>): Map<String, TierCaseTotals> {
+    val teamTierCaseTotals = mutableMapOf<String, TierCaseTotals>()
+    cases.forEach { (staffIdentifier, cases) ->
+      if (cases != null) {
+        val tiers = getTiers(cases.activeCases.map { it.crn })
+        teamTierCaseTotals[cases.code] = calculateTotals(
+          cases.activeCases.map { it.crn },
+          tiers,
+        )
+      }
+    }
+    return teamTierCaseTotals
   }
 
-  suspend fun getPractitionerTotalsByTier(staffCode: String, teamCode: String): TierCaseTotals {
-    val cases = personManagerRepository.findByStaffCodeAndTeamCodeAndIsActiveIsTrue(staffCode, teamCode)
-    val tiers = getTiers(cases.map { it.crn })
-    val totals = calculateTotals(cases, tiers)
+  suspend fun getPractitionerTotalsByTier(activeCases: List<ActiveCase>): TierCaseTotals {
+    val tiers = getTiers(activeCases.map { it.crn })
+    val totals = calculateTotals(activeCases.map { it.crn }, tiers)
 
     return totals
   }
@@ -72,7 +77,7 @@ class CaseTotalsService(
     return tiers
   }
 
-  private fun calculateTotals(cases: List<PersonManagerEntity>, tiers: Map<String, String?>): TierCaseTotals {
+  private fun calculateTotals(cases: List<String>, tiers: Map<String, String?>): TierCaseTotals {
     var a = BigDecimal.ZERO
     var b = BigDecimal.ZERO
     var c = BigDecimal.ZERO
@@ -84,7 +89,7 @@ class CaseTotalsService(
     var notSupervised = BigDecimal.ZERO
 
     for (case in cases) {
-      val tier = tiers.getOrDefault(case.crn, "MISSING")
+      val tier = tiers.getOrDefault(case, "MISSING")
 
       when (tier) {
         "A" -> a = a.inc()
