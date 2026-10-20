@@ -7,6 +7,7 @@ fun allocateOldCase(crn: String, eventNumber: Int, sendEmailCopyToAllocatingOffi
      "sendEmailCopyToAllocatingOfficer": $sendEmailCopyToAllocatingOfficer,
      "eventNumber": $eventNumber,
      "allocationJustificationNotes": "$allocationJustificationNotes",
-     "sensitiveNotes": $sensitiveNotes
+     "sensitiveNotes": $sensitiveNotes,
+     "laoCase": false
   }
 """.trimIndent()

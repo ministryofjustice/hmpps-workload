@@ -69,7 +69,7 @@ class GetOverviewForOffenderManager : IntegrationTestBase() {
         ),
         effectiveTo = LocalDate.now().plusDays(2).atStartOfDay(ZoneId.systemDefault()),
         status = ReductionStatus.DELETED,
-        reductionReasonId = reductionReason.id,
+        reductionReasonId = reductionReason.id!!,
       ),
     )
 

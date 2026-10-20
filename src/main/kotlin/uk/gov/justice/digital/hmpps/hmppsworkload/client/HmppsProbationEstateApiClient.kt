@@ -19,7 +19,7 @@ class HmppsProbationEstateApiClient(private val webClient: WebClient) {
       return withTimeout(TIMEOUT_VALUE.milliseconds) {
         webClient
           .get()
-          .uri { uriBuilder -> uriBuilder.path("/team/search").queryParam("codes", teamCodes).build() }
+          .uri { uriBuilder -> uriBuilder.path("/team/search").queryParam("codes", *teamCodes.toTypedArray()).build() }
           .awaitExchangeOrNull { response ->
             when (response.statusCode()) {
               HttpStatus.OK -> response.awaitBody<List<TeamOverview>>()

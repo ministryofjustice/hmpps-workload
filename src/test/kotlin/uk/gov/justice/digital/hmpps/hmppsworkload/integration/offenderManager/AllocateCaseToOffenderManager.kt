@@ -12,8 +12,6 @@ import kotlinx.coroutines.runBlocking
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.matches
 import org.awaitility.kotlin.untilCallTo
-import org.hamcrest.core.IsNot
-import org.hamcrest.text.MatchesPattern
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -106,11 +104,11 @@ class AllocateCaseToOffenderManager : IntegrationTestBase() {
       .isOk
       .expectBody()
       .jsonPath("$.personManagerId")
-      .value(MatchesPattern.matchesPattern("([a-f0-9]{8}(-[a-f0-9]{4}){4}[a-f0-9]{8})"))
+      .value(String::class.java) { it.matches("([a-f0-9]{8}(-[a-f0-9]{4}){4}[a-f0-9]{8})".toRegex()) }
       .jsonPath("$.eventManagerId")
-      .value(MatchesPattern.matchesPattern("([a-f0-9]{8}(-[a-f0-9]{4}){4}[a-f0-9]{8})"))
+      .value(String::class.java) { it.matches("([a-f0-9]{8}(-[a-f0-9]{4}){4}[a-f0-9]{8})".toRegex()) }
       .jsonPath("$.requirementManagerIds[0]")
-      .value(MatchesPattern.matchesPattern("([a-f0-9]{8}(-[a-f0-9]{4}){4}[a-f0-9]{8})"))
+      .value(String::class.java) { it.matches("([a-f0-9]{8}(-[a-f0-9]{4}){4}[a-f0-9]{8})".toRegex()) }
 
     expectWorkloadAllocationCompleteMessages(crn)
 
@@ -250,9 +248,9 @@ class AllocateCaseToOffenderManager : IntegrationTestBase() {
       .isOk
       .expectBody()
       .jsonPath("$.personManagerId")
-      .value(MatchesPattern.matchesPattern("([a-f0-9]{8}(-[a-f0-9]{4}){4}[a-f0-9]{8})"))
+      .value(String::class.java) { it.matches("([a-f0-9]{8}(-[a-f0-9]{4}){4}[a-f0-9]{8})".toRegex()) }
       .jsonPath("$.personManagerId")
-      .value(IsNot.not(storedPersonManager.uuid.toString()))
+      .value(String::class.java) { it != storedPersonManager.uuid.toString() }
 
     await untilCallTo {
       workloadCalculationRepository.count()
@@ -431,11 +429,11 @@ class AllocateCaseToOffenderManager : IntegrationTestBase() {
       .isOk
       .expectBody()
       .jsonPath("$.personManagerId")
-      .value(MatchesPattern.matchesPattern("([a-f0-9]{8}(-[a-f0-9]{4}){4}[a-f0-9]{8})"))
+      .value(String::class.java) { it.matches("([a-f0-9]{8}(-[a-f0-9]{4}){4}[a-f0-9]{8})".toRegex()) }
       .jsonPath("$.eventManagerId")
-      .value(MatchesPattern.matchesPattern("([a-f0-9]{8}(-[a-f0-9]{4}){4}[a-f0-9]{8})"))
+      .value(String::class.java) { it.matches("([a-f0-9]{8}(-[a-f0-9]{4}){4}[a-f0-9]{8})".toRegex()) }
       .jsonPath("$.requirementManagerIds[0]")
-      .value(MatchesPattern.matchesPattern("([a-f0-9]{8}(-[a-f0-9]{4}){4}[a-f0-9]{8})"))
+      .value(String::class.java) { it.matches("([a-f0-9]{8}(-[a-f0-9]{4}){4}[a-f0-9]{8})".toRegex()) }
 
     expectWorkloadAllocationCompleteMessages(crn)
 
@@ -486,7 +484,7 @@ class AllocateCaseToOffenderManager : IntegrationTestBase() {
       .returnResult()
       .responseBody
 
-    val storedEventManager = eventManagerRepository.findByUuid(response.eventManagerId)!!
+    val storedEventManager = eventManagerRepository.findByUuid(response!!.eventManagerId)!!
     val eventManagerAllocatedEvent = expectWorkloadAllocationCompleteMessages(crn)["event.manager.allocated"]!!
 
     webTestClient.get()
@@ -526,7 +524,7 @@ class AllocateCaseToOffenderManager : IntegrationTestBase() {
       .returnResult()
       .responseBody
 
-    val storedRequirementManager = requirementManagerRepository.findByUuid(response.requirementManagerIds[0])!!
+    val storedRequirementManager = requirementManagerRepository.findByUuid(response!!.requirementManagerIds[0])!!
     val requirementManagerAllocatedEvent = expectWorkloadAllocationCompleteMessages(crn)["requirement.manager.allocated"]!!
     webTestClient.get()
       .uri(requirementManagerAllocatedEvent.detailUrl.replace("https://localhost:8080", ""))
@@ -569,7 +567,7 @@ class AllocateCaseToOffenderManager : IntegrationTestBase() {
       .returnResult()
       .responseBody
 
-    val eventManager = eventManagerRepository.findByUuid(response.eventManagerId)
+    val eventManager = eventManagerRepository.findByUuid(response!!.eventManagerId)
     val eventManagerAudit = eventManagerAuditRepository.findByEventManager(eventManager!!)
 
     Assertions.assertEquals(1, eventManagerAudit.size)
@@ -627,7 +625,7 @@ class AllocateCaseToOffenderManager : IntegrationTestBase() {
       .returnResult()
       .responseBody
 
-    val eventManager = eventManagerRepository.findByUuid(response.eventManagerId)
+    val eventManager = eventManagerRepository.findByUuid(response!!.eventManagerId)
 
     assertTrue(eventManager!!.createdDate!!.isAfter(createdDateToTest))
     assertTrue(eventManager!!.createdDate!!.isAfter(nowTimeCheck))
@@ -680,7 +678,7 @@ class AllocateCaseToOffenderManager : IntegrationTestBase() {
       .returnResult()
       .responseBody
 
-    val eventManager = eventManagerRepository.findByUuid(response.eventManagerId)
+    val eventManager = eventManagerRepository.findByUuid(response!!.eventManagerId)
     assertEquals(createdDateToTest.hour, eventManager!!.createdDate!!.hour)
     assertEquals(createdDateToTest.minute, eventManager!!.createdDate!!.minute)
     assertEquals(createdDateToTest.second, eventManager!!.createdDate!!.second)
@@ -705,7 +703,7 @@ class AllocateCaseToOffenderManager : IntegrationTestBase() {
       .returnResult()
       .responseBody
 
-    val eventManager = eventManagerRepository.findByUuid(response.eventManagerId)
+    val eventManager = eventManagerRepository.findByUuid(response!!.eventManagerId)
     val eventManagerAudit = eventManagerAuditRepository.findByEventManager(eventManager!!)
 
     Assertions.assertEquals(1, eventManagerAudit.size)

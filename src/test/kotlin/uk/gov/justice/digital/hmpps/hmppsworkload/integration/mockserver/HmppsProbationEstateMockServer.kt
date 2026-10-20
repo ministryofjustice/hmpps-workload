@@ -21,15 +21,15 @@ class HmppsProbationEstateApiExtension :
     lateinit var hmppsProbationEstate: HmppsProbationEstateMockServer
   }
 
-  override fun beforeAll(context: ExtensionContext?) {
+  override fun beforeAll(context: ExtensionContext) {
     hmppsProbationEstate = HmppsProbationEstateMockServer()
   }
 
-  override fun beforeEach(context: ExtensionContext?) {
+  override fun beforeEach(context: ExtensionContext) {
     hmppsProbationEstate.reset()
   }
 
-  override fun afterAll(context: ExtensionContext?) {
+  override fun afterAll(context: ExtensionContext) {
     hmppsProbationEstate.stop()
   }
 }

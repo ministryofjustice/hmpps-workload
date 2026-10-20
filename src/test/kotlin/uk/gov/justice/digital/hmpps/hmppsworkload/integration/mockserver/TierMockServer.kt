@@ -25,13 +25,13 @@ class TierApiExtension :
     lateinit var hmppsTier: TierMockServer
   }
 
-  override fun beforeAll(context: ExtensionContext?) {
+  override fun beforeAll(context: ExtensionContext) {
     hmppsTier = TierMockServer()
   }
-  override fun beforeEach(context: ExtensionContext?) {
+  override fun beforeEach(context: ExtensionContext) {
     hmppsTier.reset()
   }
-  override fun afterAll(context: ExtensionContext?) {
+  override fun afterAll(context: ExtensionContext) {
     hmppsTier.stop()
   }
 }

@@ -39,13 +39,13 @@ class WorkforceAllocationsToDeliusExtension :
     lateinit var workforceAllocationsToDelius: WorkforceAllocationsToDeliusMockServer
   }
 
-  override fun beforeAll(context: ExtensionContext?) {
+  override fun beforeAll(context: ExtensionContext) {
     workforceAllocationsToDelius = WorkforceAllocationsToDeliusMockServer()
   }
-  override fun beforeEach(context: ExtensionContext?) {
+  override fun beforeEach(context: ExtensionContext) {
     workforceAllocationsToDelius.reset()
   }
-  override fun afterAll(context: ExtensionContext?) {
+  override fun afterAll(context: ExtensionContext) {
     workforceAllocationsToDelius.stop()
   }
 }
