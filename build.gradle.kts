@@ -47,7 +47,7 @@ dependencies {
   implementation("com.microsoft.azure:applicationinsights-core:3.7.6")
   agentDeps("com.microsoft.azure:applicationinsights-agent:3.7.6")
 
-  implementation("uk.gov.service.notify:notifications-java-client:5.2.1-RELEASE")
+  implementation("uk.gov.service.notify:notifications-java-client:6.2.1-RELEASE")
   implementation("io.hypersistence:hypersistence-utils-hibernate-73:3.16.0")
 
   runtimeOnly("com.zaxxer:HikariCP")
