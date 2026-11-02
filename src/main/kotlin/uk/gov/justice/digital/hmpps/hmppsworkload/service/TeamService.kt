@@ -110,7 +110,7 @@ class TeamService(
     return totals.asFlow()
   }
 
-  suspend fun getPractitioners(teamCodes: List<String>): Map<String, List<PractitionerWithRawWorkloadPoints>>? {
+  suspend fun getPractitioners(teamCodes: List<String>, grades: List<String>?): Map<String, List<PractitionerWithRawWorkloadPoints>>? {
     return workforceAllocationsToDeliusApiClient.choosePractitioners(teamCodes)?.let { choosePractitionerResponse ->
       val caseCountAfter = LocalDate.now().atStartOfDay(ZoneId.systemDefault()).minusDays(CASE_COUNT_PERIOD_DAYS)
       val practitionerAllocationCaseCounts = caseTotalsService.getPractitionerAllocationCaseCountsTeamCodeOnly(teamCodes, caseCountAfter)
@@ -125,15 +125,17 @@ class TeamService(
       log.info("Practitioner Reallocation Case Counts: $practitionerReallocationCaseCounts")
 
       return choosePractitionerResponse.teams.mapValues { team ->
-        team.value.map {
-          val teamStaffId = it.code
-          log.info("StaffId to get workload: $teamStaffId")
-          val practitionerCases = teamCases[StaffIdentifier(it.code, team.key)]!!
-          val reportPractitionerId = getReportPractitionerId(teamNames, team.key, it)
-          val practitionerStats = getPractitionerStats(practitionerAllocationCaseCounts, practitionerReallocationCaseCounts, reportPractitionerData, teamStaffId, reportPractitionerId, tierCaseTotals[it.code])
+        team.value
+          .filter { grades == null || grades.contains(it.getGrade()) }
+          .map {
+            val teamStaffId = it.code
+            log.info("StaffId to get workload: $teamStaffId")
+            val practitionerCases = teamCases[StaffIdentifier(it.code, team.key)]!!
+            val reportPractitionerId = getReportPractitionerId(teamNames, team.key, it)
+            val practitionerStats = getPractitionerStats(practitionerAllocationCaseCounts, practitionerReallocationCaseCounts, reportPractitionerData, teamStaffId, reportPractitionerId, tierCaseTotals[it.code])
 
-          PractitionerWithRawWorkloadPoints.from(it, practitionerCases, practitionerStats)
-        }
+            PractitionerWithRawWorkloadPoints.from(it, practitionerCases, practitionerStats)
+          }
       }
     }
   }

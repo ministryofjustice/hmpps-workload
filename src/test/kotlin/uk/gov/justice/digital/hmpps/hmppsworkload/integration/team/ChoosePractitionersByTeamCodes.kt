@@ -364,6 +364,33 @@ class ChoosePractitionersByTeamCodes : IntegrationTestBase() {
   }
 
   @Test
+  fun `can get choose practitioner response team code only filtered by grade`() {
+    val teamCode = "T1"
+
+    workforceAllocationsToDelius.getTeamsResponse(listOf(teamCode))
+
+    val firstOm = "OM1"
+    val secondOm = "NOWORKLOAD1"
+
+    setupCasesForTeams()
+
+    hmppsProbationEstate.getTeamsResponse(listOf(TeamOverview(teamCode, "Team 1")))
+    hmppsTier.bulkTierCalculationResponse(mapOf("CRN1" to "A"))
+
+    webTestClient.get()
+      .uri("/team/practitioner-workloadcases?teamCode=$teamCode&grades=PO")
+      .headers { it.authToken(roles = listOf("ROLE_WORKLOAD_MEASUREMENT")) }
+      .exchange()
+      .expectStatus()
+      .isOk
+      .expectBody()
+      .jsonPath("$.$teamCode.teams[?(@.code == '$firstOm')]")
+      .exists()
+      .jsonPath("$.$teamCode.teams[?(@.code == '$secondOm')]")
+      .doesNotExist()
+  }
+
+  @Test
   fun `throws 404 when crn not in repository`() {
     val teamCode = "T1"
     val teamCode2 = "T2"
