@@ -18,6 +18,7 @@ import uk.gov.justice.digital.hmpps.hmppsworkload.domain.Practitioner
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.PractitionerStats
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.PractitionerWithRawWorkloadPoints
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.PractitionerWorkload
+import uk.gov.justice.digital.hmpps.hmppsworkload.domain.Reductions
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.StaffIdentifier
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.TierCaseTotals
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.WorkloadCase
@@ -64,6 +65,7 @@ class TeamService(
             val teamStaffId = teamStaffId(team.key, it.code)
             val practitionerCases = teamCases[StaffIdentifier(it.code, team.key)]!!
             val reportPractitionerId = getReportPractitionerId(teamNames, team.key, it)
+            val practitionerReductions = getPractitionerReductions(it.code)
             val practitionerStats = getPractitionerStats(
               practitionerAllocationCaseCounts,
               practitionerReallocationCaseCounts,
@@ -71,6 +73,7 @@ class TeamService(
               teamStaffId,
               reportPractitionerId,
               teamTierCaseTotals[it.code],
+              practitionerReductions,
             )
 
             Practitioner.from(it, practitionerCases, practitionerStats)
@@ -130,7 +133,8 @@ class TeamService(
           log.info("StaffId to get workload: $teamStaffId")
           val practitionerCases = teamCases[StaffIdentifier(it.code, team.key)]!!
           val reportPractitionerId = getReportPractitionerId(teamNames, team.key, it)
-          val practitionerStats = getPractitionerStats(practitionerAllocationCaseCounts, practitionerReallocationCaseCounts, reportPractitionerData, teamStaffId, reportPractitionerId, tierCaseTotals[it.code])
+          val practitionerReductions = getPractitionerReductions(it.code)
+          val practitionerStats = getPractitionerStats(practitionerAllocationCaseCounts, practitionerReallocationCaseCounts, reportPractitionerData, teamStaffId, reportPractitionerId, tierCaseTotals[it.code], practitionerReductions)
 
           PractitionerWithRawWorkloadPoints.from(it, practitionerCases, practitionerStats)
         }
@@ -156,6 +160,7 @@ class TeamService(
     teamStaffId: String,
     reportPractitionerId: ReportPractitionerId,
     tierCaseTotals: TierCaseTotals?,
+    practitionerReductions: List<Reductions>,
   ): PractitionerStats = PractitionerStats(
     practitionerAllocationCaseCounts.getOrDefault(teamStaffId, 0),
     practitionerReallocationCaseCounts.getOrDefault(teamStaffId, 0),
@@ -167,6 +172,7 @@ class TeamService(
     reportPractitionerData.partBReportsInNext14Days.getOrDefault(reportPractitionerId, 0),
     reportPractitionerData.partCReportsInNext14Days.getOrDefault(reportPractitionerId, 0),
     tierCaseTotals ?: TierCaseTotals(),
+    practitionerReductions,
   )
 
   private suspend fun getTeamPractitionerCases(teams: Set<String>): Map<StaffIdentifier, OffenderManagerCases?> {
@@ -184,4 +190,6 @@ class TeamService(
         .associate { it.key to it.value }
     }
   }
+
+  private suspend fun getPractitionerReductions(staffCode: String): List<Reductions> = reportDataService.getStaffReductions(staffCode)
 }

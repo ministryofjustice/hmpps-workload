@@ -56,6 +56,7 @@ data class PractitionerWithRawWorkloadPoints(
   val paroleReportsInNext28Days: Int,
   val otherReportsInNext14Days: Int,
   val tierCaseTotals: TierCaseTotals?,
+  val reductions: List<Reductions>,
 ) {
   companion object {
     fun from(staffMember: StaffMember, practitionerCases: OffenderManagerCases, practitionerStats: PractitionerStats): PractitionerWithRawWorkloadPoints = PractitionerWithRawWorkloadPoints(
@@ -77,6 +78,7 @@ data class PractitionerWithRawWorkloadPoints(
       practitionerStats.paroleReportsInNext28Days,
       practitionerStats.hdcrotlReportsInNext14Days + practitionerStats.partBReportsInNext14Days + practitionerStats.partCReportsInNext14Days,
       practitionerStats.tierCaseTotals,
+      practitionerStats.reductions,
     )
   }
 }
@@ -100,6 +102,7 @@ data class Practitioner constructor(
   val paroleReportsInNext28Days: Int,
   val otherReportsInNext14Days: Int,
   val tierCaseTotals: TierCaseTotals?,
+  val reductions: List<Reductions>,
 ) {
   companion object {
     fun from(staffMember: StaffMember, practitionerCases: OffenderManagerCases, practitionerStats: PractitionerStats): Practitioner = Practitioner(
@@ -121,6 +124,7 @@ data class Practitioner constructor(
       practitionerStats.paroleReportsInNext28Days,
       practitionerStats.hdcrotlReportsInNext14Days + practitionerStats.partBReportsInNext14Days + practitionerStats.partCReportsInNext14Days,
       practitionerStats.tierCaseTotals,
+      practitionerStats.reductions,
     )
   }
 }
