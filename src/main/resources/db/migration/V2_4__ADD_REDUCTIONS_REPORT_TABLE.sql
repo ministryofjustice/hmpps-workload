@@ -10,7 +10,7 @@ CREATE TABLE reductions_reports(
     reduction_status VARCHAR NOT NULL,
     start_date DATE NOT NULL,
     expiry_date DATE NOT NULL,
-    region_code DATE NOT NULL,
+    region_code VARCHAR NOT NULL,
     pdu_code VARCHAR NOT NULL,
     team_code VARCHAR NOT NULL,
     contracted_hours INTEGER NOT NULL
