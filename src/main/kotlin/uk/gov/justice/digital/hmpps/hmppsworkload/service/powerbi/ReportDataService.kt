@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.hmppsworkload.service.powerbi
 
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.hmppsworkload.domain.Reductions
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.powerbi.ReportPractitionerData
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.powerbi.ReportPractitionerId
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.powerbi.HDCROTLReportRepository
@@ -8,6 +9,7 @@ import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.powerbi.Initial
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.powerbi.ParoleReportRepository
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.powerbi.PartBReportRepository
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.powerbi.PartCReportRepository
+import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.powerbi.ReductionsReportRepository
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.powerbi.ResetReportRepository
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.powerbi.UpcomingReleasesReportRepository
 import java.time.LocalDate
@@ -21,6 +23,7 @@ class ReportDataService(
   private val hdcrotlReportRepository: HDCROTLReportRepository,
   private val partBReportRepository: PartBReportRepository,
   private val partCReportRepository: PartCReportRepository,
+  private val reductionsReportRepository: ReductionsReportRepository,
 ) {
   fun getPractitionerData(teamNames: List<String>): ReportPractitionerData = ReportPractitionerData(
     getIspsDueInNext14Days(teamNames),
@@ -59,4 +62,12 @@ class ReportDataService(
   private fun getPartCReportsInNext14Days(teamNames: List<String>): Map<ReportPractitionerId, Int> = partCReportRepository.findAllByTeamInAndTargetDateLessThanEqual(teamNames, LocalDate.now().plusDays(14))
     .groupBy { ReportPractitionerId(it.team, it.probationPractitioner) }
     .mapValues { entry -> entry.value.size }
+
+  fun getStaffReductions(staffCode: String): List<Reductions> {
+    val reductionsList = mutableListOf<Reductions>()
+    reductionsReportRepository.findAllByStaffId(staffCode).forEach { reduction ->
+      reductionsList.add(Reductions(reduction.reductionHours, reduction.startDate.toLocalDate(), reduction.expiryDate.toLocalDate(), reduction.reductionType, reduction.reductionStatus, reduction.contractedHours))
+    }
+    return reductionsList
+  }
 }

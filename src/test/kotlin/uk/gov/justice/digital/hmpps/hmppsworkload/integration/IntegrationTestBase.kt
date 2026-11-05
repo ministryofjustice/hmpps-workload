@@ -28,6 +28,7 @@ import uk.gov.justice.digital.hmpps.hmppsworkload.domain.powerbi.InitialSentence
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.powerbi.ParoleReportEntity
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.powerbi.PartBReportEntity
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.powerbi.PartCReportEntity
+import uk.gov.justice.digital.hmpps.hmppsworkload.domain.powerbi.ReductionsReportEntity
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.powerbi.ResetReportEntity
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.powerbi.UpcomingReleasesReportEntity
 import uk.gov.justice.digital.hmpps.hmppsworkload.integration.domain.ActiveCasesIntegration
@@ -81,6 +82,7 @@ import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.powerbi.Initial
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.powerbi.ParoleReportRepository
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.powerbi.PartBReportRepository
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.powerbi.PartCReportRepository
+import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.powerbi.ReductionsReportRepository
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.powerbi.ResetReportRepository
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.powerbi.UpcomingReleasesReportRepository
 import uk.gov.justice.digital.hmpps.hmppsworkload.listener.HmppsOffenderEvent
@@ -307,6 +309,9 @@ abstract class IntegrationTestBase {
   @Autowired
   protected lateinit var partCReportRepository: PartCReportRepository
 
+  @Autowired
+  protected lateinit var reductionsReportRepository: ReductionsReportRepository
+
   @BeforeEach
   fun setupDependentServices() {
     personManagerRepository.deleteAll()
@@ -471,6 +476,7 @@ abstract class IntegrationTestBase {
   protected fun setupReportData() {
     val team = "Team 1"
     val practitioner = "Doe, Jane"
+    val staffCode = "OM1"
 
     val ispReportAtThreshold = InitialSentencePlanReportEntity(targetDate = Date.valueOf(LocalDate.now().plusDays(14)), team = team, probationPractitioner = practitioner)
     val ispReportAfterThreshold = ispReportAtThreshold.copy(targetDate = Date.valueOf(LocalDate.now().plusDays(15)))
@@ -498,6 +504,22 @@ abstract class IntegrationTestBase {
     val partCReportAtThreshold = PartCReportEntity(targetDate = Date.valueOf(LocalDate.now().plusDays(14)), team = team, probationPractitioner = practitioner)
     val partCReportAfterThreshold = partCReportAtThreshold.copy(targetDate = Date.valueOf(LocalDate.now().plusDays(15)))
     partCReportRepository.saveAll(listOf(partCReportAtThreshold, partCReportAfterThreshold))
+
+    val reduction = ReductionsReportEntity(
+      staffName = practitioner,
+      staffId = staffCode,
+      staffTeamKey = "test",
+      reductionType = "Annual Leave",
+      reductionHours = 2.0,
+      reductionStatus = "ACTIVE",
+      startDate = Date.valueOf(LocalDate.now()),
+      expiryDate = Date.valueOf(LocalDate.now().plusDays(10)),
+      regionCode = "test",
+      pduCode = "test",
+      teamCode = "test",
+      contractedHours = 37,
+    )
+    reductionsReportRepository.save(reduction)
   }
 
   protected fun setupCasesForTeams() {
