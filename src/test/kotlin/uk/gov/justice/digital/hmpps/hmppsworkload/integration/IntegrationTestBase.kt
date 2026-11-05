@@ -81,6 +81,7 @@ import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.powerbi.Initial
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.powerbi.ParoleReportRepository
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.powerbi.PartBReportRepository
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.powerbi.PartCReportRepository
+import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.powerbi.ReductionsReportRepository
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.powerbi.ResetReportRepository
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.powerbi.UpcomingReleasesReportRepository
 import uk.gov.justice.digital.hmpps.hmppsworkload.listener.HmppsOffenderEvent
@@ -306,6 +307,9 @@ abstract class IntegrationTestBase {
 
   @Autowired
   protected lateinit var partCReportRepository: PartCReportRepository
+
+  @Autowired
+  protected lateinit var reductionsReportRepository: ReductionsReportRepository
 
   @BeforeEach
   fun setupDependentServices() {

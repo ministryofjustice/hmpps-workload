@@ -11,7 +11,7 @@ import jakarta.validation.constraints.NotNull
 import java.sql.Date
 
 @Entity
-@Table(name = "upcoming_releases_reports")
+@Table(name = "reductions_reports")
 data class ReductionsReportEntity @JsonCreator constructor(
 
   @Id

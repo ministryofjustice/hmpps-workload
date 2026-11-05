@@ -66,7 +66,7 @@ class ReportDataService(
   fun getStaffReductions(staffCode: String): List<Reductions> {
     val reductionsList = mutableListOf<Reductions>()
     reductionsReportRepository.findAllByStaffId(staffCode).forEach { reduction ->
-      reductionsList.add(Reductions(reduction.reductionHours, reduction.startDate.toLocalDate(), reduction.expiryDate.toLocalDate()))
+      reductionsList.add(Reductions(reduction.reductionHours, reduction.startDate.toLocalDate(), reduction.expiryDate.toLocalDate(), reduction.reductionType, reduction.reductionStatus, reduction.contractedHours))
     }
     return reductionsList
   }
