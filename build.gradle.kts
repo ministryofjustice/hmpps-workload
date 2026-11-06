@@ -1,6 +1,6 @@
 plugins {
   id("com.gorylenko.gradle-git-properties") version "2.5.4"
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "11.0.11"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "11.0.15"
   kotlin("plugin.spring") version "2.2.21"
   kotlin("plugin.jpa") version "2.2.21"
   kotlin("jvm") version "2.2.21"
