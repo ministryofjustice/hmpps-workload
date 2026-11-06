@@ -56,8 +56,8 @@ class TeamController(
   )
   @PreAuthorize("hasRole('ROLE_WORKLOAD_MEASUREMENT') or hasRole('ROLE_MANAGE_A_WORKFORCE_ALLOCATE')")
   @GetMapping("/team/practitioner-workloadcases")
-  suspend fun getPractitionerWorkloadAndCaseCount(@RequestParam(required = true) teamCode: String): Map<String, Map<String, List<PractitionerWithRawWorkloadPoints>>> {
-    val practitioners = teamService.getPractitioners(listOf(teamCode))
+  suspend fun getPractitionerWorkloadAndCaseCount(@RequestParam(required = true) teamCode: String, @RequestParam grades: List<String>?): Map<String, Map<String, List<PractitionerWithRawWorkloadPoints>>> {
+    val practitioners = teamService.getPractitioners(listOf(teamCode), grades)
       ?: throw EntityNotFoundException("Choose practitioner not found for $teamCode")
     return mapOf(practitioners.keys.first() to mapOf("teams" to practitioners.values.first()))
   }
