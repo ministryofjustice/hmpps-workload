@@ -31,6 +31,7 @@ import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.StaffMember
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.TeamActiveCases
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.TeamsResponse
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.CaseType
+import uk.gov.justice.digital.hmpps.hmppsworkload.domain.StaffIdentifier
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.entity.EventManagerEntity
 
 private const val TIMEOUT_VALUE = 3000L
@@ -243,12 +244,12 @@ class WorkforceAllocationsToDeliusApiClient(private val webClient: WebClient) {
     }
   }
 
-  suspend fun staffActiveCases(staffCode: String): StaffActiveCases {
+  suspend fun staffActiveCases(staffDetails: StaffIdentifier): StaffActiveCases {
     try {
       return withTimeout(EXTENDED_TIMEOUT_VALUE) {
         webClient
           .get()
-          .uri("/staff/{staffCode}/active-cases", staffCode)
+          .uri("/staff/{staffCode}/active-cases?teamCode={teamCode}", staffDetails.staffCode, staffDetails.teamCode)
           .retrieve()
           .onStatus({ it.is5xxServerError }) { response ->
             response.createException().flatMap { Mono.error(WorkloadFailedDependencyException(it.message!!)) }
