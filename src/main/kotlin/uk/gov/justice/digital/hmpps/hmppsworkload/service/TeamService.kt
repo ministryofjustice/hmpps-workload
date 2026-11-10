@@ -47,6 +47,7 @@ class TeamService(
     private val log = LoggerFactory.getLogger(this::class.java)
   }
 
+  @Suppress("LongMethod")
   suspend fun getPractitioners(teamCodes: List<String>, crn: String, grades: List<String>?): PractitionerWorkload? {
     return workforceAllocationsToDeliusApiClient.choosePractitioners(crn, teamCodes)?.let { choosePractitionerResponse ->
       val caseCountAfter = LocalDate.now().atStartOfDay(ZoneId.systemDefault()).minusDays(CASE_COUNT_PERIOD_DAYS)
@@ -110,6 +111,7 @@ class TeamService(
     return totals.asFlow()
   }
 
+  @Suppress("LongMethod")
   suspend fun getPractitioners(teamCodes: List<String>, grades: List<String>?): Map<String, List<PractitionerWithRawWorkloadPoints>>? {
     return workforceAllocationsToDeliusApiClient.choosePractitioners(teamCodes)?.let { choosePractitionerResponse ->
       val caseCountAfter = LocalDate.now().atStartOfDay(ZoneId.systemDefault()).minusDays(CASE_COUNT_PERIOD_DAYS)
