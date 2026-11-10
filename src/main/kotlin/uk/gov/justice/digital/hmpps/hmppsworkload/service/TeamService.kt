@@ -68,7 +68,7 @@ class TeamService(
             if (practitionerCases != null) {
               val reportPractitionerId = getReportPractitionerId(teamNames, team.key, it)
               val practitionerReductions = getPractitionerReductions(it.code)
-              val practitionerStats = getPractitionerStats(practitionerAllocationCaseCounts, practitionerReallocationCaseCounts, reportPractitionerData, teamStaffId, reportPractitionerId, teamTierCaseTotals[it.code], practitionerReductions,)
+              val practitionerStats = getPractitionerStats(practitionerAllocationCaseCounts, practitionerReallocationCaseCounts, reportPractitionerData, teamStaffId, reportPractitionerId, teamTierCaseTotals[it.code], practitionerReductions)
 
               Practitioner.from(it, practitionerCases, practitionerStats)
             } else {
