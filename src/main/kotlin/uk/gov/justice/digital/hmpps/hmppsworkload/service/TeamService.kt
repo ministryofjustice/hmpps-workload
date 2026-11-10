@@ -61,22 +61,19 @@ class TeamService(
       val enrichedTeams = choosePractitionerResponse.teams.mapValues { team ->
         team.value
           .filter { grades == null || grades.contains(it.getGrade()) }
-          .map {
+          .mapNotNull {
             val teamStaffId = teamStaffId(team.key, it.code)
-            val practitionerCases = teamCases[StaffIdentifier(it.code, team.key)]!!
-            val reportPractitionerId = getReportPractitionerId(teamNames, team.key, it)
-            val practitionerReductions = getPractitionerReductions(it.code)
-            val practitionerStats = getPractitionerStats(
-              practitionerAllocationCaseCounts,
-              practitionerReallocationCaseCounts,
-              reportPractitionerData,
-              teamStaffId,
-              reportPractitionerId,
-              teamTierCaseTotals[it.code],
-              practitionerReductions,
-            )
+            val practitionerCases = teamCases[StaffIdentifier(it.code, team.key)]
 
-            Practitioner.from(it, practitionerCases, practitionerStats)
+            if (practitionerCases != null) {
+              val reportPractitionerId = getReportPractitionerId(teamNames, team.key, it)
+              val practitionerReductions = getPractitionerReductions(it.code)
+              val practitionerStats = getPractitionerStats(practitionerAllocationCaseCounts, practitionerReallocationCaseCounts, reportPractitionerData, teamStaffId, reportPractitionerId, teamTierCaseTotals[it.code], practitionerReductions,)
+
+              Practitioner.from(it, practitionerCases, practitionerStats)
+            } else {
+              null
+            }
           }
       }
 
@@ -130,15 +127,20 @@ class TeamService(
       return choosePractitionerResponse.teams.mapValues { team ->
         team.value
           .filter { grades == null || grades.contains(it.getGrade()) }
-          .map {
+          .mapNotNull {
             val teamStaffId = it.code
             log.info("StaffId to get workload: $teamStaffId")
-            val practitionerCases = teamCases[StaffIdentifier(it.code, team.key)]!!
-            val reportPractitionerId = getReportPractitionerId(teamNames, team.key, it)
-            val practitionerReductions = getPractitionerReductions(it.code)
-            val practitionerStats = getPractitionerStats(practitionerAllocationCaseCounts, practitionerReallocationCaseCounts, reportPractitionerData, teamStaffId, reportPractitionerId, tierCaseTotals[it.code], practitionerReductions)
+            val practitionerCases = teamCases[StaffIdentifier(it.code, team.key)]
 
-            PractitionerWithRawWorkloadPoints.from(it, practitionerCases, practitionerStats)
+            if (practitionerCases != null) {
+              val reportPractitionerId = getReportPractitionerId(teamNames, team.key, it)
+              val practitionerReductions = getPractitionerReductions(it.code)
+              val practitionerStats = getPractitionerStats(practitionerAllocationCaseCounts, practitionerReallocationCaseCounts, reportPractitionerData, teamStaffId, reportPractitionerId, tierCaseTotals[it.code], practitionerReductions)
+
+              PractitionerWithRawWorkloadPoints.from(it, practitionerCases, practitionerStats)
+            } else {
+              null
+            }
           }
       }
     }

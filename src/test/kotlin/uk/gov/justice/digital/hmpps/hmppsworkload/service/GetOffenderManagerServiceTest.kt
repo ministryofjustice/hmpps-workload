@@ -140,7 +140,7 @@ class GetOffenderManagerServiceTest {
     coEvery { getReductionService.findNextReductionChange(staffIdentifier) } returns ZonedDateTime.now().plusDays(1)
     coEvery { getReductionService.findReductionHours(staffIdentifier) } returns reductionHours
     coEvery { getWeeklyHours.findWeeklyHours(staffIdentifier, OFFICER_GRADE) } returns workWeekHours
-    coEvery { workforceAllocationsToDeliusApiClient.staffActiveCases(staffIdentifier.staffCode) } returns StaffActiveCases("", Name("", "", ""), "", "", emptyList())
+    coEvery { workforceAllocationsToDeliusApiClient.staffActiveCases(staffIdentifier) } returns StaffActiveCases("", Name("", "", ""), "", "", emptyList())
     coEvery { caseTotalsService.getPractitionerTotalsByTier(any()) } returns TierCaseTotals(BigDecimal.valueOf(120), BigDecimal.valueOf(122), BigDecimal.valueOf(124), BigDecimal.valueOf(126), BigDecimal.valueOf(128), BigDecimal.valueOf(130), BigDecimal.valueOf(132), BigDecimal.valueOf(134), BigDecimal.valueOf(25))
 
     val overview = offenderManagerService.getOverview(staffIdentifier)
@@ -174,7 +174,7 @@ class GetOffenderManagerServiceTest {
 
     val now = LocalDate.now()
 
-    coEvery { workforceAllocationsToDeliusApiClient.staffActiveCases(staffIdentifier.staffCode) } returns StaffActiveCases("002", name, OFFICER_GRADE, OFFICER_EMAIL, listOf(ActiveCase(crn, name, "CUSTODY", now)))
+    coEvery { workforceAllocationsToDeliusApiClient.staffActiveCases(staffIdentifier) } returns StaffActiveCases("002", name, OFFICER_GRADE, OFFICER_EMAIL, listOf(ActiveCase(crn, name, "CUSTODY", now)))
 
     val caseDetailsEntity = CaseDetailsEntity(crn, Tier.A, false, CaseType.CUSTODY, "John", "Smith")
     coEvery { caseDetailsRepository.findAllById(listOf(crn)) } returns listOf(caseDetailsEntity)
@@ -199,7 +199,7 @@ class GetOffenderManagerServiceTest {
 
     val now = LocalDate.now()
 
-    coEvery { workforceAllocationsToDeliusApiClient.staffActiveCases(staffIdentifier.staffCode) } returns StaffActiveCases("002", name, OFFICER_GRADE, OFFICER_EMAIL, listOf(ActiveCase(crn1, name, "CUSTODY", now), ActiveCase(crn2, name, "CUSTODY", now)))
+    coEvery { workforceAllocationsToDeliusApiClient.staffActiveCases(staffIdentifier) } returns StaffActiveCases("002", name, OFFICER_GRADE, OFFICER_EMAIL, listOf(ActiveCase(crn1, name, "CUSTODY", now), ActiveCase(crn2, name, "CUSTODY", now)))
 
     val caseDetailsEntity = CaseDetailsEntity(crn1, Tier.A, false, CaseType.CUSTODY, "John", "Smith")
     coEvery { caseDetailsRepository.findAllById(listOf(crn1, crn2)) } returns listOf(caseDetailsEntity)
