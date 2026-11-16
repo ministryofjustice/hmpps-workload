@@ -15,6 +15,7 @@ import org.springframework.web.reactive.function.client.ExchangeFunction
 import org.springframework.web.reactive.function.client.WebClient
 import reactor.core.publisher.Mono
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.CaseType
+import uk.gov.justice.digital.hmpps.hmppsworkload.domain.StaffIdentifier
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.entity.EventManagerEntity
 import java.math.BigInteger
 import java.time.LocalDate
@@ -285,7 +286,7 @@ class WorkforceAllocationsToDeliusApiClientTest {
       .build()
 
     val result = WorkforceAllocationsToDeliusApiClient(webClient)
-      .staffActiveCases("SM00234")
+      .staffActiveCases(StaffIdentifier("SM00234", ""))
 
     assertEquals("SM00234", result.code)
     assertEquals("Jones", result.name.surname)
