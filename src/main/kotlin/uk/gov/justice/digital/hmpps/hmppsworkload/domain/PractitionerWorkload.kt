@@ -78,6 +78,27 @@ data class PractitionerWithRawWorkloadPoints(
       practitionerStats.hdcrotlReportsInNext14Days + practitionerStats.partBReportsInNext14Days + practitionerStats.partCReportsInNext14Days,
       practitionerStats.tierCaseTotals,
     )
+
+    fun from(staffMember: StaffMember, practitionerStats: PractitionerStats): PractitionerWithRawWorkloadPoints = PractitionerWithRawWorkloadPoints(
+      staffMember.code,
+      staffMember.name,
+      staffMember.email.takeUnless { email -> email.isNullOrBlank() },
+      staffMember.getGrade(),
+      practitionerStats.allocatedCaseCount + practitionerStats.reallocatedCaseCount,
+      practitionerStats.allocatedCaseCount,
+      practitionerStats.reallocatedCaseCount,
+      0,
+      0,
+      0,
+      0,
+      practitionerStats.ispsDueInNext14Days,
+      0,
+      practitionerStats.contactSuspendedCases,
+      practitionerStats.custodyReleasesInNext7Days,
+      practitionerStats.paroleReportsInNext28Days,
+      practitionerStats.hdcrotlReportsInNext14Days + practitionerStats.partBReportsInNext14Days + practitionerStats.partCReportsInNext14Days,
+      practitionerStats.tierCaseTotals,
+    )
   }
 }
 
@@ -116,6 +137,27 @@ data class Practitioner constructor(
       practitionerCases.activeCases.filter { it.type == "CUSTODY" }.size,
       practitionerStats.ispsDueInNext14Days,
       practitionerCases.activeCases.size - practitionerStats.contactSuspendedCases,
+      practitionerStats.contactSuspendedCases,
+      practitionerStats.custodyReleasesInNext7Days,
+      practitionerStats.paroleReportsInNext28Days,
+      practitionerStats.hdcrotlReportsInNext14Days + practitionerStats.partBReportsInNext14Days + practitionerStats.partCReportsInNext14Days,
+      practitionerStats.tierCaseTotals,
+    )
+
+    fun from(staffMember: StaffMember, practitionerStats: PractitionerStats): Practitioner = Practitioner(
+      staffMember.code,
+      staffMember.name,
+      staffMember.email.takeUnless { email -> email.isNullOrBlank() },
+      staffMember.getGrade(),
+      practitionerStats.allocatedCaseCount + practitionerStats.reallocatedCaseCount,
+      practitionerStats.allocatedCaseCount,
+      practitionerStats.reallocatedCaseCount,
+      0,
+      0,
+      0,
+      0,
+      practitionerStats.ispsDueInNext14Days,
+      0,
       practitionerStats.contactSuspendedCases,
       practitionerStats.custodyReleasesInNext7Days,
       practitionerStats.paroleReportsInNext28Days,
