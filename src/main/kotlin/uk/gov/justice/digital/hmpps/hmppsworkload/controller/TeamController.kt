@@ -29,7 +29,7 @@ class TeamController(
       ApiResponse(responseCode = "404", description = "Result Not Found"),
     ],
   )
-  @PreAuthorize("hasRole('ROLE_MANAGE_A_WORKFORCE_ALLOCATE')")
+  @PreAuthorize("hasRole('ROLE_WORKLOAD_READ') or hasRole('ROLE_MANAGE_A_WORKFORCE_ALLOCATE')")
   @GetMapping("/team/choose-practitioner")
   suspend fun getPractitioners(
     @RequestParam teamCodes: List<String>,
