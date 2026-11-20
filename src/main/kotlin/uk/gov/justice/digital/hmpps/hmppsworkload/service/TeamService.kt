@@ -66,6 +66,7 @@ class TeamService(
             val teamStaffId = teamStaffId(team.key, it.code)
             val practitionerCases = teamCases[StaffIdentifier(it.code, team.key)]
             val reportPractitionerId = getReportPractitionerId(teamNames, team.key, it)
+            val practitionerReductions = getPractitionerReductions(it.code)
             val practitionerStats = getPractitionerStats(practitionerAllocationCaseCounts, practitionerReallocationCaseCounts, reportPractitionerData, teamStaffId, reportPractitionerId, teamTierCaseTotals[it.code], practitionerReductions)
 
             if (practitionerCases != null) {
@@ -132,6 +133,7 @@ class TeamService(
             log.info("StaffId to get workload: $teamStaffId")
             val practitionerCases = teamCases[StaffIdentifier(it.code, team.key)]
             val reportPractitionerId = getReportPractitionerId(teamNames, team.key, it)
+            val practitionerReductions = getPractitionerReductions(it.code)
             val practitionerStats = getPractitionerStats(practitionerAllocationCaseCounts, practitionerReallocationCaseCounts, reportPractitionerData, teamStaffId, reportPractitionerId, tierCaseTotals[it.code], practitionerReductions)
 
             if (practitionerCases != null) {
