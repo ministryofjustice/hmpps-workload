@@ -100,6 +100,7 @@ data class PractitionerWithRawWorkloadPoints(
       practitionerStats.paroleReportsInNext28Days,
       practitionerStats.hdcrotlReportsInNext14Days + practitionerStats.partBReportsInNext14Days + practitionerStats.partCReportsInNext14Days,
       practitionerStats.tierCaseTotals,
+      practitionerStats.reductions,
     )
   }
 }
@@ -167,6 +168,7 @@ data class Practitioner constructor(
       practitionerStats.paroleReportsInNext28Days,
       practitionerStats.hdcrotlReportsInNext14Days + practitionerStats.partBReportsInNext14Days + practitionerStats.partCReportsInNext14Days,
       practitionerStats.tierCaseTotals,
+      practitionerStats.reductions,
     )
   }
 }
