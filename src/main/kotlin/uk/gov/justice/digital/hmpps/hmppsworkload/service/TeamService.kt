@@ -18,6 +18,7 @@ import uk.gov.justice.digital.hmpps.hmppsworkload.domain.Practitioner
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.PractitionerStats
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.PractitionerWithRawWorkloadPoints
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.PractitionerWorkload
+import uk.gov.justice.digital.hmpps.hmppsworkload.domain.Reductions
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.StaffIdentifier
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.TierCaseTotals
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.WorkloadCase
@@ -46,6 +47,7 @@ class TeamService(
     private val log = LoggerFactory.getLogger(this::class.java)
   }
 
+  @Suppress("LongMethod")
   suspend fun getPractitioners(teamCodes: List<String>, crn: String, grades: List<String>?): PractitionerWorkload? {
     return workforceAllocationsToDeliusApiClient.choosePractitioners(crn, teamCodes)?.let { choosePractitionerResponse ->
       val caseCountAfter = LocalDate.now().atStartOfDay(ZoneId.systemDefault()).minusDays(CASE_COUNT_PERIOD_DAYS)
@@ -64,7 +66,8 @@ class TeamService(
             val teamStaffId = teamStaffId(team.key, it.code)
             val practitionerCases = teamCases[StaffIdentifier(it.code, team.key)]
             val reportPractitionerId = getReportPractitionerId(teamNames, team.key, it)
-            val practitionerStats = getPractitionerStats(practitionerAllocationCaseCounts, practitionerReallocationCaseCounts, reportPractitionerData, teamStaffId, reportPractitionerId, teamTierCaseTotals[it.code])
+            val practitionerReductions = getPractitionerReductions(it.code)
+            val practitionerStats = getPractitionerStats(practitionerAllocationCaseCounts, practitionerReallocationCaseCounts, reportPractitionerData, teamStaffId, reportPractitionerId, teamTierCaseTotals[it.code], practitionerReductions)
 
             if (practitionerCases != null) {
               Practitioner.from(it, practitionerCases, practitionerStats)
@@ -107,6 +110,7 @@ class TeamService(
     return totals.asFlow()
   }
 
+  @Suppress("LongMethod")
   suspend fun getPractitioners(teamCodes: List<String>, grades: List<String>?): Map<String, List<PractitionerWithRawWorkloadPoints>>? {
     return workforceAllocationsToDeliusApiClient.choosePractitioners(teamCodes)?.let { choosePractitionerResponse ->
       val caseCountAfter = LocalDate.now().atStartOfDay(ZoneId.systemDefault()).minusDays(CASE_COUNT_PERIOD_DAYS)
@@ -129,7 +133,8 @@ class TeamService(
             log.info("StaffId to get workload: $teamStaffId")
             val practitionerCases = teamCases[StaffIdentifier(it.code, team.key)]
             val reportPractitionerId = getReportPractitionerId(teamNames, team.key, it)
-            val practitionerStats = getPractitionerStats(practitionerAllocationCaseCounts, practitionerReallocationCaseCounts, reportPractitionerData, teamStaffId, reportPractitionerId, tierCaseTotals[it.code])
+            val practitionerReductions = getPractitionerReductions(it.code)
+            val practitionerStats = getPractitionerStats(practitionerAllocationCaseCounts, practitionerReallocationCaseCounts, reportPractitionerData, teamStaffId, reportPractitionerId, tierCaseTotals[it.code], practitionerReductions)
 
             if (practitionerCases != null) {
               PractitionerWithRawWorkloadPoints.from(it, practitionerCases, practitionerStats)
@@ -159,6 +164,7 @@ class TeamService(
     teamStaffId: String,
     reportPractitionerId: ReportPractitionerId,
     tierCaseTotals: TierCaseTotals?,
+    practitionerReductions: List<Reductions>,
   ): PractitionerStats = PractitionerStats(
     practitionerAllocationCaseCounts.getOrDefault(teamStaffId, 0),
     practitionerReallocationCaseCounts.getOrDefault(teamStaffId, 0),
@@ -170,6 +176,7 @@ class TeamService(
     reportPractitionerData.partBReportsInNext14Days.getOrDefault(reportPractitionerId, 0),
     reportPractitionerData.partCReportsInNext14Days.getOrDefault(reportPractitionerId, 0),
     tierCaseTotals ?: TierCaseTotals(),
+    practitionerReductions,
   )
 
   private suspend fun getTeamPractitionerCases(teams: Set<String>): Map<StaffIdentifier, OffenderManagerCases?> {
@@ -187,4 +194,6 @@ class TeamService(
         .associate { it.key to it.value }
     }
   }
+
+  private suspend fun getPractitionerReductions(staffCode: String): List<Reductions> = reportDataService.getStaffReductions(staffCode)
 }
