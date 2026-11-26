@@ -22,18 +22,14 @@ import uk.gov.justice.digital.hmpps.hmppsworkload.domain.Tier
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.TierCaseTotals
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.entity.CaseDetailsEntity
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.entity.PersonManagerEntity
-import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.mapping.OverviewOffenderManager
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.CaseDetailsRepository
-import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.OffenderManagerRepository
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.PersonManagerRepository
-import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.WorkloadPointsRepository
 import uk.gov.justice.digital.hmpps.hmppsworkload.service.staff.CaseTotalsService
 import uk.gov.justice.digital.hmpps.hmppsworkload.service.staff.GetOffenderManagerService
 import uk.gov.justice.digital.hmpps.hmppsworkload.service.staff.JpaBasedGetEventManager
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.time.LocalDate
-import java.time.LocalDateTime
 import java.time.ZonedDateTime
 
 private const val OFFICER_EMAIL = "me@here.com"
@@ -44,19 +40,13 @@ private const val STAFF_TEAM_CODE = "Reds"
 
 class GetOffenderManagerServiceTest {
   private val workforceAllocationsToDeliusApiClient = mockk<WorkforceAllocationsToDeliusApiClient>()
-  private val workloadPointsRepository = mockk<WorkloadPointsRepository>()
-  private val offenderManagerRepository = mockk<OffenderManagerRepository>()
   private val caseDetailsRepository = mockk<CaseDetailsRepository>()
-  private val getWeeklyHours = mockk<GetWeeklyHours>()
   private val getEventManager = mockk<JpaBasedGetEventManager>()
   private val caseTotalsService = mockk<CaseTotalsService>()
   private val personManagerRepository = mockk<PersonManagerRepository>()
 
   private val offenderManagerService = GetOffenderManagerService(
-    offenderManagerRepository,
-    workloadPointsRepository,
     caseDetailsRepository,
-    getWeeklyHours,
     getEventManager,
     workforceAllocationsToDeliusApiClient,
     caseTotalsService,
@@ -68,32 +58,13 @@ class GetOffenderManagerServiceTest {
     val name = Name("Jim", "A", "Bond")
     val staffIdentifier = StaffIdentifier(STAFF_CODE, STAFF_TEAM_CODE)
     val staffMember = StaffMember(OFFICER_CODE, name, OFFICER_EMAIL, OFFICER_GRADE)
-    val communityCases = 1L
-    val licenseCases = 0L
-    val custodyCases = 2L
-    val availablePoints = 102L
-    val totalPoints = BigInteger.valueOf(15)
 
     coEvery { workforceAllocationsToDeliusApiClient.impact(crn, staffIdentifier.staffCode) } returns ImpactResponse(crn, name, staffMember)
     coEvery { caseDetailsRepository.findByIdOrNull(crn) } returns CaseDetailsEntity(crn, Tier.A, false, CaseType.CUSTODY, "John", "Smith")
-    coEvery { offenderManagerRepository.findByOverview(STAFF_TEAM_CODE, STAFF_CODE) } returns OverviewOffenderManager(
-      communityCases,
-      licenseCases,
-      custodyCases,
-      BigInteger.valueOf(availablePoints),
-      totalPoints,
-      STAFF_CODE,
-      LocalDateTime.now(),
-      13,
-      BigInteger.valueOf(12L),
-    )
-    coEvery { offenderManagerRepository.findCaseByTeamCodeAndStaffCodeAndCrn(STAFF_TEAM_CODE, STAFF_CODE, crn) } returns "002"
 
     val workload = offenderManagerService.getPotentialWorkload(staffIdentifier, crn)
     assertEquals(workload?.name, name)
     assertEquals(workload?.staff, staffMember)
-    assertEquals(workload?.capacity, BigDecimal("14.700"))
-    assertEquals(workload?.potentialCapacity, BigDecimal("14.700"))
     assertEquals(workload?.tier, Tier.A)
   }
 
@@ -103,12 +74,7 @@ class GetOffenderManagerServiceTest {
     val name = Name("Jim", "A", "Bond")
     val staffIdentifier = StaffIdentifier(STAFF_CODE, STAFF_TEAM_CODE)
     val eventDetails = EventDetails(Tier.A, false, CaseType.CUSTODY, crn, ZonedDateTime.now())
-    val workWeekHours = BigDecimal.valueOf(40)
-    val totalPoints = BigInteger.valueOf(15)
-    val communityCases = 1L
-    val licenseCases = 0L
-    val custodyCases = 2L
-    val availablePoints = 102L
+    val activeCases = listOf(ActiveCase(crn, name, "CUSTODY", LocalDate.now()))
 
     coEvery { workforceAllocationsToDeliusApiClient.getOfficerView(staffIdentifier.staffCode) } returns OfficerView(
       STAFF_CODE,
@@ -119,29 +85,14 @@ class GetOffenderManagerServiceTest {
       BigInteger.valueOf(5),
       BigInteger.valueOf(6),
     )
-    coEvery { caseDetailsRepository.findByIdOrNull(crn) } returns CaseDetailsEntity(crn, Tier.A, false, CaseType.CUSTODY, "John", "Smith")
-    coEvery { offenderManagerRepository.findByOverview(STAFF_TEAM_CODE, STAFF_CODE) } returns OverviewOffenderManager(
-      communityCases,
-      licenseCases,
-      custodyCases,
-      BigInteger.valueOf(availablePoints),
-      totalPoints,
-      STAFF_CODE,
-      LocalDateTime.now(),
-      13,
-      BigInteger.valueOf(12L),
-    )
-    coEvery { offenderManagerRepository.findCaseByTeamCodeAndStaffCodeAndCrn(STAFF_TEAM_CODE, STAFF_CODE, "1234") } returns "002"
+    coEvery { caseDetailsRepository.findAllById(listOf(crn)) } returns listOf(CaseDetailsEntity(crn, Tier.A, false, CaseType.CUSTODY, "John", "Smith"))
     coEvery { getEventManager.findLatestByStaffAndTeam(staffIdentifier) } returns eventDetails
-    coEvery { getWeeklyHours.findWeeklyHours(staffIdentifier, OFFICER_GRADE) } returns workWeekHours
-    coEvery { workforceAllocationsToDeliusApiClient.staffActiveCases(staffIdentifier) } returns StaffActiveCases("", Name("", "", ""), "", "", emptyList())
+    coEvery { workforceAllocationsToDeliusApiClient.staffActiveCases(staffIdentifier) } returns StaffActiveCases("", Name("", "", ""), "", "", activeCases)
     coEvery { caseTotalsService.getPractitionerTotalsByTier(any()) } returns TierCaseTotals(BigDecimal.valueOf(120), BigDecimal.valueOf(122), BigDecimal.valueOf(124), BigDecimal.valueOf(126), BigDecimal.valueOf(128), BigDecimal.valueOf(130), BigDecimal.valueOf(132), BigDecimal.valueOf(134), BigDecimal.valueOf(25))
 
     val overview = offenderManagerService.getOverview(staffIdentifier)
 
     assertEquals(overview?.code, STAFF_CODE)
-    assertEquals(overview?.weeklyHours, workWeekHours)
-    assertEquals(overview?.capacity?.compareTo(BigDecimal.valueOf(14.7)), 0)
     assertEquals(overview?.email, OFFICER_EMAIL)
     assertEquals(overview?.grade, OFFICER_GRADE)
     assertEquals(overview?.caseTotals?.a, BigDecimal.valueOf(120))
@@ -154,9 +105,7 @@ class GetOffenderManagerServiceTest {
     assertEquals(overview?.caseTotals?.missing, BigDecimal.valueOf(134))
     assertEquals(overview?.caseTotals?.notSupervised, BigDecimal.valueOf(25))
     assertEquals(overview?.caseEndDue, BigInteger.valueOf(4))
-    assertEquals(overview?.pointsAvailable, BigInteger.valueOf(availablePoints))
-    assertEquals(overview?.pointsUsed, totalPoints)
-    assertEquals(overview?.totalCases, communityCases + custodyCases)
+    assertEquals(overview?.totalCases, 1)
   }
 
   @Test

@@ -18,26 +18,22 @@ class GetOverviewForOffenderManager : IntegrationTestBase() {
   fun `can get overview for an offender manager`() {
     val teamCode = "T1"
     val offenderManagerCode = "OM1"
-    workforceAllocationsToDelius.officerViewResponse(offenderManagerCode)
-    workforceAllocationsToDelius.staffActiveCasesResponse(
-      offenderManagerCode,
-      activeCases = listOf(
-        buildActiveCase("X111111"),
-        buildActiveCase("X111112"),
-        buildActiveCase("X111113"),
-        buildActiveCase("X111114"),
-        buildActiveCase("X111115"),
-        buildActiveCase("X111116"),
-        buildActiveCase("X111117"),
-        buildActiveCase("X111118"),
-        buildActiveCase("X111119"),
-      ),
+    val activeCases = listOf(
+      buildActiveCase("X111111"),
+      buildActiveCase("X111112"),
+      buildActiveCase("X111113"),
+      buildActiveCase("X111114"),
+      buildActiveCase("X111115"),
+      buildActiveCase("X111116"),
+      buildActiveCase("X111117"),
+      buildActiveCase("X111118"),
+      buildActiveCase("X111119"),
     )
 
-    val wmtStaff = setupCurrentWmtStaff(offenderManagerCode, teamCode)
+    workforceAllocationsToDelius.officerViewResponse(offenderManagerCode)
+    workforceAllocationsToDelius.staffActiveCasesResponse(offenderManagerCode, activeCases = activeCases)
 
-    setupWmtManagedCase(wmtStaff, Tier.A, "CRN3333", CaseType.COMMUNITY)
-    setupWmtManagedCase(wmtStaff, Tier.D, "CRN2222", CaseType.CUSTODY)
+    activeCases.forEach { caseDetailsRepository.save(CaseDetailsEntity(it.crn, Tier.A, false, CaseType.COMMUNITY, it.firstName, it.surname)) }
 
     hmppsTier.bulkTierCalculationResponse(
       mapOf(
@@ -68,28 +64,12 @@ class GetOverviewForOffenderManager : IntegrationTestBase() {
       .isEqualTo("Hancock")
       .jsonPath("$.grade")
       .isEqualTo("PO")
-      .jsonPath("$.capacity")
-      .isEqualTo(50)
       .jsonPath("$.code")
       .isEqualTo("OM1")
       .jsonPath("$.email")
       .isEqualTo("sheila.hancock@test.justice.gov.uk")
       .jsonPath("$.totalCases")
-      .isEqualTo(35)
-      .jsonPath("$.weeklyHours")
-      .isEqualTo(wmtStaff.wmtWorkloadOwnerEntity.contractedHours)
-      .jsonPath("$.pointsAvailable")
-      .isEqualTo(wmtStaff.workloadPointsCalculation.availablePoints)
-      .jsonPath("$.pointsUsed")
-      .isEqualTo(wmtStaff.workloadPointsCalculation.totalPoints)
-      .jsonPath("$.pointsRemaining")
-      .isEqualTo(wmtStaff.workloadPointsCalculation.availablePoints - wmtStaff.workloadPointsCalculation.totalPoints)
-      .jsonPath("$.lastUpdatedOn")
-      .isEqualTo(
-        wmtStaff.workloadPointsCalculation.lastUpdatedOn.format(
-          DateTimeFormatter.ISO_LOCAL_DATE_TIME,
-        ),
-      )
+      .isEqualTo(9)
       .jsonPath("$.caseTotals.a")
       .isEqualTo(1)
       .jsonPath("$.caseTotals.b")
@@ -108,8 +88,6 @@ class GetOverviewForOffenderManager : IntegrationTestBase() {
       .isEqualTo(1)
       .jsonPath("$.caseTotals.notSupervised")
       .isEqualTo(1)
-      .jsonPath("$.paroleReportsDue")
-      .isEqualTo(wmtStaff.workload.institutionalReportsDueInNextThirtyDays)
       .jsonPath("$.caseEndDue")
       .isEqualTo(1)
       .jsonPath("$.releasesDue")
@@ -123,6 +101,10 @@ class GetOverviewForOffenderManager : IntegrationTestBase() {
     val teamCode = "T1"
     val offenderManagerCode = "NOWORKLOAD1"
     workforceAllocationsToDelius.officerViewResponse(offenderManagerCode)
+    workforceAllocationsToDelius.staffActiveCasesResponse(
+      offenderManagerCode,
+      activeCases = listOf(),
+    )
 
     webTestClient.get()
       .uri("/team/$teamCode/offenderManagers/$offenderManagerCode")
@@ -139,20 +121,10 @@ class GetOverviewForOffenderManager : IntegrationTestBase() {
       .isEqualTo("Hancock")
       .jsonPath("$.grade")
       .isEqualTo("PO")
-      .jsonPath("$.capacity")
-      .isEqualTo(0)
       .jsonPath("$.code")
       .isEqualTo(offenderManagerCode)
       .jsonPath("$.totalCases")
       .isEqualTo(0)
-      .jsonPath("$.weeklyHours")
-      .isEqualTo(37)
-      .jsonPath("$.pointsAvailable")
-      .isEqualTo(2176)
-      .jsonPath("$.pointsUsed")
-      .isEqualTo(0)
-      .jsonPath("$.pointsRemaining")
-      .isEqualTo(2176)
       .jsonPath("$.caseTotals.a")
       .isEqualTo(0)
       .jsonPath("$.caseTotals.b")
@@ -178,6 +150,11 @@ class GetOverviewForOffenderManager : IntegrationTestBase() {
     val teamCode = "T1"
     val offenderManagerCode = "NOWORKLOAD1"
     workforceAllocationsToDelius.officerViewResponse(offenderManagerCode, email = null)
+    workforceAllocationsToDelius.staffActiveCasesResponse(
+      offenderManagerCode,
+      activeCases = listOf(),
+    )
+
     webTestClient.get()
       .uri("/team/$teamCode/offenderManagers/$offenderManagerCode")
       .headers {
@@ -200,6 +177,10 @@ class GetOverviewForOffenderManager : IntegrationTestBase() {
     val teamCode = "T1"
     val offenderManagerCode = "NOWORKLOAD1"
     workforceAllocationsToDelius.officerViewResponse(offenderManagerCode)
+    workforceAllocationsToDelius.staffActiveCasesResponse(
+      offenderManagerCode,
+      activeCases = listOf(),
+    )
 
     val eventManager = eventManagerRepository.save(
       EventManagerEntity(
