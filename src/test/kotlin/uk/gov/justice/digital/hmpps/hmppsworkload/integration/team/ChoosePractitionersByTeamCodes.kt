@@ -49,7 +49,7 @@ class ChoosePractitionersByTeamCodes : IntegrationTestBase() {
 
     webTestClient.get()
       .uri("/team/choose-practitioner?crn=$crn&teamCodes=$teamCode,$teamCode2")
-      .headers { it.authToken(roles = listOf("ROLE_WORKLOAD_MEASUREMENT")) }
+      .headers { it.authToken(roles = listOf("ROLE_MANAGE_A_WORKFORCE_ALLOCATE")) }
       .exchange()
       .expectStatus()
       .isOk
@@ -198,7 +198,7 @@ class ChoosePractitionersByTeamCodes : IntegrationTestBase() {
 
     webTestClient.get()
       .uri("/team/choose-practitioner?&teamCodes=$teamCode,$teamCode2&crn=$crn")
-      .headers { it.authToken(roles = listOf("ROLE_WORKLOAD_MEASUREMENT")) }
+      .headers { it.authToken(roles = listOf("ROLE_MANAGE_A_WORKFORCE_ALLOCATE")) }
       .exchange()
       .expectStatus()
       .isOk
@@ -336,7 +336,7 @@ class ChoosePractitionersByTeamCodes : IntegrationTestBase() {
 
     webTestClient.get()
       .uri("/team/practitioner-workloadcases?teamCode=$teamCode")
-      .headers { it.authToken(roles = listOf("ROLE_WORKLOAD_MEASUREMENT")) }
+      .headers { it.authToken(roles = listOf("ROLE_MANAGE_A_WORKFORCE_ALLOCATE")) }
       .exchange()
       .expectStatus()
       .isOk
@@ -403,7 +403,7 @@ class ChoosePractitionersByTeamCodes : IntegrationTestBase() {
 
     webTestClient.get()
       .uri("/team/practitioner-workloadcases?teamCode=$teamCode&grades=PO")
-      .headers { it.authToken(roles = listOf("ROLE_WORKLOAD_MEASUREMENT")) }
+      .headers { it.authToken(roles = listOf("ROLE_MANAGE_A_WORKFORCE_ALLOCATE")) }
       .exchange()
       .expectStatus()
       .isOk
@@ -445,7 +445,7 @@ class ChoosePractitionersByTeamCodes : IntegrationTestBase() {
 
     webTestClient.get()
       .uri("/team/choose-practitioner?crn=$crn&teamCodes=$teamCode,$teamCode2")
-      .headers { it.authToken(roles = listOf("ROLE_WORKLOAD_MEASUREMENT")) }
+      .headers { it.authToken(roles = listOf("ROLE_MANAGE_A_WORKFORCE_ALLOCATE")) }
       .exchange()
       .expectStatus()
       .isNotFound
@@ -468,7 +468,7 @@ class ChoosePractitionersByTeamCodes : IntegrationTestBase() {
 
     webTestClient.get()
       .uri("/team/choose-practitioner?crn=$crn&teamCodes=$teamCode,$teamCode2&grades=PO,PQiP")
-      .headers { it.authToken(roles = listOf("ROLE_WORKLOAD_MEASUREMENT")) }
+      .headers { it.authToken(roles = listOf("ROLE_MANAGE_A_WORKFORCE_ALLOCATE")) }
       .exchange()
       .expectStatus()
       .isOk
@@ -489,7 +489,7 @@ class ChoosePractitionersByTeamCodes : IntegrationTestBase() {
   fun `must return not found when team code is not matched`() {
     webTestClient.get()
       .uri("/team/choose-practitioner?crn=CRNRANDOM123456&teamCodes=T1")
-      .headers { it.authToken(roles = listOf("ROLE_WORKLOAD_MEASUREMENT")) }
+      .headers { it.authToken(roles = listOf("ROLE_MANAGE_A_WORKFORCE_ALLOCATE")) }
       .exchange()
       .expectStatus()
       .isNotFound
@@ -528,7 +528,7 @@ class ChoosePractitionersByTeamCodes : IntegrationTestBase() {
 
     webTestClient.get()
       .uri("/team/choose-practitioner?crn=$crn&teamCodes=$teamCode")
-      .headers { it.authToken(roles = listOf("ROLE_WORKLOAD_MEASUREMENT")) }
+      .headers { it.authToken(roles = listOf("ROLE_MANAGE_A_WORKFORCE_ALLOCATE")) }
       .exchange()
       .expectStatus()
       .isOk
@@ -554,7 +554,7 @@ class ChoosePractitionersByTeamCodes : IntegrationTestBase() {
 
     webTestClient.get()
       .uri("/team/choose-practitioner?crn=$crn&teamCodes=$teamCode,$teamCode2")
-      .headers { it.authToken(roles = listOf("ROLE_WORKLOAD_MEASUREMENT")) }
+      .headers { it.authToken(roles = listOf("ROLE_MANAGE_A_WORKFORCE_ALLOCATE")) }
       .exchange()
       .expectStatus()
       .isOk
@@ -585,7 +585,7 @@ class ChoosePractitionersByTeamCodes : IntegrationTestBase() {
 
     webTestClient.get()
       .uri("/team/choose-practitioner?crn=$crn&teamCodes=$teamCode")
-      .headers { it.authToken(roles = listOf("ROLE_WORKLOAD_MEASUREMENT")) }
+      .headers { it.authToken(roles = listOf("ROLE_MANAGE_A_WORKFORCE_ALLOCATE")) }
       .exchange()
       .expectStatus()
       .isOk
@@ -619,7 +619,7 @@ class ChoosePractitionersByTeamCodes : IntegrationTestBase() {
 
     webTestClient.get()
       .uri("/team/choose-practitioner?crn=$crn&teamCodes=$teamCode")
-      .headers { it.authToken(roles = listOf("ROLE_WORKLOAD_MEASUREMENT")) }
+      .headers { it.authToken(roles = listOf("ROLE_MANAGE_A_WORKFORCE_ALLOCATE")) }
       .exchange()
       .expectStatus()
       .isOk
@@ -655,7 +655,7 @@ class ChoosePractitionersByTeamCodes : IntegrationTestBase() {
 
     webTestClient.get()
       .uri("/team/choose-practitioner?crn=$crn&teamCodes=$teamCode")
-      .headers { it.authToken(roles = listOf("ROLE_WORKLOAD_MEASUREMENT")) }
+      .headers { it.authToken(roles = listOf("ROLE_MANAGE_A_WORKFORCE_ALLOCATE")) }
       .exchange()
       .expectStatus()
       .isOk
