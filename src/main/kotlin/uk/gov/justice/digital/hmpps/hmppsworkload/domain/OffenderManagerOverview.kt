@@ -26,8 +26,6 @@ data class OffenderManagerOverview @JsonCreator constructor(
   val totalCases: Long,
   @Schema(description = "Probation Practitioner Contracted hours per week", example = "37")
   val weeklyHours: BigDecimal,
-  @Schema(description = "Probation Practitioner total Reduction hours per week", example = "10")
-  val totalReductionHours: BigDecimal,
   @Schema(description = "Probation Practitioner total Points available", example = "2176")
   val pointsAvailable: BigInteger,
   @Schema(description = "Probation Practitioner total Points used", example = "1567")
@@ -36,8 +34,6 @@ data class OffenderManagerOverview @JsonCreator constructor(
   val pointsRemaining: BigInteger,
   @Schema(description = "Last time the Capacity was updated", example = "2013-11-03T09:00:00")
   val lastUpdatedOn: LocalDateTime?,
-  @Schema(description = "Next time the reduction total will change", example = "2013-11-03T09:00:00")
-  val nextReductionChange: ZonedDateTime?,
   val caseTotals: TierCaseTotals,
   @Schema(description = "Probation Practitioner parole reports due in the next 30 days", example = "5")
   val paroleReportsDue: BigInteger,
@@ -57,12 +53,10 @@ data class OffenderManagerOverview @JsonCreator constructor(
       officerView.email,
       overviewOffenderManager.totalCommunityCases.plus(overviewOffenderManager.totalLicenseCases).plus(overviewOffenderManager.totalCustodyCases),
       overviewOffenderManager.contractedHours,
-      overviewOffenderManager.reductionHours,
       overviewOffenderManager.availablePoints,
       overviewOffenderManager.totalPoints,
       overviewOffenderManager.availablePoints.minus(overviewOffenderManager.totalPoints),
       overviewOffenderManager.lastUpdatedOn,
-      overviewOffenderManager.nextReductionChange,
       overviewOffenderManager.tierCaseTotals,
       overviewOffenderManager.paroleReportsDue,
       officerView.casesDueToEndInNext4Weeks,

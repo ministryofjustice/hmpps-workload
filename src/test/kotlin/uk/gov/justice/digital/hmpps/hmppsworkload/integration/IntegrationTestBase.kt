@@ -1,7 +1,6 @@
 package uk.gov.justice.digital.hmpps.hmppsworkload.integration
 
 import com.fasterxml.jackson.core.type.TypeReference
-import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assertions
@@ -42,8 +41,6 @@ import uk.gov.justice.digital.hmpps.hmppsworkload.integration.jpa.entity.Workloa
 import uk.gov.justice.digital.hmpps.hmppsworkload.integration.jpa.entity.WorkloadReportEntity
 import uk.gov.justice.digital.hmpps.hmppsworkload.integration.jpa.repository.CaseCategoryRepository
 import uk.gov.justice.digital.hmpps.hmppsworkload.integration.jpa.repository.PduRepository
-import uk.gov.justice.digital.hmpps.hmppsworkload.integration.jpa.repository.ReductionCategoryRepository
-import uk.gov.justice.digital.hmpps.hmppsworkload.integration.jpa.repository.ReductionReasonRepository
 import uk.gov.justice.digital.hmpps.hmppsworkload.integration.jpa.repository.RegionRepository
 import uk.gov.justice.digital.hmpps.hmppsworkload.integration.jpa.repository.TiersRepository
 import uk.gov.justice.digital.hmpps.hmppsworkload.integration.jpa.repository.WMTCaseDetailsRepository
@@ -69,7 +66,6 @@ import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.EventManagerAud
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.EventManagerRepository
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.OffenderManagerRepository
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.PersonManagerRepository
-import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.ReductionsRepository
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.RequirementManagerRepository
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.TeamRepository
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.WMTCMSRepository
@@ -140,9 +136,6 @@ abstract class IntegrationTestBase {
   protected lateinit var wmtcmsRepository: WMTCMSRepository
 
   @Autowired
-  protected lateinit var reductionsRepository: ReductionsRepository
-
-  @Autowired
   protected lateinit var wmtWorkloadOwnerRepository: WMTWorkloadOwnerRepository
 
   @Autowired
@@ -189,17 +182,10 @@ abstract class IntegrationTestBase {
     hmppsQueueService.findByQueueId("hmppsauditqueue")
       ?: throw MissingQueueException("HmppsQueue hmppsauditqueue not found")
   }
-  private val hmppsReductionsCompletedQueue by lazy {
-    hmppsQueueService.findByQueueId("hmppsreductionscompletedqueue")
-      ?: throw MissingQueueException("HmppsQueue hmppsreductionsCompletedqueue not found")
-  }
+
   private val workloadCalculationQueue by lazy {
     hmppsQueueService.findByQueueId("workloadcalculationqueue")
       ?: throw MissingQueueException("HmppsQueue workloadcalculationqueue not found")
-  }
-  protected val hmppsExtractPlacedQueue by lazy {
-    hmppsQueueService.findByQueueId("hmppsextractplacedqueue")
-      ?: throw MissingQueueException("HmppsQueue hmppsextractplacedqueue not found")
   }
 
   private val workloadPrisonerQueue by lazy {
@@ -232,11 +218,6 @@ abstract class IntegrationTestBase {
 
   protected val hmppsAuditQueueClient by lazy { hmppsAuditQueue.sqsClient }
 
-  protected val hmppsReductionsCompletedClient by lazy { hmppsReductionsCompletedQueue.sqsClient }
-
-  protected val hmppsExtractPlacedClient by lazy { hmppsExtractPlacedQueue.sqsClient }
-  private val hmppsExtractPlacedDlqClient by lazy { hmppsExtractPlacedQueue.sqsDlqClient }
-
   private val workloadPrisonerSqsDlqClient by lazy { workloadPrisonerQueue.sqsDlqClient }
   protected val workloadPrisonerSqsClient by lazy { workloadPrisonerQueue.sqsClient }
 
@@ -263,12 +244,6 @@ abstract class IntegrationTestBase {
 
   @Autowired
   protected lateinit var workloadReportRepository: WorkloadReportRepository
-
-  @Autowired
-  protected lateinit var reductionReasonRepository: ReductionReasonRepository
-
-  @Autowired
-  protected lateinit var reductionCategoryRepository: ReductionCategoryRepository
 
   @Autowired
   protected lateinit var regionRepository: RegionRepository
@@ -321,7 +296,6 @@ abstract class IntegrationTestBase {
     caseDetailsRepository.deleteAll()
     wmtCourtReportsRepository.deleteAll()
     wmtcmsRepository.deleteAll()
-    reductionsRepository.deleteAll()
     adjustmentReasonRepository.deleteAll()
     allocationCompleteSqsClient.purgeQueue(
       PurgeQueueRequest.builder().queueUrl(hmppsAllocationCompleteQueue.queueUrl).build(),
@@ -333,9 +307,6 @@ abstract class IntegrationTestBase {
     workloadCalculationSqsDlqClient!!.purgeQueue(PurgeQueueRequest.builder().queueUrl(workloadCalculationQueue.dlqUrl!!).build()).get()
     workloadPrisonerSqsClient.purgeQueue(PurgeQueueRequest.builder().queueUrl(workloadPrisonerQueue.queueUrl).build()).get()
     workloadPrisonerSqsDlqClient!!.purgeQueue(PurgeQueueRequest.builder().queueUrl(workloadPrisonerQueue.dlqUrl!!).build()).get()
-    hmppsExtractPlacedClient.purgeQueue(PurgeQueueRequest.builder().queueUrl(hmppsExtractPlacedQueue.queueUrl).build()).get()
-    hmppsExtractPlacedDlqClient!!.purgeQueue(PurgeQueueRequest.builder().queueUrl(hmppsExtractPlacedQueue.dlqUrl!!).build()).get()
-    hmppsReductionsCompletedClient.purgeQueue(PurgeQueueRequest.builder().queueUrl(hmppsReductionsCompletedQueue.queueUrl).build()).get()
     hmppsAuditQueueClient.purgeQueue(PurgeQueueRequest.builder().queueUrl(hmppsAuditQueue.queueUrl).build()).get()
     notificationSqsClient.purgeQueue(PurgeQueueRequest.builder().queueUrl(notificationQueue.queueUrl).build()).get()
     notificationSqsDlqClient!!.purgeQueue(PurgeQueueRequest.builder().queueUrl(notificationQueue.dlqUrl!!).build()).get()
@@ -354,7 +325,6 @@ abstract class IntegrationTestBase {
     requirementManagerRepository.deleteAll()
     wmtCourtReportsRepository.deleteAll()
     wmtcmsRepository.deleteAll()
-    reductionsRepository.deleteAll()
     adjustmentReasonRepository.deleteAll()
     workloadCalculationRepository.deleteAll()
     initialSentencePlanReportRepository.deleteAll()
@@ -374,9 +344,6 @@ abstract class IntegrationTestBase {
     workloadPointsCalculationRepository.deleteAll()
     wmtWorkloadRepository.deleteAll()
     workloadReportRepository.deleteAll()
-    reductionsRepository.deleteAll()
-    reductionReasonRepository.deleteAll()
-    reductionCategoryRepository.deleteAll()
     wmtWorkloadOwnerRepository.deleteAll()
     offenderManagerRepository.deleteAll()
     teamRepository.deleteAll()
@@ -641,10 +608,6 @@ abstract class IntegrationTestBase {
     numberOfMessagesCurrentlyOnQueue(hmppsOffenderSqsClient, hmppsOffenderQueue.queueUrl, 0)
   }
 
-  protected fun noMessagesOnExtractPlacedQueue() {
-    numberOfMessagesCurrentlyOnQueue(hmppsExtractPlacedClient, hmppsExtractPlacedQueue.queueUrl, 0)
-  }
-
   protected fun noMessagesOnWorkloadCalculationEventsQueue() {
     numberOfMessagesCurrentlyOnQueue(workloadCalculationSqsClient, workloadCalculationQueue.queueUrl, 0)
   }
@@ -667,10 +630,6 @@ abstract class IntegrationTestBase {
 
   protected fun noMessagesOnOffenderEventsDLQ() {
     numberOfMessagesCurrentlyOnQueue(hmppsOffenderSqsDlqClient!!, hmppsOffenderQueue.dlqUrl!!, 0)
-  }
-
-  protected fun noMessagesOnExtractPlacedDLQ() {
-    numberOfMessagesCurrentlyOnQueue(hmppsExtractPlacedDlqClient!!, hmppsExtractPlacedQueue.dlqUrl!!, 0)
   }
 
   protected fun noMessagesOnNotificationQueue() {
@@ -740,17 +699,6 @@ abstract class IntegrationTestBase {
       hmppsAuditQueueClient.deleteMessage(DeleteMessageRequest.builder().queueUrl(hmppsAuditQueue.queueUrl).receiptHandle(it.receiptHandle()).build())
       val auditDataType = object : TypeReference<AuditMessage>() {}
       objectMapper.readValue(it.body(), auditDataType)
-    }.first()
-  }
-
-  protected fun verifyReductionsCompletedOnQueue(): Boolean = getNumberOfMessagesCurrentlyOnQueue(hmppsReductionsCompletedClient, hmppsReductionsCompletedQueue.queueUrl) == 1
-
-  protected fun getReductionsCompletedMessages(): HmppsMessage<JsonNode> {
-    val message = hmppsReductionsCompletedClient.receiveMessage(ReceiveMessageRequest.builder().queueUrl(hmppsReductionsCompletedQueue.queueUrl).build())
-    return message.get().messages().map {
-      hmppsReductionsCompletedClient.deleteMessage(DeleteMessageRequest.builder().queueUrl(hmppsReductionsCompletedQueue.queueUrl).receiptHandle(it.receiptHandle()).build())
-      val reductionsCompletedMessageDataType = object : TypeReference<HmppsMessage<JsonNode>>() {}
-      objectMapper.readValue(it.body(), reductionsCompletedMessageDataType)
     }.first()
   }
 }

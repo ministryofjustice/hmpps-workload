@@ -16,7 +16,6 @@ import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.OffenderManager
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.WorkloadPointsRepository
 import uk.gov.justice.digital.hmpps.hmppsworkload.service.GetWeeklyHours
 import uk.gov.justice.digital.hmpps.hmppsworkload.service.calculateCapacity
-import uk.gov.justice.digital.hmpps.hmppsworkload.service.reduction.GetReductionService
 import java.math.BigInteger
 import java.time.LocalDateTime
 
@@ -24,7 +23,6 @@ import java.time.LocalDateTime
 @Suppress("LongParameterList")
 class GetOffenderManagerService(
   private val offenderManagerRepository: OffenderManagerRepository,
-  private val getReductionService: GetReductionService,
   private val workloadPointsRepository: WorkloadPointsRepository,
   private val caseDetailsRepository: CaseDetailsRepository,
   private val getWeeklyHours: GetWeeklyHours,
@@ -65,8 +63,6 @@ class GetOffenderManagerService(
     overview.lastAllocatedEvent = getEventManager.findLatestByStaffAndTeam(staffIdentifier)
 
     if (overview.hasWorkload) {
-      overview.nextReductionChange = getReductionService.findNextReductionChange(staffIdentifier)
-      overview.reductionHours = getReductionService.findReductionHours(staffIdentifier)
       overview.contractedHours = getWeeklyHours.findWeeklyHours(staffIdentifier, officerView.getGrade())
       val practitionerCases = workforceAllocationsToDeliusApiClient.staffActiveCases(staffIdentifier)
       overview.tierCaseTotals = caseTotalsService.getPractitionerTotalsByTier(practitionerCases.cases)
