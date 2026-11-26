@@ -11,4 +11,5 @@ data class PractitionerStats(
   val partBReportsInNext14Days: Int,
   val partCReportsInNext14Days: Int,
   val tierCaseTotals: TierCaseTotals,
+  val reductions: List<Reductions>,
 )
