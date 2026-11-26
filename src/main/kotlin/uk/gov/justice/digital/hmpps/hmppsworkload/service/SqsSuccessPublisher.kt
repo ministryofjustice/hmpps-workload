@@ -14,12 +14,9 @@ import uk.gov.justice.digital.hmpps.hmppsworkload.domain.event.HmppsAllocationMe
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.event.HmppsMessage
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.event.PersonReference
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.event.PersonReferenceType
-import uk.gov.justice.digital.hmpps.hmppsworkload.domain.event.StaffAvailableHours
-import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.entity.ReductionEntity
 import uk.gov.justice.hmpps.sqs.HmppsQueueService
 import uk.gov.justice.hmpps.sqs.MissingQueueException
 import uk.gov.justice.hmpps.sqs.MissingTopicException
-import java.math.BigDecimal
 import java.math.BigInteger
 import java.time.Instant
 import java.time.ZonedDateTime
@@ -48,11 +45,6 @@ class SqsSuccessPublisher(
   private val domainTopic by lazy {
     hmppsQueueService.findByTopicId("hmppsdomaintopic")
       ?: throw MissingTopicException("hmppsdomaintopic not found")
-  }
-
-  private val hmppsReductionsCompletedQueue by lazy {
-    hmppsQueueService.findByQueueId("hmppsreductionscompletedqueue")
-      ?: throw MissingQueueException("HmppsQueue hmppsreductionsCompletedqueue not found")
   }
 
   private val hmppsAuditQueue by lazy { hmppsQueueService.findByQueueId("hmppsauditqueue") ?: throw MissingQueueException("HmppsQueue hmppsauditqueue not found") }
@@ -140,19 +132,6 @@ class SqsSuccessPublisher(
     log.info(LOG_TEMPLATE_NOTIFICATION, notificationEmail.emailTo, notificationEmail.emailReferenceId)
   }
 
-  fun outOfDateReductionsProcessed() {
-    val sendMessage =
-      SendMessageRequest.builder()
-        .queueUrl(hmppsReductionsCompletedQueue.queueUrl)
-        .messageBody(getReductionChangeMessage())
-        .messageAttributes(
-          mapOf(EVENT_TYPE to software.amazon.awssdk.services.sqs.model.MessageAttributeValue.builder().dataType(STRING).stringValue("OUT_OF_DATE_REDUCTIONS").build()),
-        ).build()
-
-    log.info("publishing event type OUT_OF_DATE_REDUCTIONS")
-    hmppsReductionsCompletedQueue.sqsClient.sendMessage(sendMessage)
-  }
-
   fun auditAllocation(
     crn: String,
     eventNumber: Int?,
@@ -176,60 +155,6 @@ class SqsSuccessPublisher(
 
     hmppsAuditQueue.sqsClient.sendMessage(sendMessage)
   }
-  fun auditReduction(reductionEntity: ReductionEntity, reductionStatus: String) {
-    val reductionsAuditData = ReductionsAuditData(
-      reductionEntity.workloadOwner.offenderManager.code,
-      reductionEntity.id!!,
-    )
-
-    val sendMessage = SendMessageRequest.builder()
-      .queueUrl(hmppsAuditQueue.queueUrl)
-      .messageBody(
-        objectMapper.writeValueAsString(
-          AuditMessage(operationId = UUID.randomUUID().toString(), who = "system_user", details = objectMapper.writeValueAsString(reductionsAuditData), what = reductionStatus),
-        ),
-      )
-      .build()
-    hmppsAuditQueue.sqsClient.sendMessage(sendMessage)
-  }
-  fun staffAvailableHoursChange(staffCode: String, teamCode: String, availableHours: BigDecimal) {
-    val staffAvailableHoursChangeMessage = HmppsMessage(
-      "staff.available.hours.changed",
-      1,
-      "Staff Available hours changed",
-      "",
-      ZonedDateTime.now().format(
-        DateTimeFormatter.ISO_OFFSET_DATE_TIME,
-      ),
-      StaffAvailableHours(availableHours),
-      PersonReference(listOf(PersonReferenceType("staffCode", staffCode), PersonReferenceType("teamCode", teamCode))),
-    )
-    domainTopic.snsClient.publish(
-      PublishRequest.builder()
-        .topicArn(domainTopic.arn)
-        .message(objectMapper.writeValueAsString(staffAvailableHoursChangeMessage))
-        .messageAttributes(
-          mapOf(
-            EVENT_TYPE to MessageAttributeValue.builder().dataType(STRING).stringValue(staffAvailableHoursChangeMessage.eventType).build(),
-          ),
-        )
-        .build(),
-    ).also {
-      log.info("staff available hours changed message for {} in team {}", staffCode, teamCode)
-    }
-  }
-
-  private fun getReductionChangeMessage(): String = objectMapper.writeValueAsString(
-    HmppsMessage(
-      "OUT_OF_DATE_REDUCTIONS",
-      1,
-      "Out of date reduction status are now correct",
-      "",
-      ZonedDateTime.now().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME),
-      objectMapper.createObjectNode(),
-      PersonReference(emptyList()),
-    ),
-  )
 
   companion object {
     val log: Logger = LoggerFactory.getLogger(this::class.java)
@@ -242,9 +167,4 @@ data class AuditData(
   val crn: String,
   val eventNumber: Int?,
   val requirementIds: List<BigInteger>,
-)
-
-data class ReductionsAuditData(
-  val staffCode: String,
-  val reductionId: Long,
 )

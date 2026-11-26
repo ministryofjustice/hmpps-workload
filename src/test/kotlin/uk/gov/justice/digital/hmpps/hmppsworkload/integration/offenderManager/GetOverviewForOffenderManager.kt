@@ -6,17 +6,10 @@ import uk.gov.justice.digital.hmpps.hmppsworkload.domain.CaseType
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.Tier
 import uk.gov.justice.digital.hmpps.hmppsworkload.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.hmppsworkload.integration.domain.ActiveCasesIntegration
-import uk.gov.justice.digital.hmpps.hmppsworkload.integration.jpa.entity.ReductionCategoryEntity
-import uk.gov.justice.digital.hmpps.hmppsworkload.integration.jpa.entity.ReductionReasonEntity
 import uk.gov.justice.digital.hmpps.hmppsworkload.integration.mockserver.TierApiExtension.Companion.hmppsTier
 import uk.gov.justice.digital.hmpps.hmppsworkload.integration.mockserver.WorkforceAllocationsToDeliusExtension.Companion.workforceAllocationsToDelius
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.entity.CaseDetailsEntity
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.entity.EventManagerEntity
-import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.entity.ReductionEntity
-import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.entity.ReductionStatus
-import java.math.BigDecimal
-import java.time.LocalDate
-import java.time.ZoneId
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 
@@ -45,33 +38,6 @@ class GetOverviewForOffenderManager : IntegrationTestBase() {
 
     setupWmtManagedCase(wmtStaff, Tier.A, "CRN3333", CaseType.COMMUNITY)
     setupWmtManagedCase(wmtStaff, Tier.D, "CRN2222", CaseType.CUSTODY)
-
-    val reductionCategory = reductionCategoryRepository.save(ReductionCategoryEntity())
-    val reductionReason = reductionReasonRepository.save(ReductionReasonEntity(reductionCategoryEntity = reductionCategory))
-    val reduction = ReductionEntity(
-      workloadOwner = wmtStaff.wmtWorkloadOwnerEntity,
-      hours = BigDecimal.valueOf(5),
-      effectiveFrom = LocalDate.now().minusDays(2).atStartOfDay(
-        ZoneId.systemDefault(),
-      ),
-      effectiveTo = LocalDate.now().plusDays(2).atStartOfDay(ZoneId.systemDefault()),
-      status = ReductionStatus.ACTIVE,
-      reductionReasonId = reductionReason.id!!,
-    )
-    reductionsRepository.save(reduction)
-
-    reductionsRepository.save(
-      ReductionEntity(
-        workloadOwner = wmtStaff.wmtWorkloadOwnerEntity,
-        hours = BigDecimal.valueOf(5),
-        effectiveFrom = LocalDate.now().minusDays(2).atStartOfDay(
-          ZoneId.systemDefault(),
-        ),
-        effectiveTo = LocalDate.now().plusDays(2).atStartOfDay(ZoneId.systemDefault()),
-        status = ReductionStatus.DELETED,
-        reductionReasonId = reductionReason.id!!,
-      ),
-    )
 
     hmppsTier.bulkTierCalculationResponse(
       mapOf(
@@ -112,8 +78,6 @@ class GetOverviewForOffenderManager : IntegrationTestBase() {
       .isEqualTo(35)
       .jsonPath("$.weeklyHours")
       .isEqualTo(wmtStaff.wmtWorkloadOwnerEntity.contractedHours)
-      .jsonPath("$.totalReductionHours")
-      .isEqualTo(reduction.hours)
       .jsonPath("$.pointsAvailable")
       .isEqualTo(wmtStaff.workloadPointsCalculation.availablePoints)
       .jsonPath("$.pointsUsed")
@@ -124,12 +88,6 @@ class GetOverviewForOffenderManager : IntegrationTestBase() {
       .isEqualTo(
         wmtStaff.workloadPointsCalculation.lastUpdatedOn.format(
           DateTimeFormatter.ISO_LOCAL_DATE_TIME,
-        ),
-      )
-      .jsonPath("$.nextReductionChange")
-      .isEqualTo(
-        reduction.effectiveTo.withZoneSameInstant(ZoneOffset.UTC).format(
-          DateTimeFormatter.ISO_OFFSET_DATE_TIME,
         ),
       )
       .jsonPath("$.caseTotals.a")
@@ -157,28 +115,6 @@ class GetOverviewForOffenderManager : IntegrationTestBase() {
       .jsonPath("$.releasesDue")
       .isEqualTo(1)
       .jsonPath("$.lastAllocatedEvent")
-      .doesNotExist()
-  }
-
-  @Test
-  fun `can get overview for an offender manager without any reductions`() {
-    val teamCode = "T1"
-    val offenderManagerCode = "OM2"
-    setupCurrentWmtStaff(offenderManagerCode, teamCode)
-    workforceAllocationsToDelius.officerViewResponse(offenderManagerCode)
-    workforceAllocationsToDelius.staffActiveCasesResponse(offenderManagerCode)
-    webTestClient.get()
-      .uri("/team/$teamCode/offenderManagers/$offenderManagerCode")
-      .headers {
-        it.authToken(roles = listOf("ROLE_WORKLOAD_MEASUREMENT"))
-      }
-      .exchange()
-      .expectStatus()
-      .isOk
-      .expectBody()
-      .jsonPath("$.totalReductionHours")
-      .isEqualTo(0)
-      .jsonPath("$.nextReductionChange")
       .doesNotExist()
   }
 
@@ -211,16 +147,12 @@ class GetOverviewForOffenderManager : IntegrationTestBase() {
       .isEqualTo(0)
       .jsonPath("$.weeklyHours")
       .isEqualTo(37)
-      .jsonPath("$.totalReductionHours")
-      .isEqualTo(0)
       .jsonPath("$.pointsAvailable")
       .isEqualTo(2176)
       .jsonPath("$.pointsUsed")
       .isEqualTo(0)
       .jsonPath("$.pointsRemaining")
       .isEqualTo(2176)
-      .jsonPath("$.nextReductionChange")
-      .doesNotExist()
       .jsonPath("$.caseTotals.a")
       .isEqualTo(0)
       .jsonPath("$.caseTotals.b")

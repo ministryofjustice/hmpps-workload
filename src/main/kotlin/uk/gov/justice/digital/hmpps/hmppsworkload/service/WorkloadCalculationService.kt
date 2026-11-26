@@ -11,7 +11,6 @@ import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.entity.WorkloadCalculation
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.entity.WorkloadPointsEntity
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.WorkloadCalculationRepository
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.WorkloadPointsRepository
-import uk.gov.justice.digital.hmpps.hmppsworkload.service.reduction.GetReductionService
 import java.math.BigDecimal
 import java.math.BigInteger
 
@@ -24,7 +23,6 @@ class WorkloadCalculationService(
   private val getContactTypeWeightings: GetContactTypeWeightings,
   private val workloadPointsRepository: WorkloadPointsRepository,
   private val weeklyHours: GetWeeklyHours,
-  private val getReductionService: GetReductionService,
   private val workloadCalculationRepository: WorkloadCalculationRepository,
   private val getCaseLoad: GetCombinedCaseload,
 ) {
@@ -41,9 +39,7 @@ class WorkloadCalculationService(
   private fun getAvailableHours(
     staffIdentifier: StaffIdentifier,
     staffGrade: String,
-  ): BigDecimal = this.weeklyHours.findWeeklyHours(staffIdentifier, staffGrade) - getReductionService.findReductionHours(
-    staffIdentifier,
-  )
+  ): BigDecimal = this.weeklyHours.findWeeklyHours(staffIdentifier, staffGrade)
 
   private fun calculate(staffIdentifier: StaffIdentifier, staffGrade: String, availableHours: BigDecimal): WorkloadCalculationEntity {
     val workloadCalculationsElements = getWorkloadCalculationElements(staffIdentifier)
