@@ -36,18 +36,15 @@ import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.entity.CaseDetailsEntity
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.entity.EventManagerEntity
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.entity.PersonManagerEntity
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.entity.RequirementManagerEntity
-import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.entity.WorkloadCalculationEntity
 import uk.gov.justice.digital.hmpps.hmppsworkload.service.AuditData
 import uk.gov.justice.digital.hmpps.hmppsworkload.service.NotificationMessageResponse
 import uk.gov.justice.digital.hmpps.hmppsworkload.service.NotificationService
 import uk.gov.justice.digital.hmpps.hmppsworkload.service.TelemetryEventType
 import uk.gov.justice.digital.hmpps.hmppsworkload.service.TelemetryEventType.PERSON_MANAGER_ALLOCATED
-import uk.gov.justice.digital.hmpps.hmppsworkload.service.getWmtPeriod
 import uk.gov.service.notify.NotificationClientApi
 import uk.gov.service.notify.NotificationClientException
 import uk.gov.service.notify.SendEmailResponse
 import java.math.BigInteger
-import java.time.LocalDateTime
 import java.time.ZonedDateTime
 import java.util.*
 
@@ -112,19 +109,6 @@ class AllocateCaseToOffenderManager : IntegrationTestBase() {
 
     expectWorkloadAllocationCompleteMessages(crn)
 
-    await untilCallTo {
-      workloadCalculationRepository.count()
-    } matches { it == 1L }
-    val actualWorkloadCalcEntity: WorkloadCalculationEntity =
-      workloadCalculationRepository.findFirstByStaffCodeAndTeamCodeOrderByCalculatedDate(staffCode, teamCode)!!
-
-    Assertions.assertAll(
-      { Assertions.assertEquals(staffCode, actualWorkloadCalcEntity.staffCode) },
-      { Assertions.assertEquals(teamCode, actualWorkloadCalcEntity.teamCode) },
-      { Assertions.assertEquals(LocalDateTime.now().dayOfMonth, actualWorkloadCalcEntity.calculatedDate.dayOfMonth) },
-      { Assertions.assertEquals(1, actualWorkloadCalcEntity.breakdownData.caseloadCount) },
-    )
-
     verify(exactly = 1) {
       telemetryClient.trackEvent(
         PERSON_MANAGER_ALLOCATED.eventName,
@@ -133,7 +117,6 @@ class AllocateCaseToOffenderManager : IntegrationTestBase() {
           "teamCode" to teamCode,
           "staffCode" to staffCode,
           "caseType" to CaseType.CUSTODY.name,
-          "wmtPeriod" to getWmtPeriod(LocalDateTime.now()),
         ),
         null,
       )
@@ -251,19 +234,6 @@ class AllocateCaseToOffenderManager : IntegrationTestBase() {
       .value(String::class.java) { it.matches("([a-f0-9]{8}(-[a-f0-9]{4}){4}[a-f0-9]{8})".toRegex()) }
       .jsonPath("$.personManagerId")
       .value(String::class.java) { it != storedPersonManager.uuid.toString() }
-
-    await untilCallTo {
-      workloadCalculationRepository.count()
-    } matches { it == 2L }
-
-    val actualWorkloadCalcEntity: WorkloadCalculationEntity? =
-      workloadCalculationRepository.findFirstByStaffCodeAndTeamCodeOrderByCalculatedDate(storedPersonManager.staffCode, storedPersonManager.teamCode)
-
-    Assertions.assertAll(
-      { Assertions.assertEquals(storedPersonManager.staffCode, actualWorkloadCalcEntity!!.staffCode) },
-      { Assertions.assertEquals(storedPersonManager.teamCode, actualWorkloadCalcEntity!!.teamCode) },
-      { Assertions.assertEquals(LocalDateTime.now().dayOfMonth, actualWorkloadCalcEntity!!.calculatedDate.dayOfMonth) },
-    )
 
     val previousPersonManager = personManagerRepository.findByIdOrNull(storedPersonManager.id!!)!!
     Assertions.assertFalse(previousPersonManager.isActive)
@@ -437,18 +407,6 @@ class AllocateCaseToOffenderManager : IntegrationTestBase() {
 
     expectWorkloadAllocationCompleteMessages(crn)
 
-    await untilCallTo {
-      workloadCalculationRepository.count()
-    } matches { it == 1L }
-    val actualWorkloadCalcEntity: WorkloadCalculationEntity =
-      workloadCalculationRepository.findFirstByStaffCodeAndTeamCodeOrderByCalculatedDate(staffCode, teamCode)!!
-
-    Assertions.assertAll(
-      { Assertions.assertEquals(staffCode, actualWorkloadCalcEntity.staffCode) },
-      { Assertions.assertEquals(teamCode, actualWorkloadCalcEntity.teamCode) },
-      { Assertions.assertEquals(LocalDateTime.now().dayOfMonth, actualWorkloadCalcEntity.calculatedDate.dayOfMonth) },
-      { Assertions.assertEquals(1, actualWorkloadCalcEntity.breakdownData.caseloadCount) },
-    )
     val parameters = slot<AllocateCase>()
     // verify that the additional email got an email
     coVerify(exactly = 1) { notificationService.notifyAllocation(any(), capture(parameters), any()) }
@@ -461,7 +419,6 @@ class AllocateCaseToOffenderManager : IntegrationTestBase() {
           "teamCode" to teamCode,
           "caseType" to CaseType.COMMUNITY.name,
           "staffCode" to staffCode,
-          "wmtPeriod" to getWmtPeriod(LocalDateTime.now()),
         ),
         null,
       )

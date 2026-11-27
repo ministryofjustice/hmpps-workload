@@ -10,7 +10,6 @@ import uk.gov.justice.digital.hmpps.hmppsworkload.client.WorkforceAllocationsToD
 import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.PersonSummary
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.CaseType
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.PersonManager
-import uk.gov.justice.digital.hmpps.hmppsworkload.domain.StaffIdentifier
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.Tier
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.UpdatedCaseDetails
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.CaseDetailsRepository
@@ -21,7 +20,6 @@ import uk.gov.justice.digital.hmpps.hmppsworkload.service.staff.GetPersonManager
 class SaveCaseDetailsService(
   @Qualifier("hmppsTierApiClient") private val hmppsTierApiClient: HmppsTierApiClient,
   private val caseDetailsRepository: CaseDetailsRepository,
-  private val workloadCalculationService: WorkloadCalculationService,
   private val getPersonManager: GetPersonManager,
   private val updateWorkloadService: UpdateWorkloadService,
   private val workforceAllocationsToDeliusApiClient: WorkforceAllocationsToDeliusApiClient,
@@ -51,12 +49,6 @@ class SaveCaseDetailsService(
         databaseService.insertCaseDetails(UpdatedCaseDetails(personSummary.name.forename, personSummary.name.surname, tier, it.provisional, caseType, personSummary.crn))
         val staff: PersonManager? = getPersonManager.findLatestByCrn(personSummary.crn)
         log.info("PersonManager in savePerson() = $staff for crn ${personSummary.crn}")
-        if (staff != null) {
-          workloadCalculationService.saveWorkloadCalculation(
-            StaffIdentifier(staff.staffCode, staff.teamCode),
-            staff.staffGrade,
-          )
-        }
       }
     } ?: personSummary?.crn?.let { crn ->
       log.info("CaseType UNKNOWN for crn: $crn")

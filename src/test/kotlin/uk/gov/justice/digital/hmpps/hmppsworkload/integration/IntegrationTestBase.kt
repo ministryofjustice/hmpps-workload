@@ -32,21 +32,6 @@ import uk.gov.justice.digital.hmpps.hmppsworkload.domain.powerbi.ResetReportEnti
 import uk.gov.justice.digital.hmpps.hmppsworkload.domain.powerbi.UpcomingReleasesReportEntity
 import uk.gov.justice.digital.hmpps.hmppsworkload.integration.domain.ActiveCasesIntegration
 import uk.gov.justice.digital.hmpps.hmppsworkload.integration.domain.StaffActiveCasesIntegration
-import uk.gov.justice.digital.hmpps.hmppsworkload.integration.domain.WMTPointsWeightings
-import uk.gov.justice.digital.hmpps.hmppsworkload.integration.domain.WMTStaff
-import uk.gov.justice.digital.hmpps.hmppsworkload.integration.jpa.entity.CaseCategoryEntity
-import uk.gov.justice.digital.hmpps.hmppsworkload.integration.jpa.entity.WMTCaseDetailsEntity
-import uk.gov.justice.digital.hmpps.hmppsworkload.integration.jpa.entity.WMTWorkloadEntity
-import uk.gov.justice.digital.hmpps.hmppsworkload.integration.jpa.entity.WorkloadPointsCalculationEntity
-import uk.gov.justice.digital.hmpps.hmppsworkload.integration.jpa.entity.WorkloadReportEntity
-import uk.gov.justice.digital.hmpps.hmppsworkload.integration.jpa.repository.CaseCategoryRepository
-import uk.gov.justice.digital.hmpps.hmppsworkload.integration.jpa.repository.PduRepository
-import uk.gov.justice.digital.hmpps.hmppsworkload.integration.jpa.repository.RegionRepository
-import uk.gov.justice.digital.hmpps.hmppsworkload.integration.jpa.repository.TiersRepository
-import uk.gov.justice.digital.hmpps.hmppsworkload.integration.jpa.repository.WMTCaseDetailsRepository
-import uk.gov.justice.digital.hmpps.hmppsworkload.integration.jpa.repository.WMTWorkloadRepository
-import uk.gov.justice.digital.hmpps.hmppsworkload.integration.jpa.repository.WorkloadPointsCalculationRepository
-import uk.gov.justice.digital.hmpps.hmppsworkload.integration.jpa.repository.WorkloadReportRepository
 import uk.gov.justice.digital.hmpps.hmppsworkload.integration.mockserver.AssessRisksNeedsApiExtension
 import uk.gov.justice.digital.hmpps.hmppsworkload.integration.mockserver.HmppsAuthApiExtension
 import uk.gov.justice.digital.hmpps.hmppsworkload.integration.mockserver.HmppsProbationEstateApiExtension
@@ -54,25 +39,12 @@ import uk.gov.justice.digital.hmpps.hmppsworkload.integration.mockserver.TierApi
 import uk.gov.justice.digital.hmpps.hmppsworkload.integration.mockserver.WorkforceAllocationsToDeliusExtension
 import uk.gov.justice.digital.hmpps.hmppsworkload.integration.mockserver.WorkforceAllocationsToDeliusExtension.Companion.workforceAllocationsToDelius
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.entity.CaseDetailsEntity
-import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.entity.OffenderManagerEntity
-import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.entity.PduEntity
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.entity.PersonManagerEntity
-import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.entity.RegionEntity
-import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.entity.TeamEntity
-import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.entity.WMTWorkloadOwnerEntity
-import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.AdjustmentReasonRepository
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.CaseDetailsRepository
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.EventManagerAuditRepository
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.EventManagerRepository
-import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.OffenderManagerRepository
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.PersonManagerRepository
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.RequirementManagerRepository
-import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.TeamRepository
-import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.WMTCMSRepository
-import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.WMTCourtReportsRepository
-import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.WMTWorkloadOwnerRepository
-import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.WorkloadCalculationRepository
-import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.WorkloadPointsRepository
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.powerbi.HDCROTLReportRepository
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.powerbi.InitialSentencePlanReportRepository
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.repository.powerbi.ParoleReportRepository
@@ -87,7 +59,6 @@ import uk.gov.justice.digital.hmpps.hmppsworkload.service.SaveCasesDbService
 import uk.gov.justice.digital.hmpps.hmppsworkload.service.staff.CaseTotalsService
 import uk.gov.justice.hmpps.sqs.HmppsQueueService
 import uk.gov.justice.hmpps.sqs.MissingQueueException
-import java.math.BigDecimal
 import java.sql.Date
 import java.time.LocalDate
 
@@ -129,27 +100,6 @@ abstract class IntegrationTestBase {
   @Autowired
   protected lateinit var requirementManagerRepository: RequirementManagerRepository
 
-  @Autowired
-  protected lateinit var wmtCourtReportsRepository: WMTCourtReportsRepository
-
-  @Autowired
-  protected lateinit var wmtcmsRepository: WMTCMSRepository
-
-  @Autowired
-  protected lateinit var wmtWorkloadOwnerRepository: WMTWorkloadOwnerRepository
-
-  @Autowired
-  protected lateinit var teamRepository: TeamRepository
-
-  @Autowired
-  protected lateinit var offenderManagerRepository: OffenderManagerRepository
-
-  @Autowired
-  protected lateinit var adjustmentReasonRepository: AdjustmentReasonRepository
-
-  @Autowired
-  protected lateinit var workloadCalculationRepository: WorkloadCalculationRepository
-
   private val hmppsAllocationCompleteQueue by lazy {
     hmppsQueueService.findByQueueId("hmppsallocationcompletequeue")
       ?: throw MissingQueueException("HmppsQueue hmppsallocationcompletequeue not found")
@@ -183,11 +133,6 @@ abstract class IntegrationTestBase {
       ?: throw MissingQueueException("HmppsQueue hmppsauditqueue not found")
   }
 
-  private val workloadCalculationQueue by lazy {
-    hmppsQueueService.findByQueueId("workloadcalculationqueue")
-      ?: throw MissingQueueException("HmppsQueue workloadcalculationqueue not found")
-  }
-
   private val workloadPrisonerQueue by lazy {
     hmppsQueueService.findByQueueId("workloadprisonerqueue")
       ?: throw MissingQueueException("HmppsQueue  workloadprisonerqueue not found")
@@ -213,9 +158,6 @@ abstract class IntegrationTestBase {
   private val tierCalculationSqsDlqClient by lazy { tierCalculationQueue.sqsDlqClient }
   protected val tierCalculationSqsClient by lazy { tierCalculationQueue.sqsClient }
 
-  private val workloadCalculationSqsDlqClient by lazy { workloadCalculationQueue.sqsDlqClient }
-  protected val workloadCalculationSqsClient by lazy { workloadCalculationQueue.sqsClient }
-
   protected val hmppsAuditQueueClient by lazy { hmppsAuditQueue.sqsClient }
 
   private val workloadPrisonerSqsDlqClient by lazy { workloadPrisonerQueue.sqsDlqClient }
@@ -229,36 +171,6 @@ abstract class IntegrationTestBase {
 
   @Autowired
   protected lateinit var caseTotalsService: CaseTotalsService
-
-  @Autowired
-  protected lateinit var tiersRepository: TiersRepository
-
-  @Autowired
-  protected lateinit var wmtCaseDetailsRepository: WMTCaseDetailsRepository
-
-  @Autowired
-  protected lateinit var workloadPointsCaseDetailsRepository: WorkloadPointsCalculationRepository
-
-  @Autowired
-  protected lateinit var wmtWorkloadRepository: WMTWorkloadRepository
-
-  @Autowired
-  protected lateinit var workloadReportRepository: WorkloadReportRepository
-
-  @Autowired
-  protected lateinit var regionRepository: RegionRepository
-
-  @Autowired
-  protected lateinit var pduRepository: PduRepository
-
-  @Autowired
-  protected lateinit var caseCategoryRepository: CaseCategoryRepository
-
-  @Autowired
-  protected lateinit var workloadPointsCalculationRepository: WorkloadPointsCalculationRepository
-
-  @Autowired
-  protected lateinit var workloadPointsRepository: WorkloadPointsRepository
 
   @Autowired
   protected lateinit var eventManagerAuditRepository: EventManagerAuditRepository
@@ -294,17 +206,12 @@ abstract class IntegrationTestBase {
     eventManagerRepository.deleteAll()
     requirementManagerRepository.deleteAll()
     caseDetailsRepository.deleteAll()
-    wmtCourtReportsRepository.deleteAll()
-    wmtcmsRepository.deleteAll()
-    adjustmentReasonRepository.deleteAll()
     allocationCompleteSqsClient.purgeQueue(
       PurgeQueueRequest.builder().queueUrl(hmppsAllocationCompleteQueue.queueUrl).build(),
     ).get()
     allocationCompleteSqsDlqClient!!.purgeQueue(PurgeQueueRequest.builder().queueUrl(hmppsAllocationCompleteQueue.dlqUrl!!).build()).get()
     hmppsOffenderSqsClient.purgeQueue(PurgeQueueRequest.builder().queueUrl(hmppsOffenderQueue.queueUrl).build()).get()
     hmppsOffenderSqsDlqClient!!.purgeQueue(PurgeQueueRequest.builder().queueUrl(hmppsOffenderQueue.dlqUrl!!).build()).get()
-    workloadCalculationSqsClient.purgeQueue(PurgeQueueRequest.builder().queueUrl(workloadCalculationQueue.queueUrl).build()).get()
-    workloadCalculationSqsDlqClient!!.purgeQueue(PurgeQueueRequest.builder().queueUrl(workloadCalculationQueue.dlqUrl!!).build()).get()
     workloadPrisonerSqsClient.purgeQueue(PurgeQueueRequest.builder().queueUrl(workloadPrisonerQueue.queueUrl).build()).get()
     workloadPrisonerSqsDlqClient!!.purgeQueue(PurgeQueueRequest.builder().queueUrl(workloadPrisonerQueue.dlqUrl!!).build()).get()
     hmppsAuditQueueClient.purgeQueue(PurgeQueueRequest.builder().queueUrl(hmppsAuditQueue.queueUrl).build()).get()
@@ -313,8 +220,13 @@ abstract class IntegrationTestBase {
     tierCalculationSqsClient.purgeQueue(PurgeQueueRequest.builder().queueUrl(tierCalculationQueue.queueUrl).build()).get()
     tierCalculationSqsDlqClient!!.purgeQueue(PurgeQueueRequest.builder().queueUrl(tierCalculationQueue.dlqUrl!!).build()).get()
 
-    workloadCalculationRepository.deleteAll()
-    clearWMT()
+    initialSentencePlanReportRepository.deleteAll()
+    resetReportRepository.deleteAll()
+    upcomingReleasesReportRepository.deleteAll()
+    paroleReportRepository.deleteAll()
+    hdcrotlReportRepository.deleteAll()
+    partBReportRepository.deleteAll()
+    partCReportRepository.deleteAll()
   }
 
   @AfterAll
@@ -323,10 +235,6 @@ abstract class IntegrationTestBase {
     eventManagerAuditRepository.deleteAll()
     eventManagerRepository.deleteAll()
     requirementManagerRepository.deleteAll()
-    wmtCourtReportsRepository.deleteAll()
-    wmtcmsRepository.deleteAll()
-    adjustmentReasonRepository.deleteAll()
-    workloadCalculationRepository.deleteAll()
     initialSentencePlanReportRepository.deleteAll()
     resetReportRepository.deleteAll()
     upcomingReleasesReportRepository.deleteAll()
@@ -335,110 +243,6 @@ abstract class IntegrationTestBase {
     partBReportRepository.deleteAll()
     partCReportRepository.deleteAll()
   }
-
-  fun clearWMT() {
-    tiersRepository.deleteAll()
-    wmtCaseDetailsRepository.deleteAll()
-    caseCategoryRepository.deleteAll()
-    workloadPointsCaseDetailsRepository.deleteAll()
-    workloadPointsCalculationRepository.deleteAll()
-    wmtWorkloadRepository.deleteAll()
-    workloadReportRepository.deleteAll()
-    wmtWorkloadOwnerRepository.deleteAll()
-    offenderManagerRepository.deleteAll()
-    teamRepository.deleteAll()
-    pduRepository.deleteAll()
-    regionRepository.deleteAll()
-    initialSentencePlanReportRepository.deleteAll()
-    resetReportRepository.deleteAll()
-    upcomingReleasesReportRepository.deleteAll()
-    paroleReportRepository.deleteAll()
-    hdcrotlReportRepository.deleteAll()
-    partBReportRepository.deleteAll()
-    partCReportRepository.deleteAll()
-  }
-
-  protected fun setupCurrentWmtStaff(staffCode: String, teamCode: String, totalFilteredCustodyCases: Int = 20): WMTStaff {
-    val region = regionRepository.findByCode("REGION1") ?: regionRepository.save(
-      RegionEntity(
-        code = "REGION1",
-        description = "Region 1",
-      ),
-    )
-    val pdu = pduRepository.findByCode("PDU1") ?: pduRepository.save(
-      PduEntity(
-        code = "PDU1",
-        description = "Local Delivery Unit (Actually a Probation Delivery Unit)",
-        region = region,
-      ),
-    )
-    val team = teamRepository.findByCode(teamCode) ?: teamRepository.save(
-      TeamEntity(
-        code = teamCode,
-        description = "Team 1",
-        ldu = pdu,
-      ),
-    )
-    val offenderManager = offenderManagerRepository.findByCode(staffCode) ?: offenderManagerRepository.save(
-      OffenderManagerEntity(
-        code = staffCode,
-        forename = "Jane",
-        surname = "Doe",
-        typeId = 1,
-      ),
-    )
-    val workloadOwner = wmtWorkloadOwnerRepository.save(
-      WMTWorkloadOwnerEntity(
-        offenderManager = offenderManager,
-        team = team,
-        contractedHours = BigDecimal.valueOf(37.5),
-      ),
-    )
-    val workloadReport = workloadReportRepository.findByEffectiveFromIsNotNullAndEffectiveToIsNull()
-      ?: workloadReportRepository.save((WorkloadReportEntity()))
-    val wmtWorkload = wmtWorkloadRepository.save(
-      WMTWorkloadEntity(
-        workloadOwner = workloadOwner,
-        workloadReport = workloadReport,
-        totalFilteredCommunityCases = 10,
-        totalFilteredCustodyCases = totalFilteredCustodyCases,
-        totalFilteredLicenseCases = 5,
-        institutionalReportsDueInNextThirtyDays = 5,
-        totalFilteredCases = 35,
-      ),
-    )
-    val currentWmtPointsWeightings = getWmtWorkloadWeightings()
-    val workloadPointsCalculation = workloadPointsCalculationRepository.save(
-      WorkloadPointsCalculationEntity(
-        workloadReport = workloadReport,
-        workloadPoints = currentWmtPointsWeightings.normalWeightings,
-        t2aWorkloadPoints = currentWmtPointsWeightings.t2aWeightings,
-        workload = wmtWorkload,
-        totalPoints = 500,
-        availablePoints = 1000,
-      ),
-    )
-    return WMTStaff(offenderManager, team, workloadOwner, wmtWorkload, workloadPointsCalculation)
-  }
-
-  protected fun setupWmtManagedCase(wmtStaff: WMTStaff, tier: Tier, crn: String, caseType: CaseType) {
-    val tierCategory = setupWmtCaseCategoryTier(tier)
-    wmtCaseDetailsRepository.save(
-      WMTCaseDetailsEntity(
-        workload = wmtStaff.workload,
-        crn = crn,
-        tierCategory = tierCategory,
-        caseType = caseType,
-        teamCode = wmtStaff.team.code,
-      ),
-    )
-  }
-
-  protected fun setupWmtCaseCategoryTier(tier: Tier): CaseCategoryEntity = caseCategoryRepository.findByCategoryName(tier.name)
-    ?: caseCategoryRepository.save(CaseCategoryEntity(categoryName = tier.name, categoryId = tier.ordinal))
-
-  protected fun setupWmtUntiered(): CaseCategoryEntity = caseCategoryRepository.findByCategoryName("Untiered")
-    ?: caseCategoryRepository.save(CaseCategoryEntity(categoryName = "Untiered", categoryId = 0))
 
   protected fun setupReportData() {
     val team = "Team 1"
@@ -589,11 +393,6 @@ abstract class IntegrationTestBase {
     )
   }
 
-  protected fun getWmtWorkloadWeightings(): WMTPointsWeightings = WMTPointsWeightings(
-    workloadPointsRepository.findFirstByIsT2AAndEffectiveToIsNullOrderByEffectiveFromDesc(true),
-    workloadPointsRepository.findFirstByIsT2AAndEffectiveToIsNullOrderByEffectiveFromDesc(false),
-  )
-
   internal fun HttpHeaders.authToken(roles: List<String> = emptyList(), subject: String = "SOME_USER") {
     this.setBearerAuth(
       jwtAuthHelper.createJwt(
@@ -608,24 +407,12 @@ abstract class IntegrationTestBase {
     numberOfMessagesCurrentlyOnQueue(hmppsOffenderSqsClient, hmppsOffenderQueue.queueUrl, 0)
   }
 
-  protected fun noMessagesOnWorkloadCalculationEventsQueue() {
-    numberOfMessagesCurrentlyOnQueue(workloadCalculationSqsClient, workloadCalculationQueue.queueUrl, 0)
-  }
-
   protected fun noMessagesOnWorkloadPrisonerQueue() {
     numberOfMessagesCurrentlyOnQueue(workloadPrisonerSqsClient, workloadPrisonerQueue.queueUrl, 0)
   }
 
   protected fun noMessagesOnWorkloadPrisonerDLQ() {
     numberOfMessagesCurrentlyOnQueue(workloadPrisonerSqsDlqClient!!, workloadPrisonerQueue.dlqUrl!!, 0)
-  }
-
-  protected fun noMessagesOnWorkloadCalculationEventsDLQ() {
-    numberOfMessagesCurrentlyOnQueue(workloadCalculationSqsDlqClient!!, workloadCalculationQueue.dlqUrl!!, 0)
-  }
-
-  protected fun oneMessageOnWorkloadCalculationDeadLetterQueue() {
-    numberOfMessagesCurrentlyOnQueue(workloadCalculationSqsDlqClient!!, workloadCalculationQueue.dlqUrl!!, 1)
   }
 
   protected fun noMessagesOnOffenderEventsDLQ() {
