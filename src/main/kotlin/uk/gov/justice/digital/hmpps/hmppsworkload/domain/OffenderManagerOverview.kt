@@ -20,6 +20,8 @@ data class OffenderManagerOverview @JsonCreator constructor(
   @Schema(description = "Probation Practitioner total cases", example = "25")
   val totalCases: Long,
   val caseTotals: TierCaseTotals,
+  @Schema(description = "Probation Practitioner parole reports due in the next 30 days", example = "5")
+  val paroleReportsDue: BigInteger,
   @Schema(description = "Probation Practitioner cases due to end in the next 30 days", example = "3")
   val caseEndDue: BigInteger,
   @Schema(description = "Probation Practitioner cases due to be released in the next 30 days", example = "6")
@@ -35,6 +37,7 @@ data class OffenderManagerOverview @JsonCreator constructor(
       officerView.email,
       offenderManagerCases.activeCases.size.toLong(),
       tierCaseTotals,
+      officerView.paroleReportsToCompleteInNext4Weeks,
       officerView.casesDueToEndInNext4Weeks,
       officerView.releasesWithinNext4Weeks,
       lastAllocatedEvent?.let { LastAllocatedEvent.from(it) },

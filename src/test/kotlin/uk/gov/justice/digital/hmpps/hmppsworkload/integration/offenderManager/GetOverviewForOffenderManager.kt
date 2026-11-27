@@ -88,6 +88,8 @@ class GetOverviewForOffenderManager : IntegrationTestBase() {
       .isEqualTo(1)
       .jsonPath("$.caseTotals.notSupervised")
       .isEqualTo(1)
+      .jsonPath("$.paroleReportsDue")
+      .isEqualTo(1)
       .jsonPath("$.caseEndDue")
       .isEqualTo(1)
       .jsonPath("$.releasesDue")

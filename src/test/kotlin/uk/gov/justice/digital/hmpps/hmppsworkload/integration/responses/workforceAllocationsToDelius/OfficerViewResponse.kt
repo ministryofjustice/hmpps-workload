@@ -14,7 +14,7 @@ fun officerOverviewResponse(staffCode: String, staffGrade: String, email: String
   $emailEntry
   "casesDueToEndInNext4Weeks": 1,
   "releasesWithinNext4Weeks": 1,
-  "paroleReportsToCompleteInNext4Weeks": 0
+  "paroleReportsToCompleteInNext4Weeks": 1
 }
   """.trimIndent()
 }
