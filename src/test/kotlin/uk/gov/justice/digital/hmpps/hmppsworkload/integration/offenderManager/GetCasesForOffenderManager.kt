@@ -115,7 +115,7 @@ class GetCasesForOffenderManager : IntegrationTestBase() {
   }
 
   @Test
-  fun `Get staff member without any WMT active cases`() {
+  fun `Get staff member without any active cases`() {
     workforceAllocationsToDelius.staffActiveCasesResponse(staffCodeNO)
     webTestClient.get()
       .uri("/team/$teamCode/offenderManagers/$staffCodeNO/cases")

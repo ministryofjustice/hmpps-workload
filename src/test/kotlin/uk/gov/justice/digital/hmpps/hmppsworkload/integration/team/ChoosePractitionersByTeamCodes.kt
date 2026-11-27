@@ -605,9 +605,8 @@ class ChoosePractitionersByTeamCodes : IntegrationTestBase() {
     casesDbService.insertCaseDetails(UpdatedCaseDetails("Don", "Cole", Tier.B, false, CaseType.CUSTODY, crn))
 
     workforceAllocationsToDelius.choosePractitionerByTeamCodesResponseNoCommunityPersonManager(listOf(teamCode), crn)
-    val firstWmtStaff = setupCurrentWmtStaff("OM3", teamCode)
 
-    val firstOm = firstWmtStaff.offenderManager.code
+    val firstOm = "OM3"
 
     val storedPersonManager = PersonManagerEntity(crn = "CRN1", staffCode = firstOm, teamCode = teamCode, createdBy = "USER1", isActive = true, allocationReason = AllocationReason.INITIAL_ALLOCATION)
     personManagerRepository.save(storedPersonManager)
@@ -641,9 +640,8 @@ class ChoosePractitionersByTeamCodes : IntegrationTestBase() {
     casesDbService.insertCaseDetails(UpdatedCaseDetails("Don", "Cole", Tier.B, false, CaseType.CUSTODY, crn))
 
     workforceAllocationsToDelius.choosePractitionerByTeamCodesResponseUnallocated(listOf(teamCode), crn)
-    val firstWmtStaff = setupCurrentWmtStaff("OM3", teamCode)
 
-    val firstOm = firstWmtStaff.offenderManager.code
+    val firstOm = "OM3"
 
     val storedPersonManager = PersonManagerEntity(crn = "CRN1", staffCode = firstOm, teamCode = teamCode, createdBy = "USER1", isActive = true, allocationReason = AllocationReason.INITIAL_ALLOCATION)
     personManagerRepository.save(storedPersonManager)

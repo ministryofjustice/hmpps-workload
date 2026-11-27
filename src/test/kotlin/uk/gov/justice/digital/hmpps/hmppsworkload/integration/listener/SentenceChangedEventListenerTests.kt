@@ -4,7 +4,6 @@ import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.matches
 import org.awaitility.kotlin.untilCallTo
-import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Test
@@ -22,9 +21,7 @@ import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.entity.CaseDetailsEntity
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.entity.EventManagerEntity
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.entity.PersonManagerEntity
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.entity.RequirementManagerEntity
-import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.entity.WorkloadCalculationEntity
 import java.math.BigInteger
-import java.time.LocalDateTime
 
 class SentenceChangedEventListenerTests : IntegrationTestBase() {
 
@@ -200,33 +197,5 @@ class SentenceChangedEventListenerTests : IntegrationTestBase() {
 
     assertThat(caseDetailsRepository.count()).isEqualTo(1)
     assertThat(caseDetailsRepository.findByIdOrNull(crn)?.tier).isEqualTo(Tier.B)
-  }
-
-  @Test
-  fun `calculate workload when updating case details for realtime offender manager`() {
-    val crn = "J678910"
-    val staffCode = "staff1"
-    val teamCode = "team1"
-
-    workforceAllocationsToDelius.personResponseByCrn(crn)
-    hmppsTier.tierCalculationResponse(crn)
-
-    casesDbService.insertCaseDetails(UpdatedCaseDetails("Jane", "Doe", Tier.C, false, CaseType.COMMUNITY, crn))
-
-    workforceAllocationsToDelius.officerViewResponse(staffCode)
-    personManagerRepository.save(PersonManagerEntity(crn = crn, staffCode = staffCode, teamCode = teamCode, createdBy = "createdby", isActive = true, allocationReason = AllocationReason.INITIAL_ALLOCATION))
-
-    placeSentenceChangedEventOnOffenderTopic(crn)
-
-    noMessagesOnOffenderEventsQueue()
-
-    val actualWorkloadCalcEntity: WorkloadCalculationEntity? =
-      workloadCalculationRepository.findFirstByStaffCodeAndTeamCodeOrderByCalculatedDate(staffCode, teamCode)
-
-    Assertions.assertAll(
-      { assertEquals(staffCode, actualWorkloadCalcEntity?.staffCode) },
-      { assertEquals(teamCode, actualWorkloadCalcEntity?.teamCode) },
-      { assertEquals(LocalDateTime.now().dayOfMonth, actualWorkloadCalcEntity?.calculatedDate?.dayOfMonth) },
-    )
   }
 }

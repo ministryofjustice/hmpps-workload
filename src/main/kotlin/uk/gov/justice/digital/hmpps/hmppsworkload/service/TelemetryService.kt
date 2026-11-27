@@ -7,7 +7,6 @@ import uk.gov.justice.digital.hmpps.hmppsworkload.client.dto.StaffMember
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.entity.EventManagerEntity
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.entity.PersonManagerEntity
 import uk.gov.justice.digital.hmpps.hmppsworkload.jpa.entity.RequirementManagerEntity
-import java.time.LocalDateTime
 
 private const val CRN = "crn"
 
@@ -30,7 +29,6 @@ class TelemetryService(@Autowired private val telemetryClient: TelemetryClient) 
         CASE_TYPE to caseType,
         TEAM_CODE to personManagerEntity.teamCode,
         STAFF_CODE to personManagerEntity.staffCode,
-        "wmtPeriod" to getWmtPeriod(LocalDateTime.now()),
       ),
     )
   }
