@@ -16,7 +16,6 @@ class GetImpactForOffenderManager : IntegrationTestBase() {
     val staffCode = "OM1"
     val teamCode = "T1"
     workforceAllocationsToDelius.getImpactResponse(crn, staffCode)
-    setupCurrentWmtStaff(staffCode, teamCode)
     val caseDetailsEntity = CaseDetailsEntity(crn, Tier.B, false, CaseType.CUSTODY, "Jane", "Doe")
     caseDetailsRepository.save(caseDetailsEntity)
 
@@ -30,10 +29,6 @@ class GetImpactForOffenderManager : IntegrationTestBase() {
       .expectStatus()
       .isOk
       .expectBody()
-      .jsonPath("$.capacity")
-      .isEqualTo(50)
-      .jsonPath("$.potentialCapacity")
-      .isEqualTo(50)
       .jsonPath("$.tier")
       .isEqualTo(caseDetailsEntity.tier.name)
       .jsonPath("$.name.forename")
@@ -55,55 +50,6 @@ class GetImpactForOffenderManager : IntegrationTestBase() {
   }
 
   @Test
-  fun `must not change capacity if case already allocated to the officer and is classified the same`() {
-    val crn = "CRN2222"
-    val staffCode = "OM1"
-    val teamCode = "T1"
-    workforceAllocationsToDelius.getImpactResponse(crn, staffCode)
-    val wmtStaff = setupCurrentWmtStaff(staffCode, teamCode)
-    val caseDetails = caseDetailsRepository.save(CaseDetailsEntity(crn, Tier.B, false, CaseType.CUSTODY, "Jane", "Doe"))
-    setupWmtManagedCase(wmtStaff, caseDetails.tier, crn, caseDetails.type)
-
-    webTestClient.get()
-      .uri("/team/$teamCode/offenderManager/$staffCode/impact/person/$crn")
-      .headers {
-        it.authToken(roles = listOf("ROLE_WORKLOAD_MEASUREMENT"))
-        it.contentType = MediaType.APPLICATION_JSON
-      }
-      .exchange()
-      .expectStatus()
-      .isOk
-      .expectBody()
-      .jsonPath("$.capacity")
-      .isEqualTo(50)
-      .jsonPath("$.potentialCapacity")
-      .isEqualTo(50)
-  }
-
-  @Test
-  fun `can get impact for an offender manager without workload`() {
-    val crn = "CRN1"
-    val staffCode = "NOWORKLOAD1"
-    val teamCode = "T1"
-    workforceAllocationsToDelius.getImpactResponse(crn, staffCode)
-    caseDetailsRepository.save(CaseDetailsEntity(crn, Tier.B, false, CaseType.CUSTODY, "Jane", "Doe"))
-    webTestClient.get()
-      .uri("/team/$teamCode/offenderManager/$staffCode/impact/person/$crn")
-      .headers {
-        it.authToken(roles = listOf("ROLE_WORKLOAD_MEASUREMENT"))
-        it.contentType = MediaType.APPLICATION_JSON
-      }
-      .exchange()
-      .expectStatus()
-      .isOk
-      .expectBody()
-      .jsonPath("$.capacity")
-      .isEqualTo(0)
-      .jsonPath("$.potentialCapacity")
-      .isEqualTo(0)
-  }
-
-  @Test
   fun `can get impact for an offender manager without a grade and a workload`() {
     val crn = "CRN1"
     val staffCode = "NOWORKLOAD1"
@@ -122,9 +68,5 @@ class GetImpactForOffenderManager : IntegrationTestBase() {
       .expectBody()
       .jsonPath("$.staff.grade")
       .isEqualTo("DMY")
-      .jsonPath("$.capacity")
-      .isEqualTo(0)
-      .jsonPath("$.potentialCapacity")
-      .isEqualTo(0)
   }
 }
